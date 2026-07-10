@@ -824,6 +824,16 @@ export function LedgerTable({
                     )}
                   </div>
                 </th>
+                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('notes')}>
+                  <div className="flex items-center gap-1.5">
+                    <span>PARTICULAR</span>
+                    {sortBy === 'notes' ? (
+                      <ArrowUpDown className="w-3 h-3 text-primary" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                    )}
+                  </div>
+                </th>
                 <th className="py-3.5 px-4 font-semibold text-right cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('amount')}>
                   <div className="flex items-center justify-end gap-1.5">
                     <span>AMOUNT</span>
@@ -852,13 +862,13 @@ export function LedgerTable({
             <tbody className="divide-y divide-border-normal text-text-body">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-8 text-center text-text-muted font-mono animate-pulse">
+                  <td colSpan={12} className="py-8 text-center text-text-muted font-mono animate-pulse">
                     {"// Loading transaction records..."}
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-8 text-center text-text-muted font-mono">
+                  <td colSpan={12} className="py-8 text-center text-text-muted font-mono">
                     {"// No matching ledger transactions found."}
                   </td>
                 </tr>
@@ -906,6 +916,9 @@ export function LedgerTable({
                       </td>
                       <td className="py-3 px-4 text-text-heading font-semibold">
                         {tx.party}
+                      </td>
+                      <td className="py-3 px-4 text-text-body text-xs max-w-[200px] truncate" title={tx.notes || ''}>
+                        {tx.notes || '-'}
                       </td>
                       <td className={`py-3 px-4 text-right font-mono font-bold text-sm ${
                         isIncome ? 'text-cyber-success' : 'text-cyber-danger'

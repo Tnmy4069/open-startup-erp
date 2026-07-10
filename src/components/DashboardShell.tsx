@@ -71,6 +71,7 @@ export function DashboardShell() {
         globalSearchRef.current?.focus();
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
+        setCurrentTab('ledger');
         setOpenNewTxDrawer(true);
       } else if (e.key === 'd' || e.key === 'D') {
         setCurrentTab('dashboard');
@@ -240,7 +241,10 @@ export function DashboardShell() {
         <div className="p-4 border-t border-border-normal space-y-2">
           {role !== 'Read Only' && (
             <button
-              onClick={() => setOpenNewTxDrawer(true)}
+              onClick={() => {
+                setCurrentTab('ledger');
+                setOpenNewTxDrawer(true);
+              }}
               className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-medium transition-all duration-150"
             >
               <Plus className="w-4 h-4" />
