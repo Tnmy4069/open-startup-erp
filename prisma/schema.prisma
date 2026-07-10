@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  date            DateTime @default(now())
+  type            String   // "Income" | "Expense" | "Transfer" | "Refund"
+  purpose         String   // "Campus Session" | "Workshop" | "Sponsorship" | "Merchandise" | "Travel" | "Food" | "Equipment" | "Software" | "Marketing" | "Reimbursement" | "Miscellaneous"
+  party           String
+  amount          Float
+  status          String   // "Pending" | "Completed" | "Cancelled"
+  paymentMethod   String   // "Cash" | "UPI" | "Bank" | "Card" | "Cheque"
+  transactionBy   String
+  approvedBy      String?
+  notes           String?
+  attachments     String   // JSON string of attachment objects e.g. [{"name": "receipt.pdf", "url": "/mock/receipt.pdf", "type": "pdf"}]
+  referenceNumber String?
+  utr             String?
+  paymentLink     String?
+  upiId           String?
+  bankDetails     String?  // JSON string or text for custom bank details
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Organization {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  name               String   @unique
+  contactPerson      String
+  phone              String
+  email              String
+  address            String
+  outstandingPayments Float    @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Person {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
+  phone         String
+  email         String
+  role          String   // Member | Vendor | Speaker | Volunteer | Student
+  totalReceived Float    @default(0)
+  totalPaid     Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  action    String   // Created | Updated | Deleted | Approved | Exported | Login
+  timestamp DateTime @default(now())
+  user      String
+  role      String
+  details   String
+}
+
+model Reminder {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  dueDate   DateTime
+  amount    Float
+  type      String   // Upcoming Due | Pending Reimbursement | Pending Payment | Overdue Payment
+  status    String   // Active | Resolved
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  message   String
+  timestamp DateTime @default(now())
+  status    String   // Unread | Read
+  type      String   // Payment completed | Payment pending | New transaction | Approval required
+}
+
+model Setting {
+  id               String  @id @map("_id") // Map string key to _id directly
+  communityName    String  @default("CyberX")
+  bankName         String  @default("HDFC Bank")
+  bankAccount      String  @default("50200012345678")
+  bankIfsc         String  @default("HDFC0000123")
+  upiId            String  @default("cyberx@hdfcbank")
+  upiQrCode        String?
+  defaultCurrency  String  @default("INR")
+  financialYear    String  @default("2026-2027")
+  categories       String  @default("Campus Session,Workshop,Sponsorship,Merchandise,Travel,Food,Equipment,Software,Marketing,Reimbursement,Miscellaneous")
+  paymentMethods   String  @default("Cash,UPI,Bank,Card,Cheque")
+}
