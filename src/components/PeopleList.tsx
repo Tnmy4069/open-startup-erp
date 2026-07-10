@@ -8,7 +8,9 @@ import {
   X,
   Eye,
   Mail,
-  Phone
+  Phone,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 
 interface Person {
@@ -51,6 +53,7 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
   const [email, setEmail] = useState('');
   const [personRole, setPersonRole] = useState('Member');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
   const fetchPeople = async () => {
     try {
@@ -90,6 +93,42 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
     }
   };
 
+  const handleOpenEdit = (person: Person) => {
+    setEditingPerson(person);
+    setName(person.name);
+    setPhone(person.phone);
+    setEmail(person.email);
+    setPersonRole(person.role);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingPerson(null);
+    setName('');
+    setPhone('');
+    setEmail('');
+    setPersonRole('Member');
+  };
+
+  const handleDeletePerson = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete profile for ${name}?`)) return;
+    try {
+      const res = await fetch(`/api/people/${id}?user=SimulationUser&role=${role}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchPeople();
+        triggerNotification(`Deleted profile for ${name}`, 'Deleted');
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to delete profile');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleCreatePerson = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -100,8 +139,10 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/people', {
-        method: 'POST',
+      const url = editingPerson ? `/api/people/${editingPerson.id}` : '/api/people';
+      const method = editingPerson ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
@@ -114,13 +155,17 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
       });
 
       if (res.ok) {
-        setShowAddModal(false);
-        setName('');
-        setPhone('');
-        setEmail('');
-        setPersonRole('Member');
+        handleCloseModal();
         fetchPeople();
-        triggerNotification(`Added profile for ${name} (${personRole})`, 'Created');
+        triggerNotification(
+          editingPerson 
+            ? `Updated profile for ${name} (${personRole})` 
+            : `Added profile for ${name} (${personRole})`, 
+          editingPerson ? 'Updated' : 'Created'
+        );
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Request failed');
       }
     } catch (e) {
       console.error(e);
@@ -197,9 +242,31 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
                     </div>
                   </div>
 
-                  <span className="px-2 py-0.5 rounded bg-bg-elevated border border-border-normal text-[9px] font-mono text-text-muted">
-                    {p.role}
-                  </span>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="px-2 py-0.5 rounded bg-bg-elevated border border-border-normal text-[9px] font-mono text-text-muted">
+                      {p.role}
+                    </span>
+                    {role !== 'Read Only' && (
+                      <div className="flex gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(p)}
+                          className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                          title="Edit Profile"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePerson(p.id, p.name)}
+                          className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
+                          title="Delete Profile"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Divider */}
@@ -343,12 +410,12 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
             
             <div className="px-6 py-4 border-b border-border-normal flex items-center justify-between">
               <div>
-                <h3 className="font-display font-bold text-text-heading text-base">{"// Register Profile"}</h3>
-                <p className="text-[10px] text-text-muted font-mono mt-0.5">Add an individual member, speaker or vendor to the system</p>
+                <h3 className="font-display font-bold text-text-heading text-base">{editingPerson ? "// Edit Profile" : "// Register Profile"}</h3>
+                <p className="text-[10px] text-text-muted font-mono mt-0.5">{editingPerson ? "Modify profile fields in the registry" : "Add an individual member, speaker or vendor to the system"}</p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={handleCloseModal}
                 className="text-text-muted hover:text-text-heading p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -412,7 +479,7 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
             <div className="px-6 py-4 border-t border-border-normal bg-bg-elevated/20 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={handleCloseModal}
                 className="h-10 px-4 rounded-lg border border-border-normal hover:bg-bg-elevated text-xs font-semibold transition-colors"
               >
                 Cancel
@@ -422,7 +489,7 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
                 disabled={isSubmitting}
                 className="h-10 px-6 rounded-lg bg-primary text-black font-bold text-xs transition-all hover:bg-opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating...' : 'Create Profile'}
+                {isSubmitting ? 'Saving...' : (editingPerson ? 'Save Changes' : 'Create Profile')}
               </button>
             </div>
 

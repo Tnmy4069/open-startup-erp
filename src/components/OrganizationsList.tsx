@@ -10,7 +10,9 @@ import {
   MapPin,
   Plus,
   X,
-  Eye
+  Eye,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 
 interface Organization {
@@ -56,6 +58,7 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
 
   const fetchOrgs = async () => {
     try {
@@ -95,6 +98,44 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
     }
   };
 
+  const handleOpenEdit = (org: Organization) => {
+    setEditingOrg(org);
+    setName(org.name);
+    setContactPerson(org.contactPerson);
+    setPhone(org.phone);
+    setEmail(org.email);
+    setAddress(org.address);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingOrg(null);
+    setName('');
+    setContactPerson('');
+    setPhone('');
+    setEmail('');
+    setAddress('');
+  };
+
+  const handleDeleteOrg = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete profile for "${name}"?`)) return;
+    try {
+      const res = await fetch(`/api/organizations/${id}?user=SimulationUser&role=${role}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchOrgs();
+        triggerNotification(`Deleted organization profile for "${name}"`, 'Deleted');
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to delete profile');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -105,8 +146,10 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/organizations', {
-        method: 'POST',
+      const url = editingOrg ? `/api/organizations/${editingOrg.id}` : '/api/organizations';
+      const method = editingOrg ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
@@ -120,14 +163,17 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
       });
 
       if (res.ok) {
-        setShowAddModal(false);
-        setName('');
-        setContactPerson('');
-        setPhone('');
-        setEmail('');
-        setAddress('');
+        handleCloseModal();
         fetchOrgs();
-        triggerNotification(`Created organization profile for "${name}"`, 'Created');
+        triggerNotification(
+          editingOrg 
+            ? `Updated organization profile for "${name}"` 
+            : `Created organization profile for "${name}"`, 
+          editingOrg ? 'Updated' : 'Created'
+        );
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Request failed');
       }
     } catch (e) {
       console.error(e);
@@ -209,13 +255,35 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
                       </div>
                     </div>
 
-                    {hasBalance && (
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
-                        hasOverdue ? 'bg-cyber-danger/10 text-cyber-danger' : 'bg-cyber-success/10 text-cyber-success'
-                      }`}>
-                        {hasOverdue ? 'DUE: ' : 'CREDIT: '}{formatCurrency(Math.abs(org.outstandingPayments))}
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-1.5">
+                      {hasBalance && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
+                          hasOverdue ? 'bg-cyber-danger/10 text-cyber-danger' : 'bg-cyber-success/10 text-cyber-success'
+                        }`}>
+                          {hasOverdue ? 'DUE: ' : 'CREDIT: '}{formatCurrency(Math.abs(org.outstandingPayments))}
+                        </span>
+                      )}
+                      {role !== 'Read Only' && (
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(org)}
+                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                            title="Edit Organization"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrg(org.id, org.name)}
+                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
+                            title="Delete Organization"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Divider */}
@@ -369,12 +437,12 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
             
             <div className="px-6 py-4 border-b border-border-normal flex items-center justify-between">
               <div>
-                <h3 className="font-display font-bold text-text-heading text-base">{"// Add Corporate Profile"}</h3>
-                <p className="text-[10px] text-text-muted font-mono mt-0.5">Register a partner client or sponsoring organization</p>
+                <h3 className="font-display font-bold text-text-heading text-base">{editingOrg ? "// Edit Corporate Profile" : "// Add Corporate Profile"}</h3>
+                <p className="text-[10px] text-text-muted font-mono mt-0.5">{editingOrg ? "Modify corporate profile fields in the registry" : "Register a partner client or sponsoring organization"}</p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={handleCloseModal}
                 className="text-text-muted hover:text-text-heading p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -446,7 +514,7 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
             <div className="px-6 py-4 border-t border-border-normal bg-bg-elevated/20 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={handleCloseModal}
                 className="h-10 px-4 rounded-lg border border-border-normal hover:bg-bg-elevated text-xs font-semibold transition-colors"
               >
                 Cancel
@@ -456,7 +524,7 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
                 disabled={isSubmitting}
                 className="h-10 px-6 rounded-lg bg-primary text-black font-bold text-xs transition-all hover:bg-opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Registering...' : 'Register Profile'}
+                {isSubmitting ? 'Saving...' : (editingOrg ? 'Save Changes' : 'Register Profile')}
               </button>
             </div>
 
