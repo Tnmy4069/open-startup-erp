@@ -110,6 +110,7 @@ export function LedgerTable({
   const [formAttachments, setFormAttachments] = useState<{ name: string; url: string; type: string }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([]);
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -170,6 +171,24 @@ export function LedgerTable({
     }
     return () => clearTimeout(timer);
   }, [fetchTransactions, refreshTrigger]);
+
+  const fetchOrganizations = useCallback(async () => {
+    try {
+      const res = await fetch('/api/organizations');
+      if (res.ok) {
+        const data = await res.json();
+        setOrganizations(data || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch organizations:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (openAddDrawer) {
+      fetchOrganizations();
+    }
+  }, [openAddDrawer, fetchOrganizations]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -1045,6 +1064,27 @@ export function LedgerTable({
                     className="h-11 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none"
                   >
                     {purposes.map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+
+                {/* Associated Organization */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold">Associated Organization (Optional)</label>
+                  <select
+                    value={organizations.some((org) => org.name === formParty) ? formParty : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setFormParty(e.target.value);
+                      }
+                    }}
+                    className="h-11 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none"
+                  >
+                    <option value="">-- Or enter custom/member name below --</option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.name}>
+                        {org.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
