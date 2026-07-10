@@ -55,6 +55,7 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchOrgs = async () => {
     try {
@@ -96,12 +97,14 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
 
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!name || !contactPerson || !phone || !email) {
       alert('Please fill out required fields.');
       return;
     }
 
     try {
+      setIsSubmitting(true);
       const res = await fetch('/api/organizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,6 +131,8 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -446,11 +451,12 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
               >
                 Cancel
               </button>
-              <button
+               <button
                 type="submit"
-                className="h-10 px-6 rounded-lg bg-primary text-black font-bold text-xs transition-all hover:bg-opacity-95"
+                disabled={isSubmitting}
+                className="h-10 px-6 rounded-lg bg-primary text-black font-bold text-xs transition-all hover:bg-opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Register Profile
+                {isSubmitting ? 'Registering...' : 'Register Profile'}
               </button>
             </div>
 

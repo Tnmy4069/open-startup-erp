@@ -109,6 +109,7 @@ export function LedgerTable({
   // Attachments state
   const [formAttachments, setFormAttachments] = useState<{ name: string; url: string; type: string }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -255,6 +256,7 @@ export function LedgerTable({
   // Form submission (Add/Edit/Duplicate)
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!formParty || !formAmount || !formTransactionBy) {
       alert('Please fill in required fields (Party, Amount, Logged By)');
       return;
@@ -280,6 +282,7 @@ export function LedgerTable({
     };
 
     try {
+      setIsSubmitting(true);
       let res;
       if (editingTx && !isDuplicate) {
         // Edit Operation
@@ -312,6 +315,8 @@ export function LedgerTable({
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1246,9 +1251,10 @@ export function LedgerTable({
               </button>
               <button
                 onClick={handleSubmitForm}
-                className="h-11 px-6 rounded-lg bg-primary hover:bg-opacity-95 text-black font-bold transition-all"
+                disabled={isSubmitting}
+                className="h-11 px-6 rounded-lg bg-primary hover:bg-opacity-95 text-black font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editingTx ? (isDuplicate ? 'Duplicate & Save' : 'Save Changes') : 'Save Transaction'}
+                {isSubmitting ? 'Saving...' : (editingTx ? (isDuplicate ? 'Duplicate & Save' : 'Save Changes') : 'Save Transaction')}
               </button>
             </div>
 
