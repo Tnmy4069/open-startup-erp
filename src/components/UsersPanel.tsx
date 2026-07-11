@@ -147,22 +147,21 @@ export function UsersPanel() {
       </div>
 
       {/* Super Admin Notice */}
-      <div className="flex items-start gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl text-[11px] font-mono text-text-muted">
+      {/* <div className="flex items-start gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl text-[11px] font-mono text-text-muted">
         <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
         <div>
           <span className="text-primary font-semibold">Super Admin</span> credentials are stored in{' '}
           <code className="text-text-heading bg-bg-elevated px-1 rounded">.env</code> and cannot be
           managed here. Only sub-role users are listed below.
         </div>
-      </div>
+      </div> */}
 
       {/* Toast */}
       {notification && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-[11px] font-mono animate-in fade-in duration-150 ${
-          notification.ok
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-[11px] font-mono animate-in fade-in duration-150 ${notification.ok
             ? 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
             : 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
-        }`}>
+          }`}>
           {notification.ok
             ? <CheckCircle className="w-4 h-4 shrink-0" />
             : <AlertCircle className="w-4 h-4 shrink-0" />}
