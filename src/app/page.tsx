@@ -188,10 +188,15 @@ export default function HomePage() {
             </button>
 
             <p className="text-center text-[10px] text-text-muted font-mono">
-              Contact your Super Admin to get access credentials.
+              Contact Tanmay Hirodkar at{' '}
+              <a href="mailto:tanmay@cyberx.org.in" className="underline hover:opacity-80 text-text-heading">
+                tanmay@cyberx.org.in
+              </a>{' '}
+              to get access credentials.
             </p>
           </form>
         )}
+
 
         <p className="text-center text-[9px] text-text-muted tracking-widest">
           CYBERX LEDGER &mdash; SECURE ACCESS ONLY
