@@ -272,6 +272,22 @@ export function DashboardShell() {
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'dashboard' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>D</kbd>
           </button>
 
+          {/* MEETINGS TAB — all roles */}
+          <button
+            onClick={() => setCurrentTab('meetings')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              currentTab === 'meetings'
+                ? 'bg-primary text-black font-semibold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-5 h-5" />
+              <span>Meetings</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
+          </button>
+
           <button
             onClick={() => setCurrentTab('ledger')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
@@ -285,21 +301,6 @@ export function DashboardShell() {
               <span>Ledger</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'ledger' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>T</kbd>
-          </button>
-
-          <button
-            onClick={() => setCurrentTab('organizations')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-              currentTab === 'organizations'
-                ? 'bg-primary text-black font-semibold'
-                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <Building2 className="w-5 h-5" />
-              <span>Organizations</span>
-            </div>
-            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'organizations' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>O</kbd>
           </button>
 
           <button
@@ -318,6 +319,21 @@ export function DashboardShell() {
           </button>
 
           <button
+            onClick={() => setCurrentTab('organizations')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              currentTab === 'organizations'
+                ? 'bg-primary text-black font-semibold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Building2 className="w-5 h-5" />
+              <span>Organizations</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'organizations' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>O</kbd>
+          </button>
+
+          <button
             onClick={() => setCurrentTab('reports')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
               currentTab === 'reports'
@@ -331,6 +347,24 @@ export function DashboardShell() {
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'reports' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>R</kbd>
           </button>
+
+          {/* USERS TAB — Super Admin only */}
+          {role === 'Super Admin' && (
+            <button
+              onClick={() => setCurrentTab('users')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                currentTab === 'users'
+                  ? 'bg-primary text-black font-semibold'
+                  : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5" />
+                <span>Users</span>
+              </div>
+              <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'users' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>U</kbd>
+            </button>
+          )}
 
           <button
             onClick={() => setCurrentTab('logs')}
@@ -361,40 +395,6 @@ export function DashboardShell() {
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'settings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>S</kbd>
           </button>
-
-          {/* MEETINGS TAB — all roles */}
-          <button
-            onClick={() => setCurrentTab('meetings')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-              currentTab === 'meetings'
-                ? 'bg-primary text-black font-semibold'
-                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-5 h-5" />
-              <span>Meetings</span>
-            </div>
-            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
-          </button>
-
-          {/* USERS TAB — Super Admin only */}
-          {role === 'Super Admin' && (
-            <button
-              onClick={() => setCurrentTab('users')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                currentTab === 'users'
-                  ? 'bg-primary text-black font-semibold'
-                  : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5" />
-                <span>Users</span>
-              </div>
-              <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'users' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>U</kbd>
-            </button>
-          )}
         </nav>
 
         {/* BOTTOM QUICK CTAS */}
@@ -764,14 +764,14 @@ export function DashboardShell() {
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {[
                 { tab: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
                 { tab: 'ledger', label: 'Ledger', icon: <ReceiptText className="w-5 h-5" /> },
-                { tab: 'organizations', label: 'Organizations', icon: <Building2 className="w-5 h-5" /> },
                 { tab: 'people', label: 'People', icon: <Users className="w-5 h-5" /> },
+                { tab: 'organizations', label: 'Organizations', icon: <Building2 className="w-5 h-5" /> },
                 { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5" /> },
+                ...(role === 'Super Admin' ? [{ tab: 'users', label: 'Users', icon: <Shield className="w-5 h-5" /> }] : []),
                 { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5" /> },
                 { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
-                ...(role === 'Super Admin' ? [{ tab: 'users', label: 'Users', icon: <Shield className="w-5 h-5" /> }] : [])
               ].map((item) => (
                 <button
                   key={item.tab}

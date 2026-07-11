@@ -255,7 +255,14 @@ export function MeetingsPanel() {
 
                     {/* Markdown rendered output */}
                     <div className="prose-meeting bg-bg-primary/60 border border-border-normal/60 rounded-xl p-5 overflow-x-auto">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                          ),
+                        }}
+                      >
                         {m.notes}
                       </ReactMarkdown>
                     </div>
@@ -375,7 +382,14 @@ export function MeetingsPanel() {
                 ) : (
                   <div className="prose-meeting bg-bg-primary border border-border-normal rounded-lg p-4 min-h-[280px] overflow-x-auto">
                     {formNotes.trim() ? (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                          ),
+                        }}
+                      >
                         {formNotes}
                       </ReactMarkdown>
                     ) : (
