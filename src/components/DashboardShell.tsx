@@ -490,13 +490,13 @@ export function DashboardShell() {
             </button>
 
             {/* THEME TOGGLE */}
-            <button
+            {/* <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2.5 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated hover:text-text-heading transition-all duration-150"
               title="Toggle Light/Dark Theme"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+            </button> */}
 
             {/* NOTIFICATIONS DRAWER TRIGGER */}
             <div className="relative">
