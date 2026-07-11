@@ -285,7 +285,7 @@ export function ReportsPanel() {
             </div>
 
             {/* Calculations Summary Section */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-bg-primary/40 border border-border-normal/60 rounded-xl p-4 space-y-1">
                 <span className="text-[9px] font-mono text-text-muted">RECORD COUNT</span>
                 <p className="text-lg font-bold text-text-heading font-mono leading-none">
@@ -311,8 +311,8 @@ export function ReportsPanel() {
           {/* Quick Ledger preview table */}
           <div className="space-y-3">
             <span className="text-[10px] text-text-muted font-mono">{"// RECENT ENTRIES IN STATEMENT"}</span>
-            <div className="border border-border-normal rounded-xl overflow-hidden">
-              <table className="w-full text-left border-collapse text-[11px] font-sans">
+            <div className="border border-border-normal rounded-xl overflow-hidden overflow-x-auto">
+              <table className="w-full text-left border-collapse text-[11px] font-sans min-w-[500px] sm:min-w-0">
                 <thead>
                   <tr className="bg-bg-elevated/40 border-b border-border-normal font-mono text-[10px] text-text-muted uppercase tracking-wider">
                     <th className="py-2.5 px-4">Date</th>

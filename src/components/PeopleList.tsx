@@ -226,7 +226,7 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
           {filteredPeople.map((p) => (
             <div
               key={p.id}
-              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-0.5 flex flex-col justify-between"
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-[2px] flex flex-col justify-between"
             >
               <div className="space-y-4">
                 

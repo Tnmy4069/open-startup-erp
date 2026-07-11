@@ -91,6 +91,15 @@ export function LedgerTable({
   const [showQrPreview, setShowQrPreview] = useState<string | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
+  // View mode: defaults to table view on desktop, card view on mobile
+  const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode('card');
+    }
+  }, []);
+
   // Form Fields State
   const [formType, setFormType] = useState('Expense');
   const [formPurpose, setFormPurpose] = useState('Campus Session');
@@ -544,6 +553,15 @@ export function LedgerTable({
             <span>Export</span>
           </button>
 
+          <button
+            onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
+            className="flex items-center gap-2 h-11 px-4 rounded-lg border border-border-normal hover:bg-bg-elevated text-xs font-semibold font-sans transition-all duration-150"
+            title="Toggle between dense table view and responsive card stack views"
+          >
+            <span className="font-mono text-[10px] text-text-muted">MODE:</span>
+            <span>{viewMode === 'table' ? 'GRID_CARDS' : 'TABLE'}</span>
+          </button>
+
           {role !== 'Read Only' && (
             <button
               onClick={() => {
@@ -771,162 +789,79 @@ export function LedgerTable({
 
       {/* 4. DATA TABLE */}
       <div className="bg-bg-surface border border-border-normal rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto min-w-full">
-          <table className="w-full text-left border-collapse font-sans text-xs">
-            <thead>
-              <tr className="border-b border-border-normal bg-bg-elevated/40 text-text-muted font-mono">
-                <th className="py-3.5 px-4 w-10 text-center">
-                  <input
-                    type="checkbox"
-                    checked={transactions.length > 0 && selectedIds.length === transactions.length}
-                    onChange={handleSelectAll}
-                    className="h-3.5 w-3.5 rounded bg-bg-primary border-border-normal focus:ring-0 focus:outline-none"
-                  />
-                </th>
-                <th className="py-3.5 px-4 font-semibold shrink-0">TXN ID</th>
-                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('date')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>DATE</span>
-                    {sortBy === 'date' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('type')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>TYPE</span>
-                    {sortBy === 'type' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('purpose')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>PURPOSE</span>
-                    {sortBy === 'purpose' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('party')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>PARTY</span>
-                    {sortBy === 'party' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('notes')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>PARTICULAR</span>
-                    {sortBy === 'notes' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold text-right cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('amount')}>
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span>AMOUNT</span>
-                    {sortBy === 'amount' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('status')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>STATUS</span>
-                    {sortBy === 'status' ? (
-                      <ArrowUpDown className="w-3 h-3 text-primary" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 text-text-muted" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3.5 px-4 font-semibold hidden lg:table-cell">METHOD</th>
-                <th className="py-3.5 px-4 font-semibold hidden xl:table-cell">LOGGED BY</th>
-                <th className="py-3.5 px-4 text-center font-semibold w-24">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-normal text-text-body">
-              {loading ? (
-                <tr>
-                  <td colSpan={12} className="py-8 text-center text-text-muted font-mono animate-pulse">
-                    {"// Loading transaction records..."}
-                  </td>
-                </tr>
-              ) : transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={12} className="py-8 text-center text-text-muted font-mono">
-                    {"// No matching ledger transactions found."}
-                  </td>
-                </tr>
-              ) : (
-                transactions.map((tx) => {
-                  const isIncome = tx.type === 'Income' || tx.type === 'Refund';
-                  const shortId = tx.id.slice(0, 8).toUpperCase();
-                  
-                  return (
-                    <tr
-                      key={tx.id}
-                      className={`hover:bg-text-heading/3 transition-colors ${
-                        selectedIds.includes(tx.id) ? 'bg-primary/5' : ''
-                      }`}
-                    >
-                      <td className="py-3 px-4 text-center">
+        {viewMode === 'card' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+            {loading ? (
+              <div className="col-span-full py-8 text-center text-text-muted font-mono animate-pulse">
+                {"// Loading transaction records..."}
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="col-span-full py-8 text-center text-text-muted font-mono">
+                {"// No matching ledger transactions found."}
+              </div>
+            ) : (
+              transactions.map((tx) => {
+                const isIncome = tx.type === 'Income' || tx.type === 'Refund';
+                const shortId = tx.id.slice(0, 8).toUpperCase();
+                
+                return (
+                  <div 
+                    key={tx.id} 
+                    className={`bg-bg-surface border rounded-xl p-4 space-y-3 transition-all duration-200 hover:-translate-y-[2px] ${
+                      selectedIds.includes(tx.id) ? 'border-primary bg-primary/5' : 'border-border-normal hover:border-primary'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={selectedIds.includes(tx.id)}
                           onChange={() => handleSelectRow(tx.id)}
                           className="h-3.5 w-3.5 rounded bg-bg-primary border-border-normal focus:ring-0 focus:outline-none"
                         />
-                      </td>
-                      <td className="py-3 px-4 font-mono font-bold text-text-heading shrink-0">
-                        {shortId}
-                      </td>
-                      <td className="py-3 px-4 text-text-heading">
-                        {new Date(tx.date).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono ${
-                          tx.type === 'Income'
-                            ? 'bg-cyber-success/10 text-cyber-success'
-                            : tx.type === 'Expense'
-                            ? 'bg-cyber-danger/10 text-cyber-danger'
-                            : tx.type === 'Refund'
-                            ? 'bg-cyber-info/10 text-cyber-info'
-                            : 'bg-primary/10 text-primary'
-                        }`}>
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-text-body font-medium">
-                        {tx.purpose}
-                      </td>
-                      <td className="py-3 px-4 text-text-heading font-semibold">
-                        {tx.party}
-                      </td>
-                      <td className="py-3 px-4 text-text-body text-xs max-w-[200px] truncate" title={tx.notes || ''}>
-                        {tx.notes || '-'}
-                      </td>
-                      <td className={`py-3 px-4 text-right font-mono font-bold text-sm ${
-                        isIncome ? 'text-cyber-success' : 'text-cyber-danger'
+                        <span className="font-mono font-bold text-text-heading">{shortId}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold font-mono ${
+                        tx.type === 'Income'
+                          ? 'bg-cyber-success/10 text-cyber-success'
+                          : tx.type === 'Expense'
+                          ? 'bg-cyber-danger/10 text-cyber-danger'
+                          : tx.type === 'Refund'
+                          ? 'bg-cyber-info/10 text-cyber-info'
+                          : 'bg-primary/10 text-primary'
                       }`}>
+                        {tx.type}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-text-muted font-mono text-[9px]">PARTY:</span>
+                        <span className="font-semibold text-text-heading">{tx.party}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-muted font-mono text-[9px]">PURPOSE:</span>
+                        <span className="text-text-body font-medium">{tx.purpose}</span>
+                      </div>
+                      {tx.notes && (
+                        <div className="flex justify-between">
+                          <span className="text-text-muted font-mono text-[9px]">PARTICULAR:</span>
+                          <span className="text-text-body truncate max-w-[150px]" title={tx.notes}>{tx.notes}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-text-muted font-mono text-[9px]">DATE:</span>
+                        <span className="text-text-heading">{new Date(tx.date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-border-normal/40 flex justify-between items-center">
+                      <span className={`font-mono font-bold text-base ${isIncome ? 'text-cyber-success' : 'text-cyber-danger'}`}>
                         {isIncome ? '+' : '-'}{formatCurrency(tx.amount)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
+                      </span>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold ${
                           tx.status === 'Completed'
                             ? 'bg-cyber-success/15 text-cyber-success'
                             : tx.status === 'Cancelled'
@@ -935,64 +870,296 @@ export function LedgerTable({
                         }`}>
                           {tx.status}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-text-body hidden lg:table-cell">
-                        {tx.paymentMethod}
-                      </td>
-                      <td className="py-3 px-4 text-text-muted hidden xl:table-cell">
-                        {tx.transactionBy}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setViewingTx(tx)}
-                            className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
-                            title="View Transaction Details"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                          
-                          {role !== 'Read Only' && (
-                            <>
+
+                        <button
+                          onClick={() => setViewingTx(tx)}
+                          className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                          title="View Transaction Details"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        
+                        {role !== 'Read Only' && (
+                          <>
+                            <button
+                              onClick={() => handleOpenEdit(tx)}
+                              className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                              title="Edit Transaction"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenDuplicate(tx)}
+                              className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                              title="Duplicate Transaction"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                            {role === 'Super Admin' && (
                               <button
-                                onClick={() => handleOpenEdit(tx)}
-                                className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
-                                title="Edit Transaction"
+                                onClick={() => handleDelete(tx.id, tx.party, tx.amount, tx.type)}
+                                className="p-1.5 rounded bg-bg-elevated hover:bg-cyber-danger/15 text-text-muted hover:text-cyber-danger transition-colors"
+                                title="Delete Transaction"
                               >
-                                <Edit2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
-                              <button
-                                onClick={() => handleOpenDuplicate(tx)}
-                                className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
-                                title="Duplicate Transaction"
-                              >
-                                <Copy className="w-3.5 h-3.5" />
-                              </button>
-                              {role === 'Super Admin' && (
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto min-w-full">
+            <table className="w-full text-left border-collapse font-sans text-xs">
+              <thead>
+                <tr className="border-b border-border-normal bg-bg-elevated/40 text-text-muted font-mono">
+                  <th className="py-3.5 px-4 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={transactions.length > 0 && selectedIds.length === transactions.length}
+                      onChange={handleSelectAll}
+                      className="h-3.5 w-3.5 rounded bg-bg-primary border-border-normal focus:ring-0 focus:outline-none"
+                    />
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold shrink-0">TXN ID</th>
+                  <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('date')}>
+                    <div className="flex items-center gap-1.5">
+                      <span>DATE</span>
+                      {sortBy === 'date' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('type')}>
+                    <div className="flex items-center gap-1.5">
+                      <span>TYPE</span>
+                      {sortBy === 'type' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('purpose')}>
+                    <div className="flex items-center gap-1.5">
+                      <span>PURPOSE</span>
+                      {sortBy === 'purpose' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('party')}>
+                    <div className="flex items-center gap-1.5">
+                      <span>PARTY</span>
+                      {sortBy === 'party' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('notes')}>
+                    <div className="flex items-center gap-1.5">
+                      <span>PARTICULAR</span>
+                      {sortBy === 'notes' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold text-right cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('amount')}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span>AMOUNT</span>
+                      {sortBy === 'amount' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:text-text-heading transition-colors" onClick={() => handleSort('status')}>
+                    <div className="flex items-center gap-1.5">
+                      <span>STATUS</span>
+                      {sortBy === 'status' ? (
+                        <ArrowUpDown className="w-3 h-3 text-primary" />
+                      ) : (
+                        <ChevronsUpDown className="w-3 h-3 text-text-muted" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 font-semibold hidden lg:table-cell">METHOD</th>
+                  <th className="py-3.5 px-4 font-semibold hidden xl:table-cell">LOGGED BY</th>
+                  <th className="py-3.5 px-4 text-center font-semibold w-24">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-normal text-text-body">
+                {loading ? (
+                  <tr>
+                    <td colSpan={12} className="py-8 text-center text-text-muted font-mono animate-pulse">
+                      {"// Loading transaction records..."}
+                    </td>
+                  </tr>
+                ) : transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={12} className="py-8 text-center text-text-muted font-mono">
+                      {"// No matching ledger transactions found."}
+                    </td>
+                  </tr>
+                ) : (
+                  transactions.map((tx) => {
+                    const isIncome = tx.type === 'Income' || tx.type === 'Refund';
+                    const shortId = tx.id.slice(0, 8).toUpperCase();
+                    
+                    return (
+                      <tr
+                        key={tx.id}
+                        className={`hover:bg-text-heading/3 transition-colors ${
+                          selectedIds.includes(tx.id) ? 'bg-primary/5' : ''
+                        }`}
+                      >
+                        <td className="py-3 px-4 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(tx.id)}
+                            onChange={() => handleSelectRow(tx.id)}
+                            className="h-3.5 w-3.5 rounded bg-bg-primary border-border-normal focus:ring-0 focus:outline-none"
+                          />
+                        </td>
+                        <td className="py-3 px-4 font-mono font-bold text-text-heading shrink-0">
+                          {shortId}
+                        </td>
+                        <td className="py-3 px-4 text-text-heading">
+                          {new Date(tx.date).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono ${
+                            tx.type === 'Income'
+                              ? 'bg-cyber-success/10 text-cyber-success'
+                              : tx.type === 'Expense'
+                              ? 'bg-cyber-danger/10 text-cyber-danger'
+                              : tx.type === 'Refund'
+                              ? 'bg-cyber-info/10 text-cyber-info'
+                              : 'bg-primary/10 text-primary'
+                          }`}>
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-text-body font-medium">
+                          {tx.purpose}
+                        </td>
+                        <td className="py-3 px-4 text-text-heading font-semibold">
+                          {tx.party}
+                        </td>
+                        <td className="py-3 px-4 text-text-body text-xs max-w-[200px] truncate" title={tx.notes || ''}>
+                          {tx.notes || '-'}
+                        </td>
+                        <td className={`py-3 px-4 text-right font-mono font-bold text-sm ${
+                          isIncome ? 'text-cyber-success' : 'text-cyber-danger'
+                        }`}>
+                          {isIncome ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
+                            tx.status === 'Completed'
+                              ? 'bg-cyber-success/15 text-cyber-success'
+                              : tx.status === 'Cancelled'
+                              ? 'bg-cyber-danger/15 text-cyber-danger'
+                              : 'bg-cyber-warning/15 text-cyber-warning'
+                          }`}>
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-text-body hidden lg:table-cell">
+                          {tx.paymentMethod}
+                        </td>
+                        <td className="py-3 px-4 text-text-muted hidden xl:table-cell">
+                          {tx.transactionBy}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => setViewingTx(tx)}
+                              className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                              title="View Transaction Details"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            
+                            {role !== 'Read Only' && (
+                              <>
                                 <button
-                                  onClick={() => handleDelete(tx.id, tx.party, tx.amount, tx.type)}
-                                  className="p-1.5 rounded bg-bg-elevated hover:bg-cyber-danger/15 text-text-muted hover:text-cyber-danger transition-colors"
-                                  title="Delete Transaction"
+                                  onClick={() => handleOpenEdit(tx)}
+                                  className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                                  title="Edit Transaction"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Edit2 className="w-3.5 h-3.5" />
                                 </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                                <button
+                                  onClick={() => handleOpenDuplicate(tx)}
+                                  className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                                  title="Duplicate Transaction"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                                {role === 'Super Admin' && (
+                                  <button
+                                    onClick={() => handleDelete(tx.id, tx.party, tx.amount, tx.type)}
+                                    className="p-1.5 rounded bg-bg-elevated hover:bg-cyber-danger/15 text-text-muted hover:text-cyber-danger transition-colors"
+                                    title="Delete Transaction"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* PAGINATION BAR */}
         <div className="p-4 border-t border-border-normal bg-bg-elevated/20 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[10px] text-text-muted">
-          <div>
-            Showing <span className="font-semibold text-text-heading">{transactions.length}</span> of <span className="font-semibold text-text-heading">{pagination.total}</span> entries
+          <div className="flex items-center gap-4 flex-wrap">
+            <div>
+              Showing <span className="font-semibold text-text-heading">{transactions.length}</span> of <span className="font-semibold text-text-heading">{pagination.total}</span> entries
+            </div>
+
+            <div className="flex items-center gap-1.5 border-l border-border-normal/40 pl-4">
+              <span>Show</span>
+              <select
+                value={pagination.limit}
+                onChange={(e) => {
+                  const newLimit = parseInt(e.target.value);
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit: newLimit,
+                    page: 1
+                  }));
+                }}
+                className="bg-bg-surface border border-border-normal rounded px-1.5 py-0.5 text-text-heading focus:outline-none focus:border-primary text-[10px] font-mono cursor-pointer"
+              >
+                {[10, 25, 50, 100, 250, 500].map((val) => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+              <span>per page</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -1433,18 +1600,11 @@ export function LedgerTable({
                 {showQrPreview && (
                   <div className="flex flex-col items-center justify-center p-4 bg-white border border-border-normal rounded-xl mt-3 animate-in fade-in duration-150">
                     <div className="p-3 bg-white border border-gray-200 rounded-lg">
-                      {/* We make an outline mock representing the QR code */}
-                      <div className="w-32 h-32 border-2 border-black relative flex items-center justify-center font-mono text-[8px] text-black text-center p-2 font-bold select-none">
-                        CYBERX SECURE QR
-                        <div className="absolute top-1 left-1 w-3 h-3 bg-black"></div>
-                        <div className="absolute top-1 right-1 w-3 h-3 bg-black"></div>
-                        <div className="absolute bottom-1 left-1 w-3 h-3 bg-black"></div>
-                        {/* QR grid design */}
-                        <div className="w-20 h-20 border border-dashed border-gray-400 mt-2 flex flex-col justify-center gap-1 text-[5px]">
-                          <div>UPI: {viewingTx.upiId}</div>
-                          <div>AMT: {viewingTx.amount}</div>
-                        </div>
-                      </div>
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(showQrPreview)}`}
+                        alt="UPI Payment QR Code"
+                        className="w-36 h-36"
+                      />
                     </div>
                     <span className="text-[9px] text-gray-500 font-sans mt-2 font-semibold">Scan with any UPI App to Pay INR {viewingTx.amount}</span>
                   </div>

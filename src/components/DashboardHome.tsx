@@ -56,6 +56,20 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [typedWelcome, setTypedWelcome] = useState('');
+  
+  useEffect(() => {
+    const fullText = 'CONNECTING TO CYBERX LEDGER SYSTEM... STATUS: ONLINE. SECURITY PROTOCOL ENFORCED.';
+    let currentIdx = 0;
+    const interval = setInterval(() => {
+      setTypedWelcome(fullText.slice(0, currentIdx + 1));
+      currentIdx++;
+      if (currentIdx >= fullText.length) {
+        clearInterval(interval);
+      }
+    }, 25);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -112,6 +126,16 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
   return (
     <div className="space-y-6">
       
+      {/* TERMINAL STATUS BAR */}
+      <div className="bg-bg-secondary border border-border-normal rounded-xl p-4 font-mono text-[10px] text-text-heading flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyber-success animate-ping shrink-0" />
+          <span className="text-cyber-success font-bold font-mono">$ {typedWelcome}</span>
+          <span className="inline-block w-1.5 h-3 bg-primary animate-pulse ml-0.5" />
+        </div>
+        <span className="text-text-muted hidden md:inline font-mono">NODE_STATUS: ACTIVE</span>
+      </div>
+
       {/* GLOBAL SEARCH HIGHLIGHT REDIRECT */}
       {globalSearch && (
         <div 
@@ -132,7 +156,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* 1. Net Balance */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">NET BALANCE</span>
             <span className="p-2 bg-primary/10 text-primary rounded-lg"><Scale className="w-4 h-4" /></span>
@@ -146,7 +170,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 2. Total Income */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">TOTAL INCOME</span>
             <span className="p-2 bg-cyber-success/15 text-cyber-success rounded-lg"><TrendingUp className="w-4 h-4" /></span>
@@ -160,7 +184,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 3. Total Expenses */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">TOTAL EXPENSES</span>
             <span className="p-2 bg-cyber-danger/15 text-cyber-danger rounded-lg"><TrendingDown className="w-4 h-4" /></span>
@@ -174,7 +198,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 4. Pending Income */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">PENDING INCOME</span>
             <span className="p-2 bg-primary/10 text-primary rounded-lg"><Clock className="w-4 h-4" /></span>
@@ -188,7 +212,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 5. Pending Expenses */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-warning transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-warning transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">PENDING EXPENSES</span>
             <span className="p-2 bg-cyber-warning/15 text-cyber-warning rounded-lg"><Clock className="w-4 h-4" /></span>
@@ -202,7 +226,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 6. Completed vs Pending Transactions */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-info transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-info transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">LEDGER STATUS</span>
             <span className="p-2 bg-cyber-info/15 text-cyber-info rounded-lg"><CheckCircle className="w-4 h-4" /></span>
@@ -221,7 +245,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 7. Monthly Income */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">MONTHLY INCOME</span>
             <span className="p-2 bg-cyber-success/15 text-cyber-success rounded-lg"><Calendar className="w-4 h-4" /></span>
@@ -235,7 +259,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 8. Monthly Expenses */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">MONTHLY EXPENSES</span>
             <span className="p-2 bg-cyber-danger/15 text-cyber-danger rounded-lg"><Calendar className="w-4 h-4" /></span>
@@ -249,7 +273,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         </div>
 
         {/* 9. Completed Payments Counter */}
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 hover:-translate-y-[2px]">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-text-muted font-display tracking-wider">APPROVAL RATIO</span>
             <span className="p-2 bg-primary/10 text-primary rounded-lg"><FileClock className="w-4 h-4" /></span>

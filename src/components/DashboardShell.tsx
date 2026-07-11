@@ -22,7 +22,8 @@ import {
   Search,
   CheckCircle2,
   AlertTriangle,
-  Info
+  Info,
+  Menu
 } from 'lucide-react';
 import { DashboardHome } from './DashboardHome';
 import { LedgerTable } from './LedgerTable';
@@ -52,16 +53,40 @@ export function DashboardShell() {
   // Dialog state trigger (New transaction)
   const [openNewTxDrawer, setOpenNewTxDrawer] = useState(false);
 
+  // Responsive & Interactive CLI states
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showCli, setShowCli] = useState(false);
+  const [cliInput, setCliInput] = useState('');
+  const [cliHistory, setCliHistory] = useState<string[]>([
+    'Welcome to CyberX SECURE CLI v1.0. Type "help" for a list of command queries.',
+    'Usage: theme [light|dark|toggle], role [name], search [query], goto [tab], newtx, clear'
+  ]);
+
   const globalSearchRef = useRef<HTMLInputElement>(null);
+  const cliInputRef = useRef<HTMLInputElement>(null);
+  const cliLogEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll terminal log
+  useEffect(() => {
+    if (showCli) {
+      cliLogEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [cliHistory, showCli]);
 
   // Keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore shortcuts if focusing input or textarea
       const activeTag = document.activeElement?.tagName.toLowerCase();
+      const isCliActive = document.activeElement === cliInputRef.current;
+      
       if (activeTag === 'input' || activeTag === 'textarea') {
         if (e.key === 'Escape') {
           (document.activeElement as HTMLElement).blur();
+          setShowCli(false);
+        }
+        if (isCliActive && (e.key === '`' || (e.ctrlKey && e.key === '\\'))) {
+          e.preventDefault();
+          setShowCli(false);
         }
         return;
       }
@@ -69,6 +94,15 @@ export function DashboardShell() {
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === '/')) {
         e.preventDefault();
         globalSearchRef.current?.focus();
+      } else if (e.key === '`' || (e.ctrlKey && e.key === '\\')) {
+        e.preventDefault();
+        setShowCli((prev) => {
+          const next = !prev;
+          if (next) {
+            setTimeout(() => cliInputRef.current?.focus(), 50);
+          }
+          return next;
+        });
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         setCurrentTab('ledger');
@@ -94,12 +128,122 @@ export function DashboardShell() {
         setShowShortcutsHelp(false);
         setShowRoleDropdown(false);
         setShowNotifDropdown(false);
+        setShowCli(false);
+        setShowMobileSidebar(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [theme, role]); // Bind dependencies to ensure updated handler context
+
+  const handleCliSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cliInput.trim()) return;
+
+    const input = cliInput.trim();
+    const args = input.split(/\s+/);
+    const cmd = args[0].toLowerCase();
+    
+    let output = '';
+
+    switch (cmd) {
+      case 'help':
+        output = 'Available: goto [dash|ledger|orgs|people|reports|logs|settings], role [super|finance|treasurer|member|readonly], theme [light|dark|toggle], search [query], newtx, clear';
+        break;
+      case 'clear':
+        setCliHistory([]);
+        setCliInput('');
+        return;
+      case 'newtx':
+        if (role !== 'Read Only') {
+          setCurrentTab('ledger');
+          setOpenNewTxDrawer(true);
+          output = 'Opening new transaction slider...';
+        } else {
+          output = 'Access Denied: Read Only role cannot create transactions.';
+        }
+        break;
+      case 'goto': {
+        const dest = args[1]?.toLowerCase();
+        if (dest === 'dash' || dest === 'dashboard') {
+          setCurrentTab('dashboard');
+          output = 'Navigating to dashboard...';
+        } else if (dest === 'ledger' || dest === 'transactions' || dest === 'ledger') {
+          setCurrentTab('ledger');
+          output = 'Navigating to transactions ledger...';
+        } else if (dest === 'orgs' || dest === 'organizations') {
+          setCurrentTab('organizations');
+          output = 'Navigating to corporate registry...';
+        } else if (dest === 'people' || dest === 'members' || dest === 'contacts') {
+          setCurrentTab('people');
+          output = 'Navigating to member registry...';
+        } else if (dest === 'reports' || dest === 'analytics') {
+          setCurrentTab('reports');
+          output = 'Navigating to financial reports...';
+        } else if (dest === 'logs' || dest === 'audit' || dest === 'activity') {
+          setCurrentTab('logs');
+          output = 'Navigating to security audit logs...';
+        } else if (dest === 'settings' || dest === 'config') {
+          setCurrentTab('settings');
+          output = 'Navigating to system settings...';
+        } else {
+          output = 'Invalid tab. Options: dash, ledger, orgs, people, reports, logs, settings';
+        }
+        break;
+      }
+      case 'role': {
+        const rName = args.slice(1).join(' ').toLowerCase();
+        if (rName.includes('super') || rName.includes('admin')) {
+          setRole('Super Admin');
+          output = 'Simulated session updated: role is Super Admin.';
+        } else if (rName.includes('finance') || rName.includes('head')) {
+          setRole('Finance Head');
+          output = 'Simulated session updated: role is Finance Head.';
+        } else if (rName.includes('treasurer')) {
+          setRole('Treasurer');
+          output = 'Simulated session updated: role is Treasurer.';
+        } else if (rName.includes('member')) {
+          setRole('Committee Member');
+          output = 'Simulated session updated: role is Committee Member.';
+        } else if (rName.includes('read') || rName.includes('only') || rName.includes('readonly')) {
+          setRole('Read Only');
+          output = 'Simulated session updated: role is Read Only.';
+        } else {
+          output = 'Invalid role. Options: super, finance, treasurer, member, readonly';
+        }
+        break;
+      }
+      case 'theme': {
+        const themeVal = args[1]?.toLowerCase();
+        if (themeVal === 'light') {
+          setTheme('light');
+          output = 'Applied light system stylesheet.';
+        } else if (themeVal === 'dark') {
+          setTheme('dark');
+          output = 'Applied dark hacker system stylesheet.';
+        } else if (themeVal === 'toggle' || !themeVal) {
+          const next = theme === 'dark' ? 'light' : 'dark';
+          setTheme(next);
+          output = `Toggled style system to: ${next}`;
+        } else {
+          output = 'Invalid theme option. Options: light, dark, toggle';
+        }
+        break;
+      }
+      case 'search': {
+        const q = args.slice(1).join(' ');
+        setGlobalSearchVal(q);
+        output = q ? `Set search pattern to: "${q}"` : 'Cleared search pattern.';
+        break;
+      }
+      default:
+        output = `Unknown instruction "${cmd}". Input "help" for syntax info.`;
+    }
+
+    setCliHistory((prev) => [...prev, `> ${input}`, output]);
+    setCliInput('');
+  };
 
   const handleMarkAllRead = async () => {
     try {
@@ -290,13 +434,37 @@ export function DashboardShell() {
             )}
           </div>
           
-          <div className="flex items-center gap-2 sm:hidden font-display font-bold text-text-heading text-lg">
-            CYBERX LEDGER
+          <div className="flex items-center gap-3 md:hidden font-display font-bold text-text-heading text-base tracking-wider">
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="p-2 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated hover:text-text-heading transition-all duration-150"
+              title="Open Navigation Menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <span>CYBERX</span>
           </div>
 
           {/* ACTIONS & SIMULATOR CONTROL */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             
+            {/* TERMINAL CLI TOGGLE */}
+            <button
+              onClick={() => {
+                setShowCli((prev) => {
+                  const next = !prev;
+                  if (next) {
+                    setTimeout(() => cliInputRef.current?.focus(), 50);
+                  }
+                  return next;
+                });
+              }}
+              className={`p-2.5 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated hover:text-text-heading transition-all duration-150 relative ${showCli ? 'bg-bg-elevated text-text-heading border-primary' : ''}`}
+              title="Toggle System CLI Console (`)"
+            >
+              <Terminal className="w-5 h-5" />
+            </button>
+
             {/* THEME TOGGLE */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -403,6 +571,47 @@ export function DashboardShell() {
 
           </div>
         </header>
+
+        {/* INTERACTIVE HACKER CLI CONSOLE */}
+        {showCli && (
+          <div className="bg-bg-secondary border-b border-border-normal flex flex-col font-mono text-[11px] h-48 shrink-0 transition-all duration-200">
+            {/* Terminal Header */}
+            <div className="px-6 py-1.5 border-b border-border-normal bg-bg-surface flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-3.5 h-3.5 text-primary filter drop-shadow-[0_0_4px_rgba(255,213,74,0.4)]" />
+                <span className="text-[10px] text-text-heading font-semibold">cyberx-ledger@secure-cli: ~</span>
+              </div>
+              <span className="text-[9px] text-text-muted">Press ` or ESC to close</span>
+            </div>
+            
+            {/* Console Log Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-black/40 text-text-body font-mono">
+              {cliHistory.map((line, idx) => {
+                const isCmd = line.startsWith('>');
+                return (
+                  <div key={idx} className={isCmd ? 'text-primary font-bold' : 'text-text-muted ml-2 whitespace-pre-wrap'}>
+                    {line}
+                  </div>
+                );
+              })}
+              <div ref={cliLogEndRef} />
+            </div>
+
+            {/* Input Prompt Form */}
+            <form onSubmit={handleCliSubmit} className="flex items-center px-4 py-2 bg-bg-surface border-t border-border-normal">
+              <span className="text-primary font-bold mr-2 select-none">&gt;</span>
+              <input
+                ref={cliInputRef}
+                type="text"
+                value={cliInput}
+                onChange={(e) => setCliInput(e.target.value)}
+                placeholder="Type 'help' for available commands..."
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-text-heading font-mono text-[11px]"
+              />
+              <button type="submit" className="hidden">Submit</button>
+            </form>
+          </div>
+        )}
 
         {/* SUBPAGE CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-bg-primary p-6 md:p-8">
@@ -512,6 +721,95 @@ export function DashboardShell() {
               Press <kbd className="px-1 bg-bg-primary rounded">Esc</kbd> to close any dialog or menu.
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MOBILE SIDEBAR DRAWER OVERLAY */}
+      {showMobileSidebar && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop screen dimming */}
+          <div 
+            onClick={() => setShowMobileSidebar(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" 
+          />
+          
+          {/* Drawer Panel */}
+          <aside className="relative flex flex-col w-64 max-w-xs bg-bg-surface border-r border-border-normal h-full shadow-2xl animate-in slide-in-from-left duration-200">
+            {/* Logo Area */}
+            <div className="h-[72px] flex items-center justify-between px-6 border-b border-border-normal bg-bg-surface">
+              <div className="flex items-center gap-3">
+                <Terminal className="w-6 h-6 text-primary filter drop-shadow-[0_0_6px_rgba(255,213,74,0.4)]" />
+                <div className="flex flex-col">
+                  <span className="font-display font-bold text-base text-text-heading leading-tight tracking-wider">CYBERX</span>
+                  <span className="text-[9px] text-text-muted font-mono tracking-widest">{"// LEDGER"}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowMobileSidebar(false)}
+                className="text-text-muted hover:text-text-heading p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation links inside drawer */}
+            <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+              {[
+                { tab: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+                { tab: 'ledger', label: 'Ledger', icon: <ReceiptText className="w-5 h-5" /> },
+                { tab: 'organizations', label: 'Organizations', icon: <Building2 className="w-5 h-5" /> },
+                { tab: 'people', label: 'People', icon: <Users className="w-5 h-5" /> },
+                { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5" /> },
+                { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5" /> },
+                { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> }
+              ].map((item) => (
+                <button
+                  key={item.tab}
+                  onClick={() => {
+                    setCurrentTab(item.tab as any);
+                    setShowMobileSidebar(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    currentTab === item.tab
+                      ? 'bg-primary text-black font-semibold'
+                      : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </div>
+                </button>
+              ))}
+            </nav>
+
+            {/* Drawer footer quick actions */}
+            <div className="p-4 border-t border-border-normal space-y-2 bg-bg-elevated/40">
+              {role !== 'Read Only' && (
+                <button
+                  onClick={() => {
+                    setCurrentTab('ledger');
+                    setOpenNewTxDrawer(true);
+                    setShowMobileSidebar(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary text-black font-medium text-xs transition-all duration-150 animate-pulse"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>New Transaction</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowShortcutsHelp(true);
+                  setShowMobileSidebar(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated text-xs transition-all duration-150"
+              >
+                <Keyboard className="w-4 h-4 text-text-muted" />
+                <span>Shortcuts</span>
+              </button>
+            </div>
+          </aside>
         </div>
       )}
 
