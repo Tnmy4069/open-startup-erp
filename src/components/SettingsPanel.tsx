@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, ShieldAlert, CreditCard, Tags, Save } from 'lucide-react';
+import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X } from 'lucide-react';
 
 
 export function SettingsPanel() {
@@ -22,7 +22,18 @@ export function SettingsPanel() {
   const [categories, setCategories] = useState('');
   const [paymentMethods, setPaymentMethods] = useState('');
 
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger'>('general');
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password'>('general');
+
+  // Change Password states
+  const [cpCurrentPw, setCpCurrentPw] = useState('');
+  const [cpNewPw, setCpNewPw] = useState('');
+  const [cpConfirmPw, setCpConfirmPw] = useState('');
+  const [cpShowCurrent, setCpShowCurrent] = useState(false);
+  const [cpShowNew, setCpShowNew] = useState(false);
+  const [cpShowConfirm, setCpShowConfirm] = useState(false);
+  const [cpLoading, setCpLoading] = useState(false);
+  const [cpError, setCpError] = useState('');
+  const [cpSuccess, setCpSuccess] = useState('');
 
   const fetchSettings = async () => {
     try {
@@ -93,6 +104,41 @@ export function SettingsPanel() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCpError('');
+    setCpSuccess('');
+
+    if (cpNewPw !== cpConfirmPw) {
+      setCpError('New passwords do not match.');
+      return;
+    }
+    if (cpNewPw.length < 6) {
+      setCpError('New password must be at least 6 characters.');
+      return;
+    }
+
+    setCpLoading(true);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: cpCurrentPw, newPassword: cpNewPw }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCpError(data.error || 'Failed to update password.');
+      } else {
+        setCpSuccess('Password updated successfully.');
+        setCpCurrentPw(''); setCpNewPw(''); setCpConfirmPw('');
+      }
+    } catch {
+      setCpError('Network error. Please try again.');
+    } finally {
+      setCpLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12 font-mono text-xs text-text-muted animate-pulse">
@@ -146,7 +192,17 @@ export function SettingsPanel() {
             <span>Ledger Categories</span>
           </button>
 
-          {isReadOnlyUser && (
+          <button
+            onClick={() => { setActiveSubTab('password'); setCpError(''); setCpSuccess(''); }}
+            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+              activeSubTab === 'password' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <KeyRound className="w-4 h-4 shrink-0" />
+            <span>Change Password</span>
+          </button>
+
+          {isReadOnlyUser && activeSubTab !== 'password' && (
             <div className="mt-8 p-3 rounded-lg border border-cyber-warning/20 bg-cyber-warning/5 text-[10px] text-cyber-warning flex gap-2">
               <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
               <p className="leading-tight">Read-only configurations. Switch simulator role to Super Admin to edit settings.</p>
@@ -154,158 +210,294 @@ export function SettingsPanel() {
           )}
         </div>
 
-        {/* Settings Right Form Panel */}
-        <form onSubmit={handleSaveSettings} className="flex-1 p-6 space-y-6 text-xs text-sans">
-          
+        {/* Settings Right Panel */}
+        <div className="flex-1 p-6 text-xs text-sans">
+
           {/* GENERAL SECTION */}
           {activeSubTab === 'general' && (
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
-                {"// Community Details"}
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Community Name</label>
-                  <input
-                    type="text"
-                    disabled={isReadOnlyUser}
-                    value={communityName}
-                    onChange={(e) => setCommunityName(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
-                  />
-                </div>
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Community Details"}
+                </h3>
                 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Financial Year</label>
-                  <input
-                    type="text"
-                    disabled={isReadOnlyUser}
-                    value={financialYear}
-                    onChange={(e) => setFinancialYear(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">Community Name</label>
+                    <input
+                      type="text"
+                      disabled={isReadOnlyUser}
+                      value={communityName}
+                      onChange={(e) => setCommunityName(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">Financial Year</label>
+                    <input
+                      type="text"
+                      disabled={isReadOnlyUser}
+                      value={financialYear}
+                      onChange={(e) => setFinancialYear(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
+                    />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Default Currency</label>
-                  <select
-                    disabled={isReadOnlyUser}
-                    value={defaultCurrency}
-                    onChange={(e) => setDefaultCurrency(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
-                  >
-                    <option value="INR">INR (₹) - Indian Rupee</option>
-                    <option value="USD">USD ($) - US Dollar</option>
-                    <option value="EUR">EUR (€) - Euro</option>
-                  </select>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">Default Currency</label>
+                    <select
+                      disabled={isReadOnlyUser}
+                      value={defaultCurrency}
+                      onChange={(e) => setDefaultCurrency(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
+                    >
+                      <option value="INR">INR (₹) - Indian Rupee</option>
+                      <option value="USD">USD ($) - US Dollar</option>
+                      <option value="EUR">EUR (€) - Euro</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {!isReadOnlyUser && (
+                <div className="flex justify-end pt-4 border-t border-border-normal/40">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="h-11 px-6 bg-primary hover:bg-opacity-95 text-black rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{submitting ? 'Saving...' : 'Save Settings'}</span>
+                  </button>
+                </div>
+              )}
+            </form>
           )}
 
           {/* BANKING SECTION */}
           {activeSubTab === 'banking' && (
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
-                {"// Bank Details & UPI"}
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Bank Name</label>
-                  <input
-                    type="text"
-                    disabled={isReadOnlyUser}
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
-                  />
-                </div>
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Bank Details & UPI"}
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">Bank Name</label>
+                    <input
+                      type="text"
+                      disabled={isReadOnlyUser}
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
+                    />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Bank Account Number</label>
-                  <input
-                    type="text"
-                    disabled={isReadOnlyUser}
-                    value={bankAccount}
-                    onChange={(e) => setBankAccount(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
-                  />
-                </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">Bank Account Number</label>
+                    <input
+                      type="text"
+                      disabled={isReadOnlyUser}
+                      value={bankAccount}
+                      onChange={(e) => setBankAccount(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                    />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">IFSC Code</label>
-                  <input
-                    type="text"
-                    disabled={isReadOnlyUser}
-                    value={bankIfsc}
-                    onChange={(e) => setBankIfsc(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
-                  />
-                </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">IFSC Code</label>
+                    <input
+                      type="text"
+                      disabled={isReadOnlyUser}
+                      value={bankIfsc}
+                      onChange={(e) => setBankIfsc(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                    />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">UPI ID (pa receiver)</label>
-                  <input
-                    type="text"
-                    disabled={isReadOnlyUser}
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
-                  />
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-text-heading font-semibold">UPI ID (pa receiver)</label>
+                    <input
+                      type="text"
+                      disabled={isReadOnlyUser}
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                      className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {!isReadOnlyUser && (
+                <div className="flex justify-end pt-4 border-t border-border-normal/40">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="h-11 px-6 bg-primary hover:bg-opacity-95 text-black rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{submitting ? 'Saving...' : 'Save Settings'}</span>
+                  </button>
+                </div>
+              )}
+            </form>
           )}
 
           {/* LEDGER CATEGORIES */}
           {activeSubTab === 'ledger' && (
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
-                {"// Ledger Categories & Methods"}
-              </h3>
-              
-              <div className="flex flex-col gap-1.5">
-                <label className="text-text-heading font-semibold">Transaction Purposes (Comma-separated)</label>
-                <textarea
-                  rows={3}
-                  disabled={isReadOnlyUser}
-                  value={categories}
-                  onChange={(e) => setCategories(e.target.value)}
-                  className="p-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 resize-none font-mono"
-                />
-                <span className="text-[9px] text-text-muted font-mono">{"// Dropdown values for ledger transaction types"}</span>
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Ledger Categories & Methods"}
+                </h3>
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold">Transaction Purposes (Comma-separated)</label>
+                  <textarea
+                    rows={3}
+                    disabled={isReadOnlyUser}
+                    value={categories}
+                    onChange={(e) => setCategories(e.target.value)}
+                    className="p-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 resize-none font-mono"
+                  />
+                  <span className="text-[9px] text-text-muted font-mono">{"// Dropdown values for ledger transaction types"}</span>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold">Payment Methods (Comma-separated)</label>
+                  <input
+                    type="text"
+                    disabled={isReadOnlyUser}
+                    value={paymentMethods}
+                    onChange={(e) => setPaymentMethods(e.target.value)}
+                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-text-heading font-semibold">Payment Methods (Comma-separated)</label>
-                <input
-                  type="text"
-                  disabled={isReadOnlyUser}
-                  value={paymentMethods}
-                  onChange={(e) => setPaymentMethods(e.target.value)}
-                  className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
-                />
+              {!isReadOnlyUser && (
+                <div className="flex justify-end pt-4 border-t border-border-normal/40">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="h-11 px-6 bg-primary hover:bg-opacity-95 text-black rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{submitting ? 'Saving...' : 'Save Settings'}</span>
+                  </button>
+                </div>
+              )}
+            </form>
+          )}
+
+          {/* CHANGE PASSWORD SECTION */}
+          {activeSubTab === 'password' && (
+            <div className="space-y-5 max-w-sm">
+              <div>
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Update Your Password"}
+                </h3>
+                <p className="text-[10px] text-text-muted font-mono mt-2">Change the password for your current account.</p>
               </div>
+
+              {/* Success */}
+              {cpSuccess && (
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-cyber-success/10 border border-cyber-success/30 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-cyber-success shrink-0" />
+                  <p className="text-[11px] text-cyber-success font-mono">{cpSuccess}</p>
+                </div>
+              )}
+
+              {/* Error */}
+              {cpError && (
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-cyber-danger/10 border border-cyber-danger/30 rounded-lg">
+                  <X className="w-4 h-4 text-cyber-danger shrink-0" />
+                  <p className="text-[11px] text-cyber-danger font-mono">{cpError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                {/* Current Password */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold tracking-wider uppercase text-[10px] font-mono">Current Password</label>
+                  <div className="relative">
+                    <input
+                      type={cpShowCurrent ? 'text' : 'password'}
+                      value={cpCurrentPw}
+                      onChange={(e) => { setCpCurrentPw(e.target.value); setCpError(''); }}
+                      placeholder="Enter current password"
+                      required
+                      disabled={cpLoading}
+                      className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 pr-10 text-sm text-text-heading font-mono placeholder-text-muted focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
+                    />
+                    <button type="button" tabIndex={-1} onClick={() => setCpShowCurrent((p) => !p)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-heading">
+                      {cpShowCurrent ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold tracking-wider uppercase text-[10px] font-mono">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={cpShowNew ? 'text' : 'password'}
+                      value={cpNewPw}
+                      onChange={(e) => { setCpNewPw(e.target.value); setCpError(''); }}
+                      placeholder="Min. 6 characters"
+                      required
+                      disabled={cpLoading}
+                      className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 pr-10 text-sm text-text-heading font-mono placeholder-text-muted focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
+                    />
+                    <button type="button" tabIndex={-1} onClick={() => setCpShowNew((p) => !p)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-heading">
+                      {cpShowNew ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold tracking-wider uppercase text-[10px] font-mono">Confirm New Password</label>
+                  <div className="relative">
+                    <input
+                      type={cpShowConfirm ? 'text' : 'password'}
+                      value={cpConfirmPw}
+                      onChange={(e) => { setCpConfirmPw(e.target.value); setCpError(''); }}
+                      placeholder="Repeat new password"
+                      required
+                      disabled={cpLoading}
+                      className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 pr-10 text-sm text-text-heading font-mono placeholder-text-muted focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
+                    />
+                    <button type="button" tabIndex={-1} onClick={() => setCpShowConfirm((p) => !p)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-heading">
+                      {cpShowConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={cpLoading || !cpCurrentPw || !cpNewPw || !cpConfirmPw}
+                    className="h-11 px-6 bg-primary hover:bg-opacity-95 text-black rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cpLoading ? (
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-current/30 border-t-current rounded-full" />
+                    ) : (
+                      <KeyRound className="w-4 h-4" />
+                    )}
+                    <span>{cpLoading ? 'Updating...' : 'Update Password'}</span>
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
-          {/* Save Action Row */}
-          {!isReadOnlyUser && (
-            <div className="flex justify-end pt-4 border-t border-border-normal/40">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="h-11 px-6 bg-primary hover:bg-opacity-95 text-black rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50"
-              >
-                <Save className="w-4.5 h-4.5" />
-                <span>{submitting ? 'Saving...' : 'Save Settings'}</span>
-              </button>
-            </div>
-          )}
-
-        </form>
+        </div>
       </div>
 
     </div>

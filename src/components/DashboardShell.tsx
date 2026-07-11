@@ -242,6 +242,7 @@ export function DashboardShell() {
     }
   };
 
+
   const unreadNotifCount = notifications.filter((n) => n.status === 'Unread').length;
 
   return (
@@ -555,6 +556,7 @@ export function DashboardShell() {
               )}
             </div>
 
+
             {/* REAL SESSION USER DISPLAY + LOGOUT */}
             <div className="flex items-center gap-2 pl-2 border-l border-border-normal/50">
               <div className="flex flex-col items-end hidden sm:flex">
@@ -735,6 +737,7 @@ export function DashboardShell() {
           </div>
         </div>
       )}
+
 
       {/* MOBILE SIDEBAR DRAWER OVERLAY */}
       {showMobileSidebar && (
