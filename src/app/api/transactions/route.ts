@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { guardCreate, guardEdit, guardDelete } from '@/lib/permissions';
 
 export async function GET(request: Request) {
   try {
@@ -91,7 +92,10 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const denied = await guardCreate();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
     const {
@@ -213,7 +217,7 @@ export async function POST(request: Request) {
 }
 
 // Bulk update endpoint (PUT)
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     const { ids, action, status, user, role } = await request.json();
 
@@ -222,6 +226,8 @@ export async function PUT(request: Request) {
     }
 
     if (action === 'delete') {
+      const denied = await guardDelete();
+      if (denied) return denied;
       // Bulk delete
       await prisma.transaction.deleteMany({
         where: { id: { in: ids } },
@@ -240,6 +246,8 @@ export async function PUT(request: Request) {
     }
 
     if (action === 'change_status' && status) {
+      const denied = await guardEdit();
+      if (denied) return denied;
       // Bulk status change
       await prisma.transaction.updateMany({
         where: { id: { in: ids } },

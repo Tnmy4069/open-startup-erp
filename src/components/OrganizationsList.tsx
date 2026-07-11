@@ -265,22 +265,26 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
                       )}
                       {role !== 'Read Only' && (
                         <div className="flex gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(org)}
-                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
-                            title="Edit Organization"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteOrg(org.id, org.name)}
-                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
-                            title="Delete Organization"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {(role === 'Super Admin' || role === 'Finance Head' || role === 'Treasurer') && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEdit(org)}
+                              className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                              title="Edit Organization"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          )}
+                          {role === 'Super Admin' && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOrg(org.id, org.name)}
+                              className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
+                              title="Delete Organization"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

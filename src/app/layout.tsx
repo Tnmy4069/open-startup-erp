@@ -16,6 +16,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "CyberX Finance Ledger",
   description: "Enterprise-grade financial tracker and analytics suite for the CyberX cybersecurity community.",
+  icons: {
+    icon: "/cyberx-logo.webp",
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +31,9 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="icon" href="/cyberx-logo.webp" />
+      </head>
       <body className="min-h-full flex flex-col bg-bg-primary text-text-body font-sans transition-colors duration-150">
         <Providers>{children}</Providers>
       </body>

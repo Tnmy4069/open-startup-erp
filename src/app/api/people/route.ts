@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { guardCreate } from '@/lib/permissions';
 
 export async function GET() {
   try {
@@ -40,7 +41,10 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const denied = await guardCreate();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
     const { name, phone, email, role, user, userRole } = data;

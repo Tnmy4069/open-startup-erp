@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { guardEdit, guardDelete } from '@/lib/permissions';
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await guardEdit();
+  if (denied) return denied;
+
   try {
     const id = (await params).id;
     const data = await request.json();
@@ -46,9 +50,12 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await guardDelete();
+  if (denied) return denied;
+
   try {
     const id = (await params).id;
     const { searchParams } = new URL(request.url);

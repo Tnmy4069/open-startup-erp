@@ -14,8 +14,14 @@
   --text-heading: #111111;
   --text-body: #374151;
   --text-muted: #6B7280;
-  
+
+  /* Yellow buttons — text-black on yellow is readable */
   --primary-color: #FFD54A;
+  --primary-fg: #000000;
+
+  /* Links & inline code text on white backgrounds need darker color */
+  --link-color: #92400E;
+
   --success-color: #10B981;
   --warning-color: #F59E0B;
   --danger-color: #EF4444;
@@ -33,8 +39,12 @@
   --text-heading: #FFFFFF;
   --text-body: #D6D6D6;
   --text-muted: #8A8A8A;
-  
+
+  /* Neon yellow on dark */
   --primary-color: #FFD54A;
+  --primary-fg: #000000;
+  --link-color: #FFD54A;
+
   --success-color: #35D07F;
   --warning-color: #FFC857;
   --danger-color: #FF5C5C;
@@ -46,6 +56,7 @@
   --font-display: var(--font-display-var);
 
   --color-primary: var(--primary-color);
+  --color-primary-fg: var(--primary-fg);
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-surface: var(--bg-surface);
@@ -70,6 +81,46 @@ body {
   font-family: var(--font-sans-var);
   transition: background-color 150ms ease, color 150ms ease;
 }
+
+/* Primary button: text adapts to light/dark automatically */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--primary-fg);
+}
+.btn-primary:hover { opacity: 0.88; }
+
+/*
+  Global fix: anywhere text-black is used ON a primary-colored background,
+  override it with the theme-correct foreground (white on light, black on dark).
+  This covers nav active states, buttons, kbd badges, toggle pills, etc.
+  without touching every TSX file.
+*/
+.bg-primary.text-black,
+.bg-primary > .text-black,
+[class*='bg-primary'][class*='text-black'] {
+  color: var(--primary-fg) !important;
+}
+
+/* Tailwind generates bg-primary text-black as sibling classes on the same element */
+.text-black:is([class*='bg-primary'], .bg-primary) {
+  color: var(--primary-fg) !important;
+}
+
+/* Simpler universal override: any .text-black inside or equal to .bg-primary */
+:is(.bg-primary) .text-black,
+:is(.bg-primary).text-black {
+  color: var(--primary-fg) !important;
+}
+
+/* kbd shortcut badge on active primary nav items */
+.bg-primary kbd,
+.bg-primary .bg-black\/10 {
+  color: var(--primary-fg) !important;
+  opacity: 0.7;
+}
+
+/* Utility — use anywhere instead of text-black on primary bg */
+.text-primary-fg { color: var(--primary-fg); }
 
 /* Custom transitions and scrollbars */
 ::-webkit-scrollbar {
@@ -98,3 +149,179 @@ body {
   border-color: var(--primary-color);
   transform: translateY(-2px);
 }
+
+/* ============================================
+   PROSE-MEETING: Full Markdown Render Styles
+   ============================================ */
+.prose-meeting {
+  color: var(--text-body);
+  font-size: 0.8125rem;   /* 13px */
+  line-height: 1.75;
+  word-break: break-word;
+}
+
+/* Headings */
+.prose-meeting h1,
+.prose-meeting h2,
+.prose-meeting h3,
+.prose-meeting h4,
+.prose-meeting h5,
+.prose-meeting h6 {
+  color: var(--text-heading);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
+  font-family: var(--font-display-var);
+  letter-spacing: -0.01em;
+}
+.prose-meeting h1 { font-size: 1.35rem; border-bottom: 1px solid var(--border-normal); padding-bottom: 0.3em; }
+.prose-meeting h2 { font-size: 1.1rem;  border-bottom: 1px solid var(--border-normal); padding-bottom: 0.2em; }
+.prose-meeting h3 { font-size: 0.95rem; }
+.prose-meeting h4 { font-size: 0.875rem; }
+.prose-meeting h5 { font-size: 0.8125rem; }
+.prose-meeting h6 { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Paragraphs */
+.prose-meeting p {
+  margin-top: 0;
+  margin-bottom: 0.85em;
+}
+
+/* Links */
+.prose-meeting a {
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+.prose-meeting a:hover { opacity: 0.8; }
+
+/* Bold & Italic */
+.prose-meeting strong { color: var(--text-heading); font-weight: 700; }
+.prose-meeting em     { font-style: italic; }
+
+/* Strikethrough */
+.prose-meeting del { opacity: 0.55; text-decoration: line-through; }
+
+/* Horizontal Rule */
+.prose-meeting hr {
+  border: none;
+  border-top: 1px solid var(--border-normal);
+  margin: 1.5em 0;
+}
+
+/* Unordered List */
+.prose-meeting ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin-bottom: 0.85em;
+}
+.prose-meeting ul li { margin-bottom: 0.25em; }
+
+/* Ordered List */
+.prose-meeting ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin-bottom: 0.85em;
+}
+.prose-meeting ol li { margin-bottom: 0.25em; }
+
+/* Task List (GFM) */
+.prose-meeting ul.contains-task-list { list-style: none; padding-left: 0.25em; }
+.prose-meeting li.task-list-item { display: flex; align-items: flex-start; gap: 0.5em; }
+.prose-meeting li.task-list-item input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  accent-color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+/* Nested lists */
+.prose-meeting li > ul,
+.prose-meeting li > ol {
+  margin-top: 0.2em;
+  margin-bottom: 0;
+}
+
+/* Blockquote */
+.prose-meeting blockquote {
+  border-left: 3px solid var(--link-color);
+  padding: 0.5em 1em;
+  margin: 1em 0;
+  background: color-mix(in srgb, var(--link-color) 8%, transparent);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-body);
+}
+.prose-meeting blockquote p { margin-bottom: 0; }
+
+/* Inline Code */
+.prose-meeting :not(pre) > code {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.78rem;
+  background: color-mix(in srgb, var(--link-color) 10%, var(--bg-elevated));
+  color: var(--link-color);
+  border: 1px solid var(--border-normal);
+  border-radius: 4px;
+  padding: 0.12em 0.45em;
+}
+
+/* Code Block */
+.prose-meeting pre {
+  background: #0d0d0d;
+  color: #d6d6d6;
+  border-radius: 10px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  margin: 1em 0;
+  border: 1px solid var(--border-normal);
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+.prose-meeting pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* Tables (GFM) */
+.prose-meeting table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.78rem;
+  overflow-x: auto;
+  display: block;
+}
+.prose-meeting th {
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-elevated));
+  color: var(--text-heading);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.5em 0.85em;
+  border: 1px solid var(--border-normal);
+}
+.prose-meeting td {
+  padding: 0.45em 0.85em;
+  border: 1px solid var(--border-normal);
+  vertical-align: top;
+}
+.prose-meeting tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-elevated) 40%, transparent);
+}
+
+/* Images */
+.prose-meeting img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.75em 0;
+  border: 1px solid var(--border-normal);
+}
+
+/* First child spacing fix */
+.prose-meeting > :first-child { margin-top: 0 !important; }
+.prose-meeting > :last-child  { margin-bottom: 0 !important; }
+

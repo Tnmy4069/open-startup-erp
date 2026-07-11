@@ -1,8 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 export type UserRole = 'Super Admin' | 'Finance Head' | 'Treasurer' | 'Committee Member' | 'Read Only';
+
+export interface AuthUser {
+  userId: string;
+  username: string;
+  role: UserRole;
+}
 
 interface AppNotification {
   id: string;
@@ -22,8 +29,8 @@ interface AppReminder {
 }
 
 interface AppContextType {
+  user: AuthUser | null;
   role: UserRole;
-  setRole: (role: UserRole) => void;
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
   notifications: AppNotification[];
@@ -33,16 +40,40 @@ interface AppContextType {
   refreshData: () => void;
   refreshTrigger: number;
   triggerNotification: (message: string, type: string) => void;
+  logout: () => Promise<void>;
+  authLoading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<UserRole>('Super Admin');
+  const router = useRouter();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [theme, setThemeState] = useState<'light' | 'dark'>('dark');
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [reminders, setReminders] = useState<AppReminder[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Derive role from user — default to Read Only if somehow no user
+  const role: UserRole = (user?.role as UserRole) ?? 'Read Only';
+
+  // Load current session from /api/auth/me
+  const fetchMe = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUser({ userId: data.userId, username: data.username, role: data.role as UserRole });
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -53,38 +84,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setReminders(data.reminders || []);
       }
     } catch (e) {
-      console.error('Failed to load notifications and reminders:', e);
+      console.error('Failed to load notifications:', e);
     }
   }, []);
 
-  // Read initial role & theme from localStorage if available
   useEffect(() => {
-    const savedRole = localStorage.getItem('cyberx_role') as UserRole;
-    if (savedRole) {
-      setTimeout(() => setRoleState(savedRole), 0);
-    }
+    fetchMe();
 
     const savedTheme = localStorage.getItem('cyberx_theme') as 'light' | 'dark';
     if (savedTheme) {
-      setTimeout(() => {
-        setThemeState(savedTheme);
-        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-      }, 0);
+      setThemeState(savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     } else {
       document.documentElement.classList.add('dark');
     }
+  }, [fetchMe]);
 
-    setTimeout(() => {
+  useEffect(() => {
+    if (!authLoading && user) {
       fetchAlerts();
-    }, 0);
-  }, [fetchAlerts, refreshTrigger]);
-
-  const setRole = (newRole: UserRole) => {
-    setRoleState(newRole);
-    localStorage.setItem('cyberx_role', newRole);
-    // Add audit log mock call or simple message
-    triggerNotification(`Simulated session: Logged in as ${newRole}`, 'Login');
-  };
+    }
+  }, [authLoading, user, refreshTrigger, fetchAlerts]);
 
   const setTheme = (newTheme: 'light' | 'dark') => {
     setThemeState(newTheme);
@@ -92,12 +112,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
-  const refreshData = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
+  const refreshData = () => setRefreshTrigger((prev) => prev + 1);
 
   const triggerNotification = async (message: string, type: string) => {
-    // Add to local state immediately
     const newNotif: AppNotification = {
       id: Math.random().toString(),
       message,
@@ -106,8 +123,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       type,
     };
     setNotifications((prev) => [newNotif, ...prev]);
-
-    // Save to database
     try {
       await fetch('/api/alerts', {
         method: 'POST',
@@ -115,15 +130,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ message, type }),
       });
     } catch (e) {
-      console.error('Failed to save notification to DB:', e);
+      console.error('Failed to save notification:', e);
     }
+  };
+
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+    router.push('/');
   };
 
   return (
     <AppContext.Provider
       value={{
+        user,
         role,
-        setRole,
         theme,
         setTheme,
         notifications,
@@ -133,6 +154,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshData,
         refreshTrigger,
         triggerNotification,
+        logout,
+        authLoading,
       }}
     >
       {children}

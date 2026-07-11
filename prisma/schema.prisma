@@ -96,3 +96,23 @@ model Setting {
   categories       String  @default("Campus Session,Workshop,Sponsorship,Merchandise,Travel,Food,Equipment,Software,Marketing,Reimbursement,Miscellaneous")
   paymentMethods   String  @default("Cash,UPI,Bank,Card,Cheque")
 }
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  username  String   @unique
+  password  String   // bcrypt-hashed
+  role      String   // "Finance Head" | "Treasurer" | "Committee Member" | "Read Only"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MeetingNote {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime @default(now())
+  agenda    String
+  notes     String   // Markdown input text
+  refLink   String?
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

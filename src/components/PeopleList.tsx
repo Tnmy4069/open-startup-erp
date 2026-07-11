@@ -248,22 +248,26 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
                     </span>
                     {role !== 'Read Only' && (
                       <div className="flex gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(p)}
-                          className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
-                          title="Edit Profile"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePerson(p.id, p.name)}
-                          className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
-                          title="Delete Profile"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        {(role === 'Super Admin' || role === 'Finance Head' || role === 'Treasurer') && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(p)}
+                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                            title="Edit Profile"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                        )}
+                        {role === 'Super Admin' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePerson(p.id, p.name)}
+                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
+                            title="Delete Profile"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

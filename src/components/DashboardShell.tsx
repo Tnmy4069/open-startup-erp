@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useApp, UserRole } from '@/context/AppContext';
+import { useApp } from '@/context/AppContext';
 import {
   LayoutDashboard,
   ReceiptText,
@@ -15,7 +15,6 @@ import {
   Moon,
   Keyboard,
   User,
-  ChevronDown,
   X,
   Plus,
   Terminal,
@@ -23,7 +22,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
-  Menu
+  Menu,
+  LogOut,
+  Shield,
+  BookOpen
 } from 'lucide-react';
 import { DashboardHome } from './DashboardHome';
 import { LedgerTable } from './LedgerTable';
@@ -32,20 +34,21 @@ import { PeopleList } from './PeopleList';
 import { ReportsPanel } from './ReportsPanel';
 import { AuditLogsList } from './AuditLogsList';
 import { SettingsPanel } from './SettingsPanel';
+import { UsersPanel } from './UsersPanel';
+import { MeetingsPanel } from './MeetingsPanel';
 
 export function DashboardShell() {
   const {
+    user,
     role,
-    setRole,
     theme,
     setTheme,
     notifications,
     setNotifications,
-    refreshData
+    logout,
   } = useApp();
 
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings'>('dashboard');
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings'>('dashboard');
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
@@ -126,7 +129,6 @@ export function DashboardShell() {
       } else if (e.key === 'Escape') {
         setOpenNewTxDrawer(false);
         setShowShortcutsHelp(false);
-        setShowRoleDropdown(false);
         setShowNotifDropdown(false);
         setShowCli(false);
         setShowMobileSidebar(false);
@@ -135,7 +137,7 @@ export function DashboardShell() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [theme, role]); // Bind dependencies to ensure updated handler context
+  }, [theme, role, logout]); // Bind dependencies to ensure updated handler context
 
   const handleCliSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +151,7 @@ export function DashboardShell() {
 
     switch (cmd) {
       case 'help':
-        output = 'Available: goto [dash|ledger|orgs|people|reports|logs|settings], role [super|finance|treasurer|member|readonly], theme [light|dark|toggle], search [query], newtx, clear';
+        output = 'Available: goto [dash|ledger|orgs|people|reports|logs|settings|users], theme [light|dark|toggle], search [query], newtx, logout, clear';
         break;
       case 'clear':
         setCliHistory([]);
@@ -187,33 +189,19 @@ export function DashboardShell() {
         } else if (dest === 'settings' || dest === 'config') {
           setCurrentTab('settings');
           output = 'Navigating to system settings...';
+        } else if (dest === 'users' && role === 'Super Admin') {
+          setCurrentTab('users');
+          output = 'Navigating to user access control...';
         } else {
-          output = 'Invalid tab. Options: dash, ledger, orgs, people, reports, logs, settings';
+          output = 'Invalid tab. Options: dash, ledger, orgs, people, reports, logs, settings, users';
         }
         break;
       }
-      case 'role': {
-        const rName = args.slice(1).join(' ').toLowerCase();
-        if (rName.includes('super') || rName.includes('admin')) {
-          setRole('Super Admin');
-          output = 'Simulated session updated: role is Super Admin.';
-        } else if (rName.includes('finance') || rName.includes('head')) {
-          setRole('Finance Head');
-          output = 'Simulated session updated: role is Finance Head.';
-        } else if (rName.includes('treasurer')) {
-          setRole('Treasurer');
-          output = 'Simulated session updated: role is Treasurer.';
-        } else if (rName.includes('member')) {
-          setRole('Committee Member');
-          output = 'Simulated session updated: role is Committee Member.';
-        } else if (rName.includes('read') || rName.includes('only') || rName.includes('readonly')) {
-          setRole('Read Only');
-          output = 'Simulated session updated: role is Read Only.';
-        } else {
-          output = 'Invalid role. Options: super, finance, treasurer, member, readonly';
-        }
-        break;
-      }
+      case 'logout':
+        setCliHistory((prev) => [...prev, '> logout', 'Logging out of secure session...']);
+        setCliInput('');
+        setTimeout(() => logout(), 800);
+        return;
       case 'theme': {
         const themeVal = args[1]?.toLowerCase();
         if (themeVal === 'light') {
@@ -256,21 +244,15 @@ export function DashboardShell() {
 
   const unreadNotifCount = notifications.filter((n) => n.status === 'Unread').length;
 
-  const roles: UserRole[] = ['Super Admin', 'Finance Head', 'Treasurer', 'Committee Member', 'Read Only'];
-
   return (
     <div className="flex h-screen bg-bg-primary text-text-body font-sans overflow-hidden">
       
       {/* SIDEBAR NAVIGATION */}
       <aside className="w-64 flex flex-col border-r border-border-normal bg-bg-surface hidden md:flex">
         
-        {/* LOGO AREA */}
-        <div className="h-[72px] flex items-center gap-3 px-6 border-b border-border-normal">
-          <Terminal className="w-6 h-6 text-primary filter drop-shadow-[0_0_6px_rgba(255,213,74,0.4)]" />
-          <div className="flex flex-col">
-            <span className="font-display font-bold text-lg text-text-heading leading-tight tracking-wider">CYBERX</span>
-            <span className="text-[10px] text-text-muted font-mono tracking-widest">{"// LEDGER V1.0"}</span>
-          </div>
+        {/* LOGO AREA — always dark bg so logo pops in both themes */}
+        <div className="h-[72px] flex items-center justify-center px-4 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
+          <img src="/cyberx-logo.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
         </div>
 
         {/* NAVIGATION LINKS */}
@@ -379,6 +361,40 @@ export function DashboardShell() {
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'settings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>S</kbd>
           </button>
+
+          {/* MEETINGS TAB — all roles */}
+          <button
+            onClick={() => setCurrentTab('meetings')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              currentTab === 'meetings'
+                ? 'bg-primary text-black font-semibold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-5 h-5" />
+              <span>Meetings</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
+          </button>
+
+          {/* USERS TAB — Super Admin only */}
+          {role === 'Super Admin' && (
+            <button
+              onClick={() => setCurrentTab('users')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                currentTab === 'users'
+                  ? 'bg-primary text-black font-semibold'
+                  : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5" />
+                <span>Users</span>
+              </div>
+              <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'users' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>U</kbd>
+            </button>
+          )}
         </nav>
 
         {/* BOTTOM QUICK CTAS */}
@@ -401,6 +417,14 @@ export function DashboardShell() {
           >
             <Keyboard className="w-4 h-4 text-text-muted" />
             <span>Shortcuts (?)</span>
+          </button>
+          {/* Logout */}
+          <button
+            onClick={logout}
+            className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-cyber-danger/30 text-cyber-danger/80 hover:bg-cyber-danger/10 hover:text-cyber-danger transition-all duration-150 text-xs font-mono"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -434,7 +458,7 @@ export function DashboardShell() {
             )}
           </div>
           
-          <div className="flex items-center gap-3 md:hidden font-display font-bold text-text-heading text-base tracking-wider">
+          <div className="flex items-center gap-3 md:hidden">
             <button
               onClick={() => setShowMobileSidebar(true)}
               className="p-2 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated hover:text-text-heading transition-all duration-150"
@@ -442,7 +466,7 @@ export function DashboardShell() {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <span>CYBERX</span>
+            <img src="/cyberx-logo.png" alt="CyberX Logo" className="h-8 w-auto object-contain" />
           </div>
 
           {/* ACTIONS & SIMULATOR CONTROL */}
@@ -531,42 +555,22 @@ export function DashboardShell() {
               )}
             </div>
 
-            {/* SIMULATED SESSION ROLE DROPDOWN */}
-            <div className="relative">
+            {/* REAL SESSION USER DISPLAY + LOGOUT */}
+            <div className="flex items-center gap-2 pl-2 border-l border-border-normal/50">
+              <div className="flex flex-col items-end hidden sm:flex">
+                <span className="text-xs font-semibold text-text-heading font-mono leading-tight">{user?.username ?? '...'}</span>
+                <span className="text-[9px] text-text-muted font-mono leading-tight">{role}</span>
+              </div>
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 border border-primary/20">
+                <User className="w-4 h-4 text-primary" />
+              </div>
               <button
-                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border-normal bg-bg-surface hover:border-border-hover text-sm font-medium transition-all duration-150 focus:outline-none"
+                onClick={logout}
+                title="Logout"
+                className="p-2 rounded-lg border border-border-normal text-text-muted hover:text-cyber-danger hover:border-cyber-danger/40 hover:bg-cyber-danger/5 transition-all duration-150"
               >
-                <User className="w-4 h-4 text-text-muted" />
-                <span className="text-xs text-text-heading font-mono hidden sm:inline">{role}</span>
-                <ChevronDown className="w-4 h-4 text-text-muted" />
+                <LogOut className="w-4 h-4" />
               </button>
-
-              {showRoleDropdown && (
-                <div className="absolute right-0 mt-2 w-56 bg-bg-surface border border-border-normal rounded-xl shadow-lg py-2 z-50">
-                  <div className="px-4 py-1.5 border-b border-border-normal mb-1">
-                    <span className="text-[10px] text-text-muted font-mono tracking-wider">{"// SIMULATE ROLE"}</span>
-                  </div>
-                  {roles.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => {
-                        setRole(r);
-                        setShowRoleDropdown(false);
-                        refreshData();
-                      }}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-xs text-left transition-colors duration-150 ${
-                        role === r
-                          ? 'bg-primary text-black font-semibold'
-                          : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-                      }`}
-                    >
-                      <span>{r}</span>
-                      {role === r && <CheckCircle2 className="w-3.5 h-3.5 text-black" />}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
           </div>
@@ -653,6 +657,14 @@ export function DashboardShell() {
               <SettingsPanel />
             )}
 
+            {currentTab === 'meetings' && (
+              <MeetingsPanel />
+            )}
+
+            {currentTab === 'users' && role === 'Super Admin' && (
+              <UsersPanel />
+            )}
+
           </div>
         </main>
       </div>
@@ -735,18 +747,14 @@ export function DashboardShell() {
           
           {/* Drawer Panel */}
           <aside className="relative flex flex-col w-64 max-w-xs bg-bg-surface border-r border-border-normal h-full shadow-2xl animate-in slide-in-from-left duration-200">
-            {/* Logo Area */}
-            <div className="h-[72px] flex items-center justify-between px-6 border-b border-border-normal bg-bg-surface">
+            {/* Logo Area — always dark bg */}
+            <div className="h-[72px] flex items-center justify-between px-6 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
               <div className="flex items-center gap-3">
-                <Terminal className="w-6 h-6 text-primary filter drop-shadow-[0_0_6px_rgba(255,213,74,0.4)]" />
-                <div className="flex flex-col">
-                  <span className="font-display font-bold text-base text-text-heading leading-tight tracking-wider">CYBERX</span>
-                  <span className="text-[9px] text-text-muted font-mono tracking-widest">{"// LEDGER"}</span>
-                </div>
+                <img src="/cyberx-logo.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
               </div>
               <button 
                 onClick={() => setShowMobileSidebar(false)}
-                className="text-text-muted hover:text-text-heading p-1 rounded-lg"
+                className="text-white/60 hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -761,12 +769,14 @@ export function DashboardShell() {
                 { tab: 'people', label: 'People', icon: <Users className="w-5 h-5" /> },
                 { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5" /> },
                 { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5" /> },
-                { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> }
+                { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
+                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
+                ...(role === 'Super Admin' ? [{ tab: 'users', label: 'Users', icon: <Shield className="w-5 h-5" /> }] : [])
               ].map((item) => (
                 <button
                   key={item.tab}
                   onClick={() => {
-                    setCurrentTab(item.tab as any);
+                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings');
                     setShowMobileSidebar(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${

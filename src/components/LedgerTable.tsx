@@ -881,13 +881,15 @@ export function LedgerTable({
                         
                         {role !== 'Read Only' && (
                           <>
-                            <button
-                              onClick={() => handleOpenEdit(tx)}
-                              className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
-                              title="Edit Transaction"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
+                            {(role === 'Super Admin' || role === 'Finance Head' || role === 'Treasurer') && (
+                              <button
+                                onClick={() => handleOpenEdit(tx)}
+                                className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                                title="Edit Transaction"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleOpenDuplicate(tx)}
                               className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
@@ -1097,13 +1099,15 @@ export function LedgerTable({
                             
                             {role !== 'Read Only' && (
                               <>
-                                <button
-                                  onClick={() => handleOpenEdit(tx)}
-                                  className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
-                                  title="Edit Transaction"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
+                                {(role === 'Super Admin' || role === 'Finance Head' || role === 'Treasurer') && (
+                                  <button
+                                    onClick={() => handleOpenEdit(tx)}
+                                    className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                                    title="Edit Transaction"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleOpenDuplicate(tx)}
                                   className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
@@ -1355,63 +1359,170 @@ export function LedgerTable({
                   <QrCode className="w-4 h-4 text-primary" />
                   <span>Payments Registry &amp; Reference</span>
                 </span>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-text-muted">UPI ID for transaction</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. cyberx@hdfcbank"
-                      value={formUpiId}
-                      onChange={(e) => setFormUpiId(e.target.value)}
-                      className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
-                    />
+                {formPaymentMethod === 'UPI' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">UPI ID for transaction</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. cyberx@hdfcbank"
+                        value={formUpiId}
+                        onChange={(e) => setFormUpiId(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">UPI Transaction UTR / Ref Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 391208390..."
+                        value={formUtr}
+                        onChange={(e) => setFormUtr(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 sm:col-span-2">
+                      <label className="text-text-muted">Payment Link (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. https://pay.cyberx..."
+                        value={formPaymentLink}
+                        onChange={(e) => setFormPaymentLink(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-text-muted">UTR / Bank Transfer Reference</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. UTR182901"
-                      value={formUtr}
-                      onChange={(e) => setFormUtr(e.target.value)}
-                      className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
-                    />
+                {formPaymentMethod === 'Bank' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <div className="flex flex-col gap-1.5 sm:col-span-2">
+                      <label className="text-text-muted">Recipient Bank Account Details</label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. Acc Name: SMC Corp, Acc No: 50200012345678, Bank: HDFC Bank, IFSC: HDFC0000123"
+                        value={formBankDetails}
+                        onChange={(e) => setFormBankDetails(e.target.value)}
+                        className="p-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none resize-none text-[11px]"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Bank Transaction UTR</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. UTR182901"
+                        value={formUtr}
+                        onChange={(e) => setFormUtr(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Reference Invoice Number (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. INV-9901"
+                        value={formReferenceNumber}
+                        onChange={(e) => setFormReferenceNumber(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-text-muted">General Reference Number</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. INV-9901"
-                      value={formReferenceNumber}
-                      onChange={(e) => setFormReferenceNumber(e.target.value)}
-                      className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
-                    />
+                {formPaymentMethod === 'Cash' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Handed Over To / Received By</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Name of volunteer/recipient"
+                        value={formUtr}
+                        onChange={(e) => setFormUtr(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Receipt / Cash Voucher Number (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CASH-1829"
+                        value={formReferenceNumber}
+                        onChange={(e) => setFormReferenceNumber(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-text-muted">Payment Link</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. https://stripe.com/pay..."
-                      value={formPaymentLink}
-                      onChange={(e) => setFormPaymentLink(e.target.value)}
-                      className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
-                    />
+                {formPaymentMethod === 'Card' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Cardholder Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Alice Sharma"
+                        value={formUpiId}
+                        onChange={(e) => setFormUpiId(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Terminal Transaction ID / Invoice Ref</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. POS-9812"
+                        value={formUtr}
+                        onChange={(e) => setFormUtr(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 sm:col-span-2">
+                      <label className="text-text-muted">Payment Link / Gateway ID (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Stripe Charge ID"
+                        value={formPaymentLink}
+                        onChange={(e) => setFormPaymentLink(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-text-muted">Custom Bank details (Raw string or text)</label>
-                  <textarea
-                    rows={1}
-                    placeholder="e.g. Acc: 502000, IFSC: HDFC..."
-                    value={formBankDetails}
-                    onChange={(e) => setFormBankDetails(e.target.value)}
-                    className="p-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none resize-none"
-                  />
-                </div>
+                {formPaymentMethod === 'Cheque' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Cheque Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CHQ-881029"
+                        value={formReferenceNumber}
+                        onChange={(e) => setFormReferenceNumber(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-text-muted">Issuing Bank Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. HDFC Bank"
+                        value={formBankDetails}
+                        onChange={(e) => setFormBankDetails(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 sm:col-span-2">
+                      <label className="text-text-muted">Cheque Clearance / Issue Date (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. YYYY-MM-DD"
+                        value={formUtr}
+                        onChange={(e) => setFormUtr(e.target.value)}
+                        className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* ATTACHMENTS MANAGER */}
