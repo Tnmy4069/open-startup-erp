@@ -105,7 +105,13 @@ export async function POST(request: Request) {
                   auth: sub.auth,
                 },
               },
-              payload
+              payload,
+              {
+                headers: {
+                  'Urgency': 'high',
+                },
+                TTL: 86400, // 24 hours
+              }
             );
             return { success: true, endpoint: sub.endpoint };
           } catch (error: any) {

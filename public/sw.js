@@ -6,7 +6,7 @@
 //   API mutations  → Never cached (pass-through only)
 //   GET /api/      → Network-First (no cache)
 
-const CACHE_VERSION = 'cyberx-v2';
+const CACHE_VERSION = 'cyberx-v3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const FONT_CACHE = `${CACHE_VERSION}-fonts`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
@@ -203,6 +203,10 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/icon-192.png',
     badge: data.badge || '/icon-192.png',
     data: data.data || {},
+    requireInteraction: true, // Prevent auto-dismiss (stays until clicked/swiped)
+    vibrate: [300, 100, 400, 100, 300], // Vibration pattern to grab attention
+    tag: 'cyberx-alert-high', // Force grouping and allow re-notifying
+    renotify: true, // Play sound and vibrate even if a notification with this tag is already showing
   };
 
   event.waitUntil(
