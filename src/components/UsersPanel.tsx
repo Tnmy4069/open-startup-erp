@@ -3,13 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from '@/context/AppContext';
 import {
-  Plus, Trash2, Edit2, X, Shield, Eye, EyeOff, CheckCircle, AlertCircle, Loader, Send
+  Plus, Trash2, Edit2, X, Eye, EyeOff, CheckCircle, AlertCircle, Loader,
+  Send, Bell, BellOff, ToggleLeft, ToggleRight, Users, WifiOff
 } from 'lucide-react';
 
 interface DBUser {
   id: string;
   username: string;
   role: string;
+  isActive: boolean;
+  hasSubscription: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +39,7 @@ export function UsersPanel() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState<DBUser | null>(null);
   const [notification, setNotification] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // Add / Edit form state
   const [formUsername, setFormUsername] = useState('');
@@ -81,11 +85,10 @@ export function UsersPanel() {
         throw new Error(data.error || 'Failed to send broadcast notification.');
       }
 
-      setBroadcastStatus(`Success! Sent push broadcast to ${data.sentCount} active devices.`);
+      setBroadcastStatus(`✓ Sent push broadcast to ${data.sentCount} active device${data.sentCount !== 1 ? 's' : ''}.`);
       setBroadcastTitle('');
       setBroadcastBody('');
       setBroadcastUrl('');
-      // Auto clear success message after 5 seconds
       setTimeout(() => setBroadcastStatus(null), 5000);
     } catch (err: any) {
       setBroadcastStatus(`Error: ${err.message}`);
@@ -117,6 +120,27 @@ export function UsersPanel() {
   };
 
   const closeModal = () => { setShowAddModal(false); setEditingUser(null); };
+
+  const handleToggleActive = async (u: DBUser) => {
+    setTogglingId(u.id);
+    try {
+      const res = await fetch(`/api/users/${u.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !u.isActive }),
+      });
+      if (res.ok) {
+        notify(`User "${u.username}" ${!u.isActive ? 'activated' : 'deactivated'}.`, true);
+        fetchUsers();
+      } else {
+        notify('Failed to update status.', false);
+      }
+    } catch {
+      notify('Network error.', false);
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,6 +194,11 @@ export function UsersPanel() {
     }
   };
 
+  // Derived stats
+  const activeCount = users.filter((u) => u.isActive).length;
+  const inactiveCount = users.filter((u) => !u.isActive).length;
+  const subscribedCount = users.filter((u) => u.hasSubscription).length;
+
   return (
     <div className="space-y-6">
 
@@ -180,7 +209,7 @@ export function UsersPanel() {
             {'// User Access Control'}
           </h2>
           <p className="text-[10px] text-text-muted font-mono mt-0.5">
-            Super Admin &mdash; manage system users and their roles
+            Super Admin &mdash; manage system users, roles, and access status
           </p>
         </div>
         <button
@@ -192,15 +221,36 @@ export function UsersPanel() {
         </button>
       </div>
 
-      {/* Super Admin Notice */}
-      {/* <div className="flex items-start gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl text-[11px] font-mono text-text-muted">
-        <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-        <div>
-          <span className="text-primary font-semibold">Super Admin</span> credentials are stored in{' '}
-          <code className="text-text-heading bg-bg-elevated px-1 rounded">.env</code> and cannot be
-          managed here. Only sub-role users are listed below.
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-[10px] font-mono text-text-muted tracking-wider">TOTAL USERS</p>
+            <p className="text-xl font-bold text-text-heading font-display">{users.length}</p>
+          </div>
         </div>
-      </div> */}
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-cyber-success/10 flex items-center justify-center shrink-0">
+            <ToggleRight className="w-4 h-4 text-cyber-success" />
+          </div>
+          <div>
+            <p className="text-[10px] font-mono text-text-muted tracking-wider">ACTIVE</p>
+            <p className="text-xl font-bold text-cyber-success font-display">{activeCount}</p>
+          </div>
+        </div>
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-cyber-danger/10 flex items-center justify-center shrink-0">
+            <ToggleLeft className="w-4 h-4 text-cyber-danger" />
+          </div>
+          <div>
+            <p className="text-[10px] font-mono text-text-muted tracking-wider">INACTIVE</p>
+            <p className="text-xl font-bold text-cyber-danger font-display">{inactiveCount}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Toast */}
       {notification && (
@@ -223,42 +273,94 @@ export function UsersPanel() {
               <tr className="border-b border-border-normal bg-bg-elevated/40 text-text-muted font-mono text-[10px]">
                 <th className="py-3.5 px-4">USERNAME</th>
                 <th className="py-3.5 px-4">ROLE</th>
+                <th className="py-3.5 px-4">STATUS</th>
+                <th className="py-3.5 px-4">PUSH NOTIFS</th>
                 <th className="py-3.5 px-4 hidden sm:table-cell">CREATED</th>
-                <th className="py-3.5 px-4 hidden md:table-cell">LAST UPDATED</th>
-                <th className="py-3.5 px-4 text-center w-24">ACTIONS</th>
+                <th className="py-3.5 px-4 text-center w-28">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-normal text-text-body">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-text-muted font-mono animate-pulse">
+                  <td colSpan={6} className="py-10 text-center text-text-muted font-mono animate-pulse">
                     <Loader className="w-4 h-4 animate-spin inline mr-2" />
                     {'// Loading user registry...'}
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-text-muted font-mono">
+                  <td colSpan={6} className="py-10 text-center text-text-muted font-mono">
                     {'// No sub-role users found. Add one above.'}
                   </td>
                 </tr>
               ) : (
                 users.map((u) => (
-                  <tr key={u.id} className="hover:bg-bg-elevated/20 transition-colors">
+                  <tr
+                    key={u.id}
+                    className={`hover:bg-bg-elevated/20 transition-colors ${!u.isActive ? 'opacity-60' : ''}`}
+                  >
+                    {/* Username */}
                     <td className="py-3 px-4 font-mono font-semibold text-text-heading">
-                      {u.username}
+                      <div className="flex items-center gap-2">
+                        {u.username}
+                        {!u.isActive && (
+                          <span className="text-[8px] font-mono bg-cyber-danger/10 text-cyber-danger border border-cyber-danger/20 px-1.5 py-0.5 rounded-full">
+                            DISABLED
+                          </span>
+                        )}
+                      </div>
                     </td>
+
+                    {/* Role */}
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold font-mono border ${ROLE_COLOR[u.role] || 'bg-bg-elevated text-text-muted'}`}>
                         {u.role}
                       </span>
                     </td>
+
+                    {/* Active Status Toggle */}
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleToggleActive(u)}
+                        disabled={togglingId === u.id}
+                        title={u.isActive ? 'Click to deactivate' : 'Click to activate'}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold border transition-all cursor-pointer ${u.isActive
+                          ? 'bg-cyber-success/10 text-cyber-success border-cyber-success/25 hover:bg-cyber-success/20'
+                          : 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/25 hover:bg-cyber-danger/20'
+                          }`}
+                      >
+                        {togglingId === u.id ? (
+                          <Loader className="w-3 h-3 animate-spin" />
+                        ) : u.isActive ? (
+                          <ToggleRight className="w-3.5 h-3.5" />
+                        ) : (
+                          <ToggleLeft className="w-3.5 h-3.5" />
+                        )}
+                        {u.isActive ? 'Active' : 'Inactive'}
+                      </button>
+                    </td>
+
+                    {/* Push Subscription */}
+                    <td className="py-3 px-4">
+                      {u.hasSubscription ? (
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-cyber-info">
+                          <Bell className="w-3.5 h-3.5" />
+                          <span>Subscribed</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted">
+                          <BellOff className="w-3.5 h-3.5" />
+                          <span>No device</span>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Created */}
                     <td className="py-3 px-4 text-text-muted hidden sm:table-cell">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-4 text-text-muted hidden md:table-cell">
-                      {new Date(u.updatedAt).toLocaleDateString()}
-                    </td>
+
+                    {/* Actions */}
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
@@ -283,6 +385,20 @@ export function UsersPanel() {
             </tbody>
           </table>
         </div>
+
+        {/* Footer legend */}
+        {!loading && users.length > 0 && (
+          <div className="px-4 py-2.5 border-t border-border-normal bg-bg-elevated/20 flex flex-wrap items-center gap-4 text-[10px] font-mono text-text-muted">
+            <span className="flex items-center gap-1.5">
+              <Bell className="w-3 h-3 text-cyber-info" />
+              {subscribedCount} of {users.length} users have push notifications enabled
+            </span>
+            <span className="flex items-center gap-1.5">
+              <WifiOff className="w-3 h-3" />
+              {users.length - subscribedCount} without device subscription
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Broadcast Push Notification */}
@@ -293,6 +409,7 @@ export function UsersPanel() {
         </h3>
         <p className="text-xs text-text-muted mb-4 font-sans">
           Send a push alert directly to all active browser sessions and home screen installations of CyberX.
+          <span className="ml-2 font-mono text-cyber-info">{subscribedCount} subscribed device{subscribedCount !== 1 ? 's' : ''} will receive this.</span>
         </p>
 
         <form onSubmit={handleBroadcastSubmit} className="space-y-4">

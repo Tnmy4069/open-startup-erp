@@ -3,17 +3,35 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { guardUsers } from '@/lib/permissions';
 
-// GET /api/users — list all DB users (Super Admin only)
+// GET /api/users — list all DB users with subscription status (Super Admin only)
 export async function GET() {
   const forbidden = await guardUsers();
   if (forbidden) return forbidden;
 
   try {
-    const users = await prisma.user.findMany({
-      select: { id: true, username: true, role: true, createdAt: true, updatedAt: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    return NextResponse.json(users);
+    const [users, subscriptions] = await Promise.all([
+      prisma.user.findMany({
+        select: { id: true, username: true, role: true, isActive: true, createdAt: true, updatedAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.pushSubscription.findMany({
+        select: { userId: true },
+      }),
+    ]);
+
+    // Build a set of userIds that have push subscriptions
+    const subscribedUserIds = new Set(
+      subscriptions
+        .filter((s) => s.userId != null)
+        .map((s) => s.userId as string)
+    );
+
+    const enriched = users.map((u) => ({
+      ...u,
+      hasSubscription: subscribedUserIds.has(u.id),
+    }));
+
+    return NextResponse.json(enriched);
   } catch (error) {
     console.error('GET /api/users error:', error);
     return NextResponse.json({ error: 'Failed to fetch users.' }, { status: 500 });
@@ -41,7 +59,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.create({
       data: { username, password: hashedPassword, role },
-      select: { id: true, username: true, role: true, createdAt: true },
+      select: { id: true, username: true, role: true, isActive: true, createdAt: true },
     });
 
     return NextResponse.json(user, { status: 201 });

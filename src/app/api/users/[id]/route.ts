@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { guardUsers } from '@/lib/permissions';
 
-// PUT /api/users/[id] — update role and/or password
+// PUT /api/users/[id] — update role, password, and/or isActive status
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -14,7 +14,7 @@ export async function PUT(
   const { id } = await params;
 
   try {
-    const { username, role, password } = await request.json();
+    const { username, role, password, isActive } = await request.json();
 
     const validRoles = ['Super Admin', 'Co-Founder', 'Founder', 'Committee Member', 'Read Only'];
     if (role && !validRoles.includes(role)) {
@@ -26,11 +26,12 @@ export async function PUT(
     if (username) updateData.username = username;
     if (role) updateData.role = role;
     if (password) updateData.password = await bcrypt.hash(password, 12);
+    if (typeof isActive === 'boolean') updateData.isActive = isActive;
 
     const user = await prisma.user.update({
       where: { id },
       data: updateData,
-      select: { id: true, username: true, role: true, updatedAt: true },
+      select: { id: true, username: true, role: true, isActive: true, updatedAt: true },
     });
 
     return NextResponse.json(user);

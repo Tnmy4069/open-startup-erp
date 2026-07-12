@@ -102,6 +102,7 @@ model User {
   username  String   @unique
   password  String   // bcrypt-hashed
   role      String   // "Super Admin" | "Co-Founder" | "Founder" | "Committee Member" | "Read Only"
+  isActive  Boolean  @default(true) // Super Admin can deactivate accounts
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

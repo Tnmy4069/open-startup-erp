@@ -34,6 +34,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
     }
 
+    // Block deactivated accounts
+    if (user.isActive === false) {
+      return NextResponse.json({ error: 'This account has been deactivated. Contact your Super Admin.' }, { status: 403 });
+    }
+
     await createSession(user.id, user.username, user.role);
     return NextResponse.json({ ok: true, username: user.username, role: user.role });
   } catch (error) {
