@@ -179,3 +179,53 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// ─── Push Events (Notifications) ─────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  let data = { title: 'CyberX Alert', body: 'New broadcast from admin.' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data = { title: 'CyberX Alert', body: event.data.text() };
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icon-192.png',
+    badge: data.badge || '/icon-192.png',
+    data: data.data || {},
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// ─── Notification Click ───────────────────────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || '/dashboard';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // If a window is already open, focus it and navigate
+      for (const client of windowClients) {
+        if (client.url.includes(location.origin) && 'focus' in client) {
+          return client.focus().then((focusedClient) => {
+            if ('navigate' in focusedClient) {
+              return focusedClient.navigate(urlToOpen);
+            }
+            return focusedClient;
+          });
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+

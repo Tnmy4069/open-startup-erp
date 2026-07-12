@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from '@/context/AppContext';
 import {
-  Plus, Trash2, Edit2, X, Shield, Eye, EyeOff, CheckCircle, AlertCircle, Loader
+  Plus, Trash2, Edit2, X, Shield, Eye, EyeOff, CheckCircle, AlertCircle, Loader, Send
 } from 'lucide-react';
 
 interface DBUser {
@@ -43,9 +43,53 @@ export function UsersPanel() {
   const [formError, setFormError] = useState('');
   const [showPw, setShowPw] = useState(false);
 
+  // Broadcast state
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastBody, setBroadcastBody] = useState('');
+  const [broadcastUrl, setBroadcastUrl] = useState('');
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  const [broadcastStatus, setBroadcastStatus] = useState<string | null>(null);
+
   const notify = (msg: string, ok: boolean) => {
     setNotification({ msg, ok });
     setTimeout(() => setNotification(null), 3500);
+  };
+
+  const handleBroadcastSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastTitle || !broadcastBody) return;
+
+    setSendingBroadcast(true);
+    setBroadcastStatus(null);
+
+    try {
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'broadcast',
+          title: broadcastTitle,
+          body: broadcastBody,
+          url: broadcastUrl || '/dashboard',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send broadcast notification.');
+      }
+
+      setBroadcastStatus(`Success! Sent push broadcast to ${data.sentCount} active devices.`);
+      setBroadcastTitle('');
+      setBroadcastBody('');
+      setBroadcastUrl('');
+      // Auto clear success message after 5 seconds
+      setTimeout(() => setBroadcastStatus(null), 5000);
+    } catch (err: any) {
+      setBroadcastStatus(`Error: ${err.message}`);
+    } finally {
+      setSendingBroadcast(false);
+    }
   };
 
   const fetchUsers = useCallback(async () => {
@@ -237,6 +281,87 @@ export function UsersPanel() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Broadcast Push Notification */}
+      <div className="bg-bg-surface border border-border-normal rounded-xl p-6 mt-6">
+        <h3 className="text-sm font-display font-bold text-text-heading mb-4 flex items-center gap-2">
+          <Send className="w-4 h-4 text-primary" />
+          {'// Broadcast Push Notification'}
+        </h3>
+        <p className="text-xs text-text-muted mb-4 font-sans">
+          Send a push alert directly to all active browser sessions and home screen installations of CyberX.
+        </p>
+
+        <form onSubmit={handleBroadcastSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-mono text-text-muted tracking-wider">NOTIFICATION TITLE</label>
+              <input
+                type="text"
+                placeholder="e.g., Campus Session Scheduled"
+                value={broadcastTitle}
+                onChange={(e) => setBroadcastTitle(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all font-sans"
+                required
+                disabled={sendingBroadcast}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-mono text-text-muted tracking-wider">TARGET REDIRECT PATH / URL</label>
+              <input
+                type="text"
+                placeholder="e.g., /dashboard?tab=events"
+                value={broadcastUrl}
+                onChange={(e) => setBroadcastUrl(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all font-mono"
+                disabled={sendingBroadcast}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-mono text-text-muted tracking-wider">ALERT MESSAGE / BODY</label>
+            <textarea
+              placeholder="Enter push alert message description..."
+              value={broadcastBody}
+              onChange={(e) => setBroadcastBody(e.target.value)}
+              className="w-full h-20 p-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all resize-none font-sans"
+              required
+              disabled={sendingBroadcast}
+            />
+          </div>
+
+          {broadcastStatus && (
+            <div className={`p-3 rounded-lg text-xs font-mono border ${
+              broadcastStatus.startsWith('Error') 
+                ? 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger' 
+                : 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
+            }`}>
+              {broadcastStatus}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={sendingBroadcast || !broadcastTitle || !broadcastBody}
+              className="px-5 h-10 rounded-lg bg-primary hover:bg-opacity-90 disabled:opacity-50 text-black font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
+            >
+              {sendingBroadcast ? (
+                <>
+                  <Loader className="w-3.5 h-3.5 animate-spin" />
+                  <span>Broadcasting...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Broadcast Alert</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Add/Edit Modal */}

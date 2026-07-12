@@ -6,6 +6,66 @@ interface UpdateToastProps {
   onUpdateAvailable: (registration: ServiceWorkerRegistration) => void;
 }
 
+// Convert urlSafeBase64 to Uint8Array for VAPID key
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
+  try {
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidKey) {
+      console.warn('[Push SW] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not defined.');
+      return;
+    }
+
+    // Check if permission is default, ask for it
+    if (Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.log('[Push SW] Permission not granted.');
+        return;
+      }
+    }
+
+    if (Notification.permission !== 'granted') {
+      return;
+    }
+
+    // Retrieve or create push subscription
+    const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey,
+    });
+
+    console.log('[Push SW] Active subscription:', subscription);
+
+    // Save/update subscription on server
+    const res = await fetch('/api/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'subscribe',
+        subscription,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error('[Push SW] Failed to save subscription:', await res.text());
+    }
+  } catch (error) {
+    console.error('[Push SW] Error subscribing user:', error);
+  }
+}
+
 export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProps) {
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
@@ -25,6 +85,11 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
           updateViaCache: 'none',
         });
         registrationRef.current = registration;
+
+        // Auto subscribe user to push if permission is granted/default
+        if ('pushManager' in registration && typeof Notification !== 'undefined') {
+          subscribeUserToPush(registration);
+        }
 
         // Check for updates every time the page gains focus
         const checkForUpdate = () => registration.update();
@@ -73,3 +138,4 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
 
   return null;
 }
+

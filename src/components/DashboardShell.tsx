@@ -29,7 +29,8 @@ import {
   Calendar,
   ListTodo,
   Wrench,
-  FileText
+  FileText,
+  Megaphone
 } from 'lucide-react';
 import { DashboardHome } from './DashboardHome';
 import { LedgerTable } from './LedgerTable';
@@ -45,6 +46,7 @@ import { EventsPanel } from './EventsPanel';
 import { AssetsPanel } from './AssetsPanel';
 import { TasksPanel } from './TasksPanel';
 import { DocumentsPanel } from './DocumentsPanel';
+import { AnnouncementsPanel } from './AnnouncementsPanel';
 
 export function DashboardShell() {
   const {
@@ -57,7 +59,7 @@ export function DashboardShell() {
     logout,
   } = useApp();
 
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents'>('dashboard');
+  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements'>('dashboard');
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
@@ -290,6 +292,22 @@ export function DashboardShell() {
               <span>Dashboard</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'dashboard' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>D</kbd>
+          </button>
+
+          {/* Announcements */}
+          <button
+            onClick={() => setCurrentTab('announcements')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'announcements'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Megaphone className="w-4 h-4" />
+              <span>Announcements</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'announcements' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>N</kbd>
           </button>
 
           {/* Meetings */}
@@ -734,6 +752,10 @@ export function DashboardShell() {
                 onSelectLedger={() => setCurrentTab('ledger')}
               />
             )}
+
+            {currentTab === 'announcements' && (
+              <AnnouncementsPanel />
+            )}
             
             {currentTab === 'ledger' && (
               <LedgerTable
@@ -903,10 +925,10 @@ export function DashboardShell() {
               </button>
             </div>
 
-            {/* Navigation links inside drawer */}
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {[
                 { tab: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+                { tab: 'announcements', label: 'Announcements', icon: <Megaphone className="w-5 h-5" /> },
                 { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
                 { tab: 'tasks', label: 'Tasks', icon: <ListTodo className="w-5 h-5" /> },
                 { tab: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
@@ -924,7 +946,7 @@ export function DashboardShell() {
                 <button
                   key={item.tab}
                   onClick={() => {
-                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents');
+                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements');
                     setShowMobileSidebar(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
