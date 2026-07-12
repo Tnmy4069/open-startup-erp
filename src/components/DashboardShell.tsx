@@ -294,22 +294,6 @@ export function DashboardShell() {
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'dashboard' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>D</kbd>
           </button>
 
-          {/* Announcements */}
-          <button
-            onClick={() => setCurrentTab('announcements')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'announcements'
-                ? 'bg-primary text-black font-bold'
-                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <Megaphone className="w-4 h-4" />
-              <span>Announcements</span>
-            </div>
-            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'announcements' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>N</kbd>
-          </button>
-
           {/* Meetings */}
           <button
             onClick={() => setCurrentTab('meetings')}
@@ -560,7 +544,7 @@ export function DashboardShell() {
         <header className="h-[72px] shrink-0 sticky top-0 z-40 flex items-center justify-between px-6 border-b border-border-normal bg-bg-surface/90 backdrop-blur-md">
           
           {/* SEARCH TRIGGER */}
-          <div className="w-96 relative hidden sm:block">
+          <div className="w-96 relative hidden md:block">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Search className="h-4.5 w-4.5 text-text-muted" />
             </span>
@@ -680,7 +664,7 @@ export function DashboardShell() {
             </div>
 
 
-            {/* REAL SESSION USER DISPLAY + LOGOUT */}
+            {/* REAL SESSION USER DISPLAY */}
             <div className="flex items-center gap-2 pl-2 border-l border-border-normal/50">
               <div className="flex flex-col items-end hidden sm:flex">
                 <span className="text-xs font-semibold text-text-heading font-mono leading-tight">{user?.username ?? '...'}</span>
@@ -689,13 +673,6 @@ export function DashboardShell() {
               <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 border border-primary/20">
                 <User className="w-4 h-4 text-primary" />
               </div>
-              <button
-                onClick={logout}
-                title="Logout"
-                className="p-2 rounded-lg border border-border-normal text-text-muted hover:text-cyber-danger hover:border-cyber-danger/40 hover:bg-cyber-danger/5 transition-all duration-150"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
             </div>
 
           </div>
@@ -750,6 +727,11 @@ export function DashboardShell() {
               <DashboardHome
                 globalSearch={globalSearchVal}
                 onSelectLedger={() => setCurrentTab('ledger')}
+                onSelectTab={(tab) => setCurrentTab(tab as any)}
+                onNewTransaction={() => {
+                  setCurrentTab('ledger');
+                  setOpenNewTxDrawer(true);
+                }}
               />
             )}
 
@@ -928,7 +910,6 @@ export function DashboardShell() {
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {[
                 { tab: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-                { tab: 'announcements', label: 'Announcements', icon: <Megaphone className="w-5 h-5" /> },
                 { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
                 { tab: 'tasks', label: 'Tasks', icon: <ListTodo className="w-5 h-5" /> },
                 { tab: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },

@@ -17,7 +17,16 @@ import {
   CheckSquare,
   FileText,
   Users,
-  AlertCircle
+  AlertCircle,
+  LayoutGrid,
+  BookOpen,
+  ListTodo,
+  ReceiptText,
+  Building2,
+  FileSpreadsheet,
+  Plus,
+  LogOut,
+  User
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -88,7 +97,17 @@ interface DashboardData {
   }>;
 }
 
-export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: string; onSelectLedger: () => void }) {
+export function DashboardHome({
+  globalSearch,
+  onSelectLedger,
+  onSelectTab,
+  onNewTransaction
+}: {
+  globalSearch: string;
+  onSelectLedger: () => void;
+  onSelectTab: (tab: string) => void;
+  onNewTransaction?: () => void;
+}) {
   const { refreshTrigger, theme, role, user: sessionUser } = useApp();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,18 +135,15 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
         const stats = await res.json();
         setData(stats);
       }
-    } catch (e) {
-      console.error('Failed to load dashboard statistics:', e);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-      fetchData();
-    }, 0);
+    fetchData();
   }, [refreshTrigger]);
 
   const formatCurrency = (val: number) => {
@@ -159,6 +175,10 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
 
   // Render role-specific dashboards
   const isFinanceOrAdmin = role === 'Super Admin' || role === 'Co-Founder';
+  const isFounder = role === 'Founder';
+  const isCommitteeMember = role === 'Committee Member';
+  const isReadOnly = role === 'Read Only';
+  const isFallback = !isFinanceOrAdmin && !isFounder && !isCommitteeMember && !isReadOnly;
 
   return (
     <div className="space-y-6">
@@ -188,6 +208,67 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
           <ChevronRight className="w-4 h-4 text-primary" />
         </div>
       )}
+
+      {/* MOBILE ONLY QUICK LAUNCH "APPS" GRID & QUICK ACTIONS */}
+      <div className="block md:hidden bg-bg-surface border border-border-normal rounded-xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-border-normal pb-3">
+          <h3 className="text-xs font-display font-bold text-text-heading flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-primary" />
+            {'// Quick Launch Apps'}
+          </h3>
+          <span className="text-[9px] font-mono text-text-muted">TAP TO LAUNCH</span>
+        </div>
+
+        {/* Quick Launch Apps Grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 text-center">
+          {[
+            { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5 text-primary" /> },
+            { tab: 'tasks', label: 'Tasks', icon: <ListTodo className="w-5 h-5 text-primary" /> },
+            { tab: 'events', label: 'Events', icon: <Calendar className="w-5 h-5 text-primary" /> },
+            { tab: 'members', label: 'Members', icon: <User className="w-5 h-5 text-primary" /> },
+            { tab: 'assets', label: 'Assets', icon: <Wrench className="w-5 h-5 text-primary" /> },
+            { tab: 'documents', label: 'Documents', icon: <FileText className="w-5 h-5 text-primary" /> },
+            { tab: 'ledger', label: 'Ledger', icon: <ReceiptText className="w-5 h-5 text-primary" /> },
+            { tab: 'people', label: 'People', icon: <Users className="w-5 h-5 text-primary" /> },
+            { tab: 'organizations', label: 'Orgs', icon: <Building2 className="w-5 h-5 text-primary" /> },
+            { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5 text-primary" /> },
+          ].map((app) => (
+            <button
+              key={app.tab}
+              onClick={() => onSelectTab(app.tab)}
+              className="flex flex-col items-center justify-center p-3 rounded-lg border border-border-normal bg-bg-primary hover:border-primary transition-all duration-150 active:scale-95 cursor-pointer"
+            >
+              <div className="p-2 bg-primary/5 rounded-lg mb-1.5">{app.icon}</div>
+              <span className="text-[10px] text-text-heading font-medium tracking-tight truncate w-full">
+                {app.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Quick Actions Strip */}
+        <div className="pt-3 border-t border-border-normal">
+          <span className="text-[9px] font-mono text-text-muted tracking-wider block mb-2">QUICK ACTIONS</span>
+          <div className="flex gap-2">
+            {onNewTransaction && (
+              <button
+                onClick={onNewTransaction}
+                className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-primary hover:bg-opacity-95 text-black font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Transaction</span>
+              </button>
+            )}
+            <button
+              onClick={() => onSelectTab('tasks')}
+              className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading font-semibold text-xs active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-text-muted" />
+              <span>Create Task</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* -------------------- 1. SUPER ADMIN / FINANCE HEAD DASHBOARD -------------------- */}
       {isFinanceOrAdmin && (
@@ -718,7 +799,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
       )}
 
       {/* -------------------- 3. READ ONLY / GUEST DASHBOARD -------------------- */}
-      {role === 'Read Only' && (
+      {(isReadOnly || isFallback) && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
             <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">

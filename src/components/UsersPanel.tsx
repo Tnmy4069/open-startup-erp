@@ -14,7 +14,8 @@ interface DBUser {
   updatedAt: string;
 }
 
-const ROLE_OPTIONS: Exclude<UserRole, 'Super Admin'>[] = [
+const ROLE_OPTIONS: UserRole[] = [
+  // 'Super Admin',
   'Co-Founder',
   'Founder',
   'Committee Member',
@@ -22,6 +23,7 @@ const ROLE_OPTIONS: Exclude<UserRole, 'Super Admin'>[] = [
 ];
 
 const ROLE_COLOR: Record<string, string> = {
+  'Super Admin': 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/20',
   'Co-Founder': 'bg-primary/10 text-primary border-primary/20',
   'Founder': 'bg-cyber-info/10 text-cyber-info border-cyber-info/20',
   'Committee Member': 'bg-cyber-success/10 text-cyber-success border-cyber-success/20',
@@ -203,8 +205,8 @@ export function UsersPanel() {
       {/* Toast */}
       {notification && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-[11px] font-mono animate-in fade-in duration-150 ${notification.ok
-            ? 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
-            : 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
+          ? 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
+          : 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
           }`}>
           {notification.ok
             ? <CheckCircle className="w-4 h-4 shrink-0" />
@@ -333,11 +335,10 @@ export function UsersPanel() {
           </div>
 
           {broadcastStatus && (
-            <div className={`p-3 rounded-lg text-xs font-mono border ${
-              broadcastStatus.startsWith('Error') 
-                ? 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger' 
+            <div className={`p-3 rounded-lg text-xs font-mono border ${broadcastStatus.startsWith('Error')
+                ? 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
                 : 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
-            }`}>
+              }`}>
               {broadcastStatus}
             </div>
           )}
