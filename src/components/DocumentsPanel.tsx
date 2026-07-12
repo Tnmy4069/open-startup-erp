@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useApp } from '@/context/AppContext';
@@ -22,7 +22,13 @@ import {
   Save,
   CheckCircle,
   Eye,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Image,
+  Globe,
+  File,
+  Download,
+  ExternalLink,
+  UploadCloud
 } from 'lucide-react';
 
 interface DocFile {
@@ -30,6 +36,10 @@ interface DocFile {
   name: string;
   folderId: string;
   content: string;
+  type?: string;
+  fileUrl?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
   tags: string[];
   isPinned: boolean;
   isFavorite: boolean;
@@ -88,6 +98,28 @@ export function DocumentsPanel() {
 
   // Local search
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Form states for new files / upload / link
+  const [newFileType, setNewFileType] = useState<'markdown' | 'link' | 'file'>('markdown');
+  const [newFileUrl, setNewFileUrl] = useState('');
+  const [selectedUploadFile, setSelectedUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const getFileIcon = (type?: string, mimeType?: string | null, sizeClass: string = "w-3.5 h-3.5 shrink-0") => {
+    if (type === 'link') {
+      return <Globe className={`${sizeClass} text-cyber-info`} />;
+    }
+    if (type === 'file') {
+      if (mimeType?.startsWith('image/')) {
+        return <Image className={`${sizeClass} text-cyber-success`} />;
+      }
+      if (mimeType === 'application/pdf') {
+        return <FileText className={`${sizeClass} text-cyber-danger`} />;
+      }
+      return <File className={`${sizeClass} text-text-muted`} />;
+    }
+    return <FileText className={`${sizeClass} text-text-muted`} />;
+  };
 
   const fetchDocumentStructure = async () => {
     try {
@@ -175,14 +207,64 @@ export function DocumentsPanel() {
     e.preventDefault();
     if (!newFileName || !targetFolderId) return;
 
+    setIsUploading(true);
     try {
+      let fileUrl = null;
+      let fileSize = null;
+      let mimeType = null;
+      let initialContent = '';
+
+      if (newFileType === 'file') {
+        if (!selectedUploadFile) {
+          alert('Please select a file to upload.');
+          setIsUploading(false);
+          return;
+        }
+
+        // 1. Upload file to server
+        const formData = new FormData();
+        formData.append('file', selectedUploadFile);
+
+        const uploadRes = await fetch('/api/documents/files', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          throw new Error(errText || 'File upload failed.');
+        }
+
+        const uploadResult = await uploadRes.json();
+        fileUrl = uploadResult.fileUrl;
+        fileSize = uploadResult.fileSize;
+        mimeType = uploadResult.mimeType;
+        initialContent = `File upload URL: ${fileUrl}`;
+      } else if (newFileType === 'link') {
+        if (!newFileUrl) {
+          alert('Please enter a link URL.');
+          setIsUploading(false);
+          return;
+        }
+        fileUrl = newFileUrl;
+        initialContent = `External link: ${fileUrl}`;
+      } else {
+        // markdown
+        initialContent = `# ${newFileName}\n\nStart writing documentation here...`;
+      }
+
+      // 2. Create DocFile record
       const res = await fetch('/api/documents/files', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newFileName.endsWith('.md') ? newFileName : `${newFileName}.md`,
+          name: newFileType === 'markdown' && !newFileName.endsWith('.md') ? `${newFileName}.md` : newFileName,
           folderId: targetFolderId,
-          content: `# ${newFileName}\n\nStart writing documentation here...`,
+          content: initialContent,
+          type: newFileType,
+          fileUrl,
+          fileSize,
+          mimeType,
         }),
       });
 
@@ -190,13 +272,22 @@ export function DocumentsPanel() {
         const data = await res.json();
         setShowFileModal(false);
         setNewFileName('');
+        setNewFileType('markdown');
+        setNewFileUrl('');
+        setSelectedUploadFile(null);
         setTargetFolderId('');
         triggerNotification(`Created document: ${data.name}`, 'Created');
         fetchDocumentStructure();
         setSelectedFileId(data.id);
+      } else {
+        const errData = await res.json();
+        alert(errData.error || 'Failed to create document.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(`Error creating document: ${err.message}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -207,7 +298,11 @@ export function DocumentsPanel() {
       const res = await fetch(`/api/documents/files/${fileDetail.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editorName, content: editorContent }),
+        body: JSON.stringify({
+          name: editorName,
+          content: editorContent,
+          fileUrl: fileDetail.type === 'link' ? editorContent : undefined
+        }),
       });
 
       if (res.ok) {
@@ -384,7 +479,7 @@ export function DocumentsPanel() {
                               }`}
                             >
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <FileText className="w-3.5 h-3.5 shrink-0" />
+                                {getFileIcon(file.type, file.mimeType)}
                                 <span className="truncate">{file.name}</span>
                               </div>
 
@@ -428,7 +523,7 @@ export function DocumentsPanel() {
                       onClick={() => setSelectedFileId(file.id)}
                       className="flex items-center gap-2 hover:text-text-heading cursor-pointer"
                     >
-                      <Pin className="w-3 h-3 text-primary shrink-0" />
+                      {getFileIcon(file.type, file.mimeType)}
                       <span className="truncate">{file.name}</span>
                     </div>
                   ))}
@@ -452,7 +547,7 @@ export function DocumentsPanel() {
                 {/* File Header Panel */}
                 <div className="flex items-center justify-between border-b border-border-normal pb-3">
                   <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-primary" />
+                    {getFileIcon(fileDetail.type, fileDetail.mimeType, 'w-5 h-5 text-primary')}
                     {editMode ? (
                       <input
                         type="text"
@@ -477,7 +572,7 @@ export function DocumentsPanel() {
                       <Star className="w-4 h-4" />
                     </button>
 
-                    {role !== 'Read Only' && (
+                    {role !== 'Read Only' && fileDetail.type !== 'file' && (
                       <>
                         {editMode ? (
                           <>
@@ -512,32 +607,108 @@ export function DocumentsPanel() {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 min-h-[350px] grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
-                  
-                  {/* Markdown Text Area Editor */}
-                  {editMode ? (
-                    <div className="flex flex-col gap-2">
-                      <span className="font-mono text-[9px] text-text-muted">EDIT MARKDOWN CODE</span>
-                      <textarea
-                        value={editorContent}
-                        onChange={(e) => setEditorContent(e.target.value)}
-                        className="w-full flex-1 p-4 bg-bg-primary border border-border-normal rounded-xl text-xs text-text-heading font-mono focus:outline-none focus:border-primary resize-none"
-                      />
-                    </div>
-                  ) : null}
+                <div className="flex-1 min-h-[350px] flex flex-col items-stretch justify-center">
+                  {fileDetail.type === 'markdown' ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch flex-1">
+                      {/* Markdown Text Area Editor */}
+                      {editMode ? (
+                        <div className="flex flex-col gap-2">
+                          <span className="font-mono text-[9px] text-text-muted">EDIT MARKDOWN CODE</span>
+                          <textarea
+                            value={editorContent}
+                            onChange={(e) => setEditorContent(e.target.value)}
+                            className="w-full flex-1 p-4 bg-bg-primary border border-border-normal rounded-xl text-xs text-text-heading font-mono focus:outline-none focus:border-primary resize-none"
+                          />
+                        </div>
+                      ) : null}
 
-                  {/* Markdown Live Preview Viewer */}
-                  {(!editMode || previewSplit) ? (
-                    <div className="flex flex-col gap-2 min-h-[300px]">
-                      <span className="font-mono text-[9px] text-text-muted">PREVIEW COMPILED</span>
-                      <div className="prose prose-sm prose-invert max-w-none w-full flex-1 p-5 bg-bg-primary/50 border border-border-normal/60 rounded-xl overflow-y-auto font-sans text-xs text-text-body leading-relaxed markdown-body">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {editMode ? editorContent : fileDetail.content}
-                        </ReactMarkdown>
+                      {/* Markdown Live Preview Viewer */}
+                      {(!editMode || previewSplit) ? (
+                        <div className="flex flex-col gap-2 min-h-[300px]">
+                          <span className="font-mono text-[9px] text-text-muted">PREVIEW COMPILED</span>
+                          <div className="prose prose-sm prose-invert max-w-none w-full flex-1 p-5 bg-bg-primary/50 border border-border-normal/60 rounded-xl overflow-y-auto font-sans text-xs text-text-body leading-relaxed markdown-body">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {editMode ? editorContent : fileDetail.content}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : fileDetail.type === 'link' ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-bg-primary/30 border border-border-normal/60 rounded-xl space-y-4 text-center">
+                      <div className="p-4 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                        <Globe className="w-10 h-10" />
                       </div>
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-sm text-text-heading">{fileDetail.name}</h4>
+                        <p className="text-[11px] text-text-muted font-mono">{fileDetail.fileUrl}</p>
+                      </div>
+                      
+                      {editMode ? (
+                        <div className="w-full max-w-md space-y-3 text-left">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-text-muted font-mono">LINK URL</label>
+                            <input
+                              type="text"
+                              value={editorContent}
+                              onChange={(e) => setEditorContent(e.target.value)}
+                              className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-xs text-text-heading focus:outline-none w-full"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <a
+                          href={fileDetail.fileUrl || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 h-10 px-5 rounded-lg bg-primary hover:bg-opacity-95 text-black font-semibold text-xs font-sans transition-all duration-150"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>Open Resource</span>
+                        </a>
+                      )}
                     </div>
-                  ) : null}
+                  ) : (
+                    // file type
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-bg-primary/30 border border-border-normal/60 rounded-xl space-y-6 text-center">
+                      {fileDetail.mimeType?.startsWith('image/') ? (
+                        <div className="max-w-full max-h-[50vh] overflow-auto border border-border-normal/80 rounded-xl bg-black/40 p-2 flex items-center justify-center">
+                          <img
+                            src={fileDetail.fileUrl || ''}
+                            alt={fileDetail.name}
+                            className="max-w-full max-h-[46vh] object-contain rounded-lg"
+                          />
+                        </div>
+                      ) : fileDetail.mimeType === 'application/pdf' ? (
+                        <iframe
+                          src={fileDetail.fileUrl || ''}
+                          className="w-full h-[55vh] rounded-xl border border-border-normal bg-white"
+                        />
+                      ) : (
+                        <div className="p-4 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                          <File className="w-10 h-10" />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-sm text-text-heading">{fileDetail.name}</h4>
+                        <p className="text-[10px] text-text-muted font-mono">
+                          MIME TYPE: {fileDetail.mimeType || 'Unknown'} | SIZE: {fileDetail.fileSize ? (fileDetail.fileSize / 1024).toFixed(1) + ' KB' : 'Unknown'}
+                        </p>
+                      </div>
 
+                      <a
+                        href={fileDetail.fileUrl || '#'}
+                        download={fileDetail.name}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 h-10 px-5 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated hover:text-text-heading text-xs font-semibold font-sans transition-all duration-150"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download File</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Version rollback control */}
@@ -656,16 +827,66 @@ export function DocumentsPanel() {
 
             <div className="space-y-3.5 text-xs text-sans">
               <div className="flex flex-col gap-1.5">
-                <label className="text-text-heading font-semibold">File Title Name *</label>
+                <label className="text-text-heading font-semibold font-mono text-[10px]">DOCUMENT TYPE</label>
+                <select
+                  value={newFileType}
+                  onChange={(e) => {
+                    const val = e.target.value as 'markdown' | 'link' | 'file';
+                    setNewFileType(val);
+                  }}
+                  className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none font-sans text-xs"
+                >
+                  <option value="markdown">Markdown Document (.md)</option>
+                  <option value="link">External Resource Link (Google Sheet, Doc, etc.)</option>
+                  <option value="file">File Attachment / Upload (PDF, PNG, JPG, DOCX)</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-text-heading font-semibold">Document Title / Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. meeting_notes_12_04.md"
+                  placeholder={newFileType === 'markdown' ? "e.g. project_milestones" : newFileType === 'link' ? "e.g. Google Sheets Budget" : "e.g. wireframe_mockup"}
                   value={newFileName}
                   onChange={(e) => setNewFileName(e.target.value)}
                   className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none font-mono"
                 />
               </div>
+
+              {newFileType === 'link' && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold">External Resource URL *</label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://docs.google.com/spreadsheets/..."
+                    value={newFileUrl}
+                    onChange={(e) => setNewFileUrl(e.target.value)}
+                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none font-mono"
+                  />
+                </div>
+              )}
+
+              {newFileType === 'file' && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold">Select File to Upload *</label>
+                  <input
+                    type="file"
+                    required
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedUploadFile(file);
+                        if (!newFileName) {
+                          setNewFileName(file.name);
+                        }
+                      }
+                    }}
+                    className="flex items-center justify-center h-12 px-3 py-2 bg-bg-primary border border-border-normal border-dashed rounded-lg text-text-muted hover:border-primary transition-colors cursor-pointer text-[11px]"
+                  />
+                </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-text-heading font-semibold">Destination Folder Directory *</label>
@@ -693,10 +914,17 @@ export function DocumentsPanel() {
               </button>
               <button
                 type="submit"
-                disabled={!targetFolderId}
-                className="h-9 px-5 rounded-lg bg-primary hover:bg-opacity-90 text-black font-bold font-mono disabled:opacity-50"
+                disabled={!targetFolderId || isUploading}
+                className="h-9 px-5 rounded-lg bg-primary hover:bg-opacity-90 text-black font-bold font-mono disabled:opacity-50 flex items-center gap-1.5"
               >
-                CREATE FILE
+                {isUploading ? (
+                  <>
+                    <UploadCloud className="w-3.5 h-3.5 animate-bounce" />
+                    <span>UPLOADING...</span>
+                  </>
+                ) : (
+                  <span>CREATE DOCUMENT</span>
+                )}
               </button>
             </div>
           </form>

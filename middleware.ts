@@ -10,10 +10,16 @@ const PROTECTED_PREFIXES = ['/dashboard', '/api/'];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow Next.js internals and static assets
+  // Allow Next.js internals, static assets, and PWA files
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
+    pathname === '/sw.js' ||
+    pathname === '/offline' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname.startsWith('/icon-') ||
+    pathname.startsWith('/apple-icon') ||
+    pathname.startsWith('/uploads/') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();

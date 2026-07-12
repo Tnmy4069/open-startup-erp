@@ -325,3 +325,30 @@ body {
 .prose-meeting > :first-child { margin-top: 0 !important; }
 .prose-meeting > :last-child  { margin-bottom: 0 !important; }
 
+/* ─── PWA / Standalone Mode ─────────────────────────────────────────────────── */
+
+/* Respect device safe areas (notch, home bar) when running as installed PWA */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Prevent elastic over-scroll bounce when installed */
+  html, body {
+    overscroll-behavior: none;
+  }
+}
+
+/* Remove tap highlight on mobile for all interactive elements */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on UI elements */
+button, label, nav, header {
+  -webkit-user-select: none;
+  user-select: none;
+}

@@ -292,20 +292,20 @@ export function DashboardShell() {
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'dashboard' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>D</kbd>
           </button>
 
-          {/* Events */}
+          {/* Meetings */}
           <button
-            onClick={() => setCurrentTab('events')}
+            onClick={() => setCurrentTab('meetings')}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'events'
+              currentTab === 'meetings'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <Calendar className="w-4 h-4" />
-              <span>Events</span>
+              <BookOpen className="w-4 h-4" />
+              <span>Meetings</span>
             </div>
-            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'events' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>E</kbd>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>G</kbd>
           </button>
 
           {/* Tasks */}
@@ -322,6 +322,22 @@ export function DashboardShell() {
               <span>Tasks</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'tasks' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>K</kbd>
+          </button>
+
+          {/* Events */}
+          <button
+            onClick={() => setCurrentTab('events')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'events'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4" />
+              <span>Events</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'events' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>E</kbd>
           </button>
 
           {/* Members */}
@@ -434,22 +450,6 @@ export function DashboardShell() {
               <span>Reports</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'reports' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>R</kbd>
-          </button>
-
-          {/* Meetings */}
-          <button
-            onClick={() => setCurrentTab('meetings')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'meetings'
-                ? 'bg-primary text-black font-bold'
-                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-4 h-4" />
-              <span>Meetings</span>
-            </div>
-            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
           </button>
 
           {/* Users — Super Admin only */}
@@ -907,8 +907,9 @@ export function DashboardShell() {
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {[
                 { tab: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-                { tab: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
+                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
                 { tab: 'tasks', label: 'Tasks', icon: <ListTodo className="w-5 h-5" /> },
+                { tab: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
                 { tab: 'members', label: 'Members', icon: <User className="w-5 h-5" /> },
                 { tab: 'assets', label: 'Assets', icon: <Wrench className="w-5 h-5" /> },
                 { tab: 'documents', label: 'Documents', icon: <FileText className="w-5 h-5" /> },
@@ -916,7 +917,6 @@ export function DashboardShell() {
                 { tab: 'people', label: 'People', icon: <Users className="w-5 h-5" /> },
                 { tab: 'organizations', label: 'Organizations', icon: <Building2 className="w-5 h-5" /> },
                 { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5" /> },
-                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
                 ...(role === 'Super Admin' ? [{ tab: 'users', label: 'Users', icon: <Shield className="w-5 h-5" /> }] : []),
                 { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5" /> },
                 { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
