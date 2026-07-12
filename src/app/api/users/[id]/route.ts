@@ -16,7 +16,7 @@ export async function PUT(
   try {
     const { username, role, password } = await request.json();
 
-    const validRoles = ['Finance Head', 'Founder', 'Committee Member', 'Read Only'];
+    const validRoles = ['Co-Founder', 'Founder', 'Committee Member', 'Read Only'];
     if (role && !validRoles.includes(role)) {
       return NextResponse.json({ error: 'Invalid role.' }, { status: 400 });
     }

@@ -447,7 +447,7 @@ export function EventsPanel() {
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          {(role === 'Super Admin' || role === 'Finance Head') && (
+                          {(role === 'Super Admin' || role === 'Co-Founder') && (
                             <button
                               onClick={(event) => { event.stopPropagation(); handleDelete(e); }}
                               className="p-1.5 border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger rounded-lg"

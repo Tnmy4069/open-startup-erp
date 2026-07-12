@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'username, password, and role are required.' }, { status: 400 });
     }
 
-    const validRoles = ['Finance Head', 'Founder', 'Committee Member', 'Read Only'];
+    const validRoles = ['Co-Founder', 'Founder', 'Committee Member', 'Read Only'];
     if (!validRoles.includes(role)) {
       return NextResponse.json({ error: 'Invalid role.' }, { status: 400 });
     }

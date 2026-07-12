@@ -101,7 +101,7 @@ model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   username  String   @unique
   password  String   // bcrypt-hashed
-  role      String   // "Finance Head" | "Treasurer" | "Committee Member" | "Read Only"
+  role      String   // "Super Admin" | "Co-Founder" | "Founder" | "Committee Member" | "Read Only"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

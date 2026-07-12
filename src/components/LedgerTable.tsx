@@ -881,7 +881,7 @@ export function LedgerTable({
                         
                         {role !== 'Read Only' && (
                           <>
-                            {(role === 'Super Admin' || role === 'Finance Head' || role === 'Founder') && (
+                            {(role === 'Super Admin' || role === 'Co-Founder' || role === 'Founder') && (
                               <button
                                 onClick={() => handleOpenEdit(tx)}
                                 className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
@@ -1099,7 +1099,7 @@ export function LedgerTable({
                             
                             {role !== 'Read Only' && (
                               <>
-                                {(role === 'Super Admin' || role === 'Finance Head' || role === 'Founder') && (
+                                {(role === 'Super Admin' || role === 'Co-Founder' || role === 'Founder') && (
                                   <button
                                     onClick={() => handleOpenEdit(tx)}
                                     className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"

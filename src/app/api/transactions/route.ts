@@ -261,7 +261,7 @@ export async function PUT(request: NextRequest) {
         data: {
           action: 'Approved',
           user: user || 'System',
-          role: role || 'Finance Head',
+          role: role || 'Co-Founder',
           details: `Bulk changed status of ${ids.length} transactions to ${status}.`,
         },
       });

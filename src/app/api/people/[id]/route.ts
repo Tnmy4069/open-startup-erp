@@ -60,8 +60,8 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  if (!['Super Admin', 'Finance Head'].includes(session.role)) {
-    return NextResponse.json({ error: 'Access denied: only Super Admin and Finance Head can delete profiles.' }, { status: 403 });
+  if (!['Super Admin', 'Co-Founder'].includes(session.role)) {
+    return NextResponse.json({ error: 'Access denied: only Super Admin and Co-Founder can delete profiles.' }, { status: 403 });
   }
 
   try {

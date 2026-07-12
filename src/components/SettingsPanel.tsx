@@ -68,8 +68,8 @@ export function SettingsPanel() {
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (role !== 'Super Admin' && role !== 'Finance Head') {
-      alert('Access Denied. Only Super Admin or Finance Head can change settings.');
+    if (role !== 'Super Admin' && role !== 'Co-Founder') {
+      alert('Access Denied. Only Super Admin or Co-Founder can change settings.');
       return;
     }
 

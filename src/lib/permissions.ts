@@ -4,8 +4,8 @@
  * Role              | View | Create | Edit | Delete | Settings | Users
  * ─────────────────────────────────────────────────────────────────────
  * Super Admin       |  ✅  |   ✅   |  ✅  |   ✅   |    ✅    |  ✅
- * Finance Head      |  ✅  |   ✅   |  ✅  |   ❌   |    ✅    |  ❌
- * Founder            |  ✅  |   ✅   |  ✅  |   ❌   |    ❌    |  ❌
+ * Co-Founder        |  ✅  |   ✅   |  ✅  |   ❌   |    ✅    |  ❌
+ * Founder           |  ✅  |   ✅   |  ✅  |   ❌   |    ❌    |  ❌
  * Committee Member  |  ✅  |   ✅   |  ❌  |   ❌   |    ❌    |  ❌
  * Read Only         |  ✅  |   ❌   |  ❌  |   ❌   |    ❌    |  ❌
  */
@@ -13,18 +13,18 @@
 import { NextResponse } from 'next/server';
 import { getSession } from './session';
 
-export type Role = 'Super Admin' | 'Finance Head' | 'Founder' | 'Committee Member' | 'Read Only';
+export type Role = 'Super Admin' | 'Co-Founder' | 'Founder' | 'Committee Member' | 'Read Only';
 
 // ── Role hierarchy helpers ────────────────────────────────────────────────────
 
 /** Can CREATE records (transactions, orgs, people) */
 export function canCreate(role: string): boolean {
-  return ['Super Admin', 'Finance Head', 'Founder', 'Committee Member'].includes(role);
+  return ['Super Admin', 'Co-Founder', 'Founder', 'Committee Member'].includes(role);
 }
 
 /** Can EDIT / UPDATE records */
 export function canEdit(role: string): boolean {
-  return ['Super Admin', 'Finance Head', 'Founder'].includes(role);
+  return ['Super Admin', 'Co-Founder', 'Founder'].includes(role);
 }
 
 /** Can DELETE records */
@@ -34,7 +34,7 @@ export function canDelete(role: string): boolean {
 
 /** Can access and edit Settings */
 export function canEditSettings(role: string): boolean {
-  return ['Super Admin', 'Finance Head'].includes(role);
+  return ['Super Admin', 'Co-Founder'].includes(role);
 }
 
 /** Can manage system Users (CRUD) */
@@ -72,7 +72,7 @@ export async function guardDelete(): Promise<NextResponse | null> {
 export async function guardSettings(): Promise<NextResponse | null> {
   const session = await getSession();
   const role = session?.role || '';
-  if (!canEditSettings(role)) return forbidden('Access denied: only Finance Head and above can modify settings.');
+  if (!canEditSettings(role)) return forbidden('Access denied: only Co-Founder and above can modify settings.');
   return null;
 }
 

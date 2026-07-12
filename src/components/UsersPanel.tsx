@@ -15,14 +15,14 @@ interface DBUser {
 }
 
 const ROLE_OPTIONS: Exclude<UserRole, 'Super Admin'>[] = [
-  'Finance Head',
+  'Co-Founder',
   'Founder',
   'Committee Member',
   'Read Only',
 ];
 
 const ROLE_COLOR: Record<string, string> = {
-  'Finance Head': 'bg-primary/10 text-primary border-primary/20',
+  'Co-Founder': 'bg-primary/10 text-primary border-primary/20',
   'Founder': 'bg-cyber-info/10 text-cyber-info border-cyber-info/20',
   'Committee Member': 'bg-cyber-success/10 text-cyber-success border-cyber-success/20',
   'Read Only': 'bg-text-muted/10 text-text-muted border-border-normal',
@@ -38,7 +38,7 @@ export function UsersPanel() {
   // Add / Edit form state
   const [formUsername, setFormUsername] = useState('');
   const [formPassword, setFormPassword] = useState('');
-  const [formRole, setFormRole] = useState<string>('Finance Head');
+  const [formRole, setFormRole] = useState<string>('Co-Founder');
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -61,7 +61,7 @@ export function UsersPanel() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const openAdd = () => {
-    setFormUsername(''); setFormPassword(''); setFormRole('Finance Head');
+    setFormUsername(''); setFormPassword(''); setFormRole('Co-Founder');
     setFormError(''); setShowPw(false); setEditingUser(null); setShowAddModal(true);
   };
 

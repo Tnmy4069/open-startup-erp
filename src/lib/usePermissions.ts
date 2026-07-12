@@ -11,10 +11,10 @@ export function usePermissions() {
 
   return {
     role,
-    canCreate: ['Super Admin', 'Finance Head', 'Founder', 'Committee Member'].includes(role),
-    canEdit: ['Super Admin', 'Finance Head', 'Founder'].includes(role),
+    canCreate: ['Super Admin', 'Co-Founder', 'Founder', 'Committee Member'].includes(role),
+    canEdit: ['Super Admin', 'Co-Founder', 'Founder'].includes(role),
     canDelete: role === 'Super Admin',
-    canEditSettings: ['Super Admin', 'Finance Head'].includes(role),
+    canEditSettings: ['Super Admin', 'Co-Founder'].includes(role),
     canManageUsers: role === 'Super Admin',
   };
 }

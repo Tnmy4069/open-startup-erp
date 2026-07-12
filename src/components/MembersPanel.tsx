@@ -625,7 +625,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
-                            {(role === 'Super Admin' || role === 'Finance Head') && (
+                            {(role === 'Super Admin' || role === 'Co-Founder') && (
                               <button
                                 onClick={(e) => handleDelete(m, e)}
                                 className="p-1 rounded hover:bg-cyber-danger/10 hover:text-cyber-danger text-text-muted"

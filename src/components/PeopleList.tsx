@@ -253,7 +253,7 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
                       >
                         <Edit2 className="w-3 h-3" />
                       </button>
-                      {(role === 'Super Admin' || role === 'Finance Head') && (
+                      {(role === 'Super Admin' || role === 'Co-Founder') && (
                         <button
                           type="button"
                           onClick={() => handleDeletePerson(p.id, p.name)}

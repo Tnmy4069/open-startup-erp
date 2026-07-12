@@ -127,9 +127,9 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // Restrict to Super Admin / Finance Head
-  if (session.role !== 'Super Admin' && session.role !== 'Finance Head') {
-    return NextResponse.json({ error: 'Forbidden: only Super Admin and Finance Head can delete events.' }, { status: 403 });
+  // Restrict to Super Admin / Co-Founder
+  if (session.role !== 'Super Admin' && session.role !== 'Co-Founder') {
+    return NextResponse.json({ error: 'Forbidden: only Super Admin and Co-Founder can delete events.' }, { status: 403 });
   }
 
   try {

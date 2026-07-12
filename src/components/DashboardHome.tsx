@@ -158,7 +158,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
   const COLORS = ['#FFD54A', '#5CAEFF', '#35D07F', '#FFC857', '#FF5C5C', '#A855F7', '#EC4899'];
 
   // Render role-specific dashboards
-  const isFinanceOrAdmin = role === 'Super Admin' || role === 'Finance Head';
+  const isFinanceOrAdmin = role === 'Super Admin' || role === 'Co-Founder';
 
   return (
     <div className="space-y-6">
@@ -771,7 +771,7 @@ export function DashboardHome({ globalSearch, onSelectLedger }: { globalSearch: 
                 <div className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer">
                   <div>
                     <h4 className="font-semibold text-text-heading">Sponsorship Pitch Decks</h4>
-                    <p className="text-[10px] text-text-muted mt-0.5">Latest outreach documents approved by Finance Head.</p>
+                    <p className="text-[10px] text-text-muted mt-0.5">Latest outreach documents approved by Co-Founder.</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-text-muted" />
                 </div>
