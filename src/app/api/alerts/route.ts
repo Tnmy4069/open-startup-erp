@@ -36,6 +36,8 @@ export async function POST(request: Request) {
     const userRole = request.headers.get('x-user-role') || '';
     const userId = request.headers.get('x-user-id') || '';
     const username = request.headers.get('x-username') || 'System';
+    // Safely normalize userId - must be a 24-char hex ObjectId or null
+    const safeUserId = userId && /^[a-f\d]{24}$/i.test(userId) ? userId : null;
 
     if (action === 'subscribe') {
       // ── Handle Push Subscription Registration ──────────────────────────────────────
@@ -51,20 +53,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Keys p256dh and auth are required.' }, { status: 400 });
       }
 
+      console.log('[push-subscribe] Saving subscription for endpoint:', endpoint.slice(0, 60));
       const upserted = await prisma.pushSubscription.upsert({
         where: { endpoint },
         update: {
           p256dh,
           auth,
-          userId: userId || null,
+          userId: safeUserId,
         },
         create: {
           endpoint,
           p256dh,
           auth,
-          userId: userId || null,
+          userId: safeUserId,
         },
       });
+      console.log('[push-subscribe] Saved. ID:', upserted.id);
 
       return NextResponse.json({ success: true, id: upserted.id });
     }
