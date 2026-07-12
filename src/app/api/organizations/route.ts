@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       data: {
         action: 'Created',
         user: user || 'System',
-        role: role || 'Treasurer',
+        role: role || 'Founder',
         details: `Created organization: ${name}`,
       },
     });

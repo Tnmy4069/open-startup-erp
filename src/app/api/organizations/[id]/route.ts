@@ -37,7 +37,7 @@ export async function PUT(
       data: {
         action: 'Updated',
         user: user || 'System',
-        role: role || 'Treasurer',
+        role: role || 'Founder',
         details: `Updated organization profile: "${name}"`,
       },
     });

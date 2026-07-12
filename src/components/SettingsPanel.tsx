@@ -147,7 +147,7 @@ export function SettingsPanel() {
     );
   }
 
-  const isReadOnlyUser = role === 'Treasurer' || role === 'Committee Member' || role === 'Read Only';
+  const isReadOnlyUser = role === 'Founder' || role === 'Committee Member' || role === 'Read Only';
 
   return (
     <div className="space-y-6">

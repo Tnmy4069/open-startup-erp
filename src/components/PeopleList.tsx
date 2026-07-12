@@ -201,15 +201,13 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
           <p className="text-[10px] text-text-muted font-mono mt-0.5">Manage speakers, student attendees, vendors and active volunteers</p>
         </div>
 
-        {role !== 'Read Only' && (
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-95 text-black font-semibold text-xs transition-all duration-150"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Member Profile</span>
-          </button>
-        )}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-95 text-black font-semibold text-xs transition-all duration-150"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Member Profile</span>
+        </button>
       </div>
 
       {/* PEOPLE CARDS GRID */}
@@ -246,30 +244,26 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
                     <span className="px-2 py-0.5 rounded bg-bg-elevated border border-border-normal text-[9px] font-mono text-text-muted">
                       {p.role}
                     </span>
-                    {role !== 'Read Only' && (
-                      <div className="flex gap-1.5">
-                        {(role === 'Super Admin' || role === 'Finance Head' || role === 'Treasurer') && (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(p)}
-                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
-                            title="Edit Profile"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
-                        )}
-                        {role === 'Super Admin' && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePerson(p.id, p.name)}
-                            className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
-                            title="Delete Profile"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(p)}
+                        className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-primary text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                        title="Edit Profile"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </button>
+                      {(role === 'Super Admin' || role === 'Finance Head') && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePerson(p.id, p.name)}
+                          className="p-1 rounded bg-bg-elevated border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger transition-colors cursor-pointer"
+                          title="Delete Profile"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 

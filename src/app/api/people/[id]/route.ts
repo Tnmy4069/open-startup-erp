@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { guardEdit, guardDelete } from '@/lib/permissions';
+import { getSession } from '@/lib/session';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = await guardEdit();
-  if (denied) return denied;
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
 
   try {
     const id = (await params).id;
@@ -36,7 +38,7 @@ export async function PUT(
       data: {
         action: 'Updated',
         user: user || 'System',
-        role: userRole || 'Treasurer',
+        role: userRole || 'Founder',
         details: `Updated person profile: ${name} (${role})`,
       },
     });
@@ -53,8 +55,14 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = await guardDelete();
-  if (denied) return denied;
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
+  if (!['Super Admin', 'Finance Head'].includes(session.role)) {
+    return NextResponse.json({ error: 'Access denied: only Super Admin and Finance Head can delete profiles.' }, { status: 403 });
+  }
 
   try {
     const id = (await params).id;

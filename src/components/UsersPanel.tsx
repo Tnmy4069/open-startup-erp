@@ -16,14 +16,14 @@ interface DBUser {
 
 const ROLE_OPTIONS: Exclude<UserRole, 'Super Admin'>[] = [
   'Finance Head',
-  'Treasurer',
+  'Founder',
   'Committee Member',
   'Read Only',
 ];
 
 const ROLE_COLOR: Record<string, string> = {
   'Finance Head': 'bg-primary/10 text-primary border-primary/20',
-  'Treasurer': 'bg-cyber-info/10 text-cyber-info border-cyber-info/20',
+  'Founder': 'bg-cyber-info/10 text-cyber-info border-cyber-info/20',
   'Committee Member': 'bg-cyber-success/10 text-cyber-success border-cyber-success/20',
   'Read Only': 'bg-text-muted/10 text-text-muted border-border-normal',
 };
@@ -266,7 +266,7 @@ export function UsersPanel() {
                   value={formUsername}
                   onChange={(e) => { setFormUsername(e.target.value); setFormError(''); }}
                   className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-sm text-text-heading font-mono focus:outline-none focus:border-primary transition-colors"
-                  placeholder="e.g. john_treasurer"
+                  placeholder="e.g. john_founder"
                   disabled={formLoading}
                 />
               </div>

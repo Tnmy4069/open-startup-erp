@@ -5,7 +5,7 @@
  * ─────────────────────────────────────────────────────────────────────
  * Super Admin       |  ✅  |   ✅   |  ✅  |   ✅   |    ✅    |  ✅
  * Finance Head      |  ✅  |   ✅   |  ✅  |   ❌   |    ✅    |  ❌
- * Treasurer         |  ✅  |   ✅   |  ✅  |   ❌   |    ❌    |  ❌
+ * Founder            |  ✅  |   ✅   |  ✅  |   ❌   |    ❌    |  ❌
  * Committee Member  |  ✅  |   ✅   |  ❌  |   ❌   |    ❌    |  ❌
  * Read Only         |  ✅  |   ❌   |  ❌  |   ❌   |    ❌    |  ❌
  */
@@ -13,18 +13,18 @@
 import { NextResponse } from 'next/server';
 import { getSession } from './session';
 
-export type Role = 'Super Admin' | 'Finance Head' | 'Treasurer' | 'Committee Member' | 'Read Only';
+export type Role = 'Super Admin' | 'Finance Head' | 'Founder' | 'Committee Member' | 'Read Only';
 
 // ── Role hierarchy helpers ────────────────────────────────────────────────────
 
 /** Can CREATE records (transactions, orgs, people) */
 export function canCreate(role: string): boolean {
-  return ['Super Admin', 'Finance Head', 'Treasurer', 'Committee Member'].includes(role);
+  return ['Super Admin', 'Finance Head', 'Founder', 'Committee Member'].includes(role);
 }
 
 /** Can EDIT / UPDATE records */
 export function canEdit(role: string): boolean {
-  return ['Super Admin', 'Finance Head', 'Treasurer'].includes(role);
+  return ['Super Admin', 'Finance Head', 'Founder'].includes(role);
 }
 
 /** Can DELETE records */

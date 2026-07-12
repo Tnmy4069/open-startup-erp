@@ -265,7 +265,7 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
                       )}
                       {role !== 'Read Only' && (
                         <div className="flex gap-1.5">
-                          {(role === 'Super Admin' || role === 'Finance Head' || role === 'Treasurer') && (
+                          {(role === 'Super Admin' || role === 'Finance Head' || role === 'Founder') && (
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(org)}

@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/session';
 
 export async function GET() {
   try {
+    const session = await getSession();
+
     const transactions = await prisma.transaction.findMany();
     const reminders = await prisma.reminder.findMany({
       where: { status: 'Active' },
@@ -12,6 +15,34 @@ export async function GET() {
       orderBy: { timestamp: 'desc' },
       take: 5,
     });
+
+    const memberCount = await prisma.member.count();
+    const assetCount = await prisma.asset.count();
+    const eventCount = await prisma.event.count();
+    const taskCount = await prisma.task.count();
+
+    let myTasks: any[] = [];
+    let myAssets: any[] = [];
+    let myEvents: any[] = [];
+
+    if (session) {
+      const member = await prisma.member.findUnique({
+        where: { email: session.username },
+      });
+      if (member) {
+        myTasks = await prisma.task.findMany({
+          where: { assigneeId: member.id },
+          include: { assignee: true }
+        });
+        myAssets = await prisma.asset.findMany({
+          where: { holderId: member.id }
+        });
+        myEvents = await prisma.eventRegistration.findMany({
+          where: { memberId: member.id },
+          include: { event: true }
+        });
+      }
+    }
 
     // 1. KPI Calculations (completed/pending, income/expenses)
     let totalIncome = 0;
@@ -131,6 +162,10 @@ export async function GET() {
         pendingCount,
         monthlyIncome,
         monthlyExpenses,
+        memberCount,
+        assetCount,
+        eventCount,
+        taskCount,
       },
       charts: {
         incomeVsExpense,
@@ -140,6 +175,9 @@ export async function GET() {
       },
       reminders,
       recentLogs: logs,
+      myTasks,
+      myAssets,
+      myEvents,
     });
   } catch (error) {
     const err = error as Error;

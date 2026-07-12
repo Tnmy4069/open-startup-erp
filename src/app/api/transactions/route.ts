@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       data: {
         action: 'Created',
         user: transactionBy,
-        role: userRole || 'Treasurer',
+        role: userRole || 'Founder',
         details: `Created ${type} transaction for ${party}: INR ${amount} (Status: ${status || 'Pending'})`,
       },
     });

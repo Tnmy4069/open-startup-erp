@@ -25,7 +25,11 @@ import {
   Menu,
   LogOut,
   Shield,
-  BookOpen
+  BookOpen,
+  Calendar,
+  ListTodo,
+  Wrench,
+  FileText
 } from 'lucide-react';
 import { DashboardHome } from './DashboardHome';
 import { LedgerTable } from './LedgerTable';
@@ -36,6 +40,11 @@ import { AuditLogsList } from './AuditLogsList';
 import { SettingsPanel } from './SettingsPanel';
 import { UsersPanel } from './UsersPanel';
 import { MeetingsPanel } from './MeetingsPanel';
+import { MembersPanel } from './MembersPanel';
+import { EventsPanel } from './EventsPanel';
+import { AssetsPanel } from './AssetsPanel';
+import { TasksPanel } from './TasksPanel';
+import { DocumentsPanel } from './DocumentsPanel';
 
 export function DashboardShell() {
   const {
@@ -48,7 +57,7 @@ export function DashboardShell() {
     logout,
   } = useApp();
 
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings'>('dashboard');
+  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents'>('dashboard');
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
@@ -110,6 +119,16 @@ export function DashboardShell() {
         e.preventDefault();
         setCurrentTab('ledger');
         setOpenNewTxDrawer(true);
+      } else if (e.key === 'e' || e.key === 'E') {
+        setCurrentTab('events');
+      } else if (e.key === 'k' || e.key === 'K') {
+        setCurrentTab('tasks');
+      } else if (e.key === 'm' || e.key === 'M') {
+        setCurrentTab('members');
+      } else if (e.key === 'a' || e.key === 'A') {
+        setCurrentTab('assets');
+      } else if (e.key === 'u' || e.key === 'U') {
+        setCurrentTab('documents');
       } else if (e.key === 'd' || e.key === 'D') {
         setCurrentTab('dashboard');
       } else if (e.key === 't' || e.key === 'T') {
@@ -256,142 +275,228 @@ export function DashboardShell() {
           <img src="/cyberx-logo.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
         </div>
 
-        {/* NAVIGATION LINKS */}
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          {/* Dashboard */}
           <button
             onClick={() => setCurrentTab('dashboard')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
               currentTab === 'dashboard'
-                ? 'bg-primary text-black font-semibold'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <LayoutDashboard className="w-5 h-5" />
+              <LayoutDashboard className="w-4 h-4" />
               <span>Dashboard</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'dashboard' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>D</kbd>
           </button>
 
-          {/* MEETINGS TAB — all roles */}
+          {/* Events */}
           <button
-            onClick={() => setCurrentTab('meetings')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-              currentTab === 'meetings'
-                ? 'bg-primary text-black font-semibold'
+            onClick={() => setCurrentTab('events')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'events'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <BookOpen className="w-5 h-5" />
-              <span>Meetings</span>
+              <Calendar className="w-4 h-4" />
+              <span>Events</span>
             </div>
-            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'events' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>E</kbd>
           </button>
 
+          {/* Tasks */}
           <button
-            onClick={() => setCurrentTab('ledger')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-              currentTab === 'ledger'
-                ? 'bg-primary text-black font-semibold'
+            onClick={() => setCurrentTab('tasks')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'tasks'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <ReceiptText className="w-5 h-5" />
+              <ListTodo className="w-4 h-4" />
+              <span>Tasks</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'tasks' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>K</kbd>
+          </button>
+
+          {/* Members */}
+          <button
+            onClick={() => setCurrentTab('members')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'members'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <User className="w-4 h-4" />
+              <span>Members</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'members' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
+          </button>
+
+          {/* Assets */}
+          <button
+            onClick={() => setCurrentTab('assets')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'assets'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Wrench className="w-4 h-4" />
+              <span>Assets</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'assets' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>A</kbd>
+          </button>
+
+          {/* Documents */}
+          <button
+            onClick={() => setCurrentTab('documents')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'documents'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="w-4 h-4" />
+              <span>Documents</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'documents' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>U</kbd>
+          </button>
+
+          {/* Ledger */}
+          <button
+            onClick={() => setCurrentTab('ledger')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'ledger'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <ReceiptText className="w-4 h-4" />
               <span>Ledger</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'ledger' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>T</kbd>
           </button>
 
+          {/* People */}
           <button
             onClick={() => setCurrentTab('people')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
               currentTab === 'people'
-                ? 'bg-primary text-black font-semibold'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <Users className="w-5 h-5" />
+              <Users className="w-4 h-4" />
               <span>People</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'people' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>P</kbd>
           </button>
 
+          {/* Organizations */}
           <button
             onClick={() => setCurrentTab('organizations')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
               currentTab === 'organizations'
-                ? 'bg-primary text-black font-semibold'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <Building2 className="w-5 h-5" />
+              <Building2 className="w-4 h-4" />
               <span>Organizations</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'organizations' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>O</kbd>
           </button>
 
+          {/* Reports */}
           <button
             onClick={() => setCurrentTab('reports')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
               currentTab === 'reports'
-                ? 'bg-primary text-black font-semibold'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <FileSpreadsheet className="w-5 h-5" />
+              <FileSpreadsheet className="w-4 h-4" />
               <span>Reports</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'reports' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>R</kbd>
           </button>
 
-          {/* USERS TAB — Super Admin only */}
+          {/* Meetings */}
+          <button
+            onClick={() => setCurrentTab('meetings')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              currentTab === 'meetings'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-4 h-4" />
+              <span>Meetings</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'meetings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>M</kbd>
+          </button>
+
+          {/* Users — Super Admin only */}
           {role === 'Super Admin' && (
             <button
               onClick={() => setCurrentTab('users')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
                 currentTab === 'users'
-                  ? 'bg-primary text-black font-semibold'
+                  ? 'bg-primary text-black font-bold'
                   : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5" />
+                <Shield className="w-4 h-4" />
                 <span>Users</span>
               </div>
               <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'users' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>U</kbd>
             </button>
           )}
 
+          {/* Activity Log */}
           <button
             onClick={() => setCurrentTab('logs')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
               currentTab === 'logs'
-                ? 'bg-primary text-black font-semibold'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <ScrollText className="w-5 h-5" />
+              <ScrollText className="w-4 h-4" />
               <span>Activity Log</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'logs' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>L</kbd>
           </button>
 
+          {/* Settings */}
           <button
             onClick={() => setCurrentTab('settings')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
               currentTab === 'settings'
-                ? 'bg-primary text-black font-semibold'
+                ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
             <div className="flex items-center gap-3">
-              <Settings className="w-5 h-5" />
+              <Settings className="w-4 h-4" />
               <span>Settings</span>
             </div>
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'settings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>S</kbd>
@@ -623,7 +728,6 @@ export function DashboardShell() {
         <main className="flex-1 overflow-y-auto bg-bg-primary p-6 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             
-            {/* RENDER THE CORRECT MODULE CONTENT */}
             {currentTab === 'dashboard' && (
               <DashboardHome
                 globalSearch={globalSearchVal}
@@ -667,6 +771,26 @@ export function DashboardShell() {
               <UsersPanel />
             )}
 
+            {currentTab === 'members' && (
+              <MembersPanel globalSearch={globalSearchVal} />
+            )}
+
+            {currentTab === 'events' && (
+              <EventsPanel />
+            )}
+
+            {currentTab === 'assets' && (
+              <AssetsPanel />
+            )}
+
+            {currentTab === 'tasks' && (
+              <TasksPanel />
+            )}
+
+            {currentTab === 'documents' && (
+              <DocumentsPanel />
+            )}
+
           </div>
         </main>
       </div>
@@ -702,16 +826,36 @@ export function DashboardShell() {
                 <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Dashboard</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
+                <span className="text-text-muted">E</span>
+                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Events</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
+                <span className="text-text-muted">K</span>
+                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Tasks</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
+                <span className="text-text-muted">M</span>
+                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Members</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
+                <span className="text-text-muted">A</span>
+                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Assets</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
+                <span className="text-text-muted">U</span>
+                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Documents</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
                 <span className="text-text-muted">T</span>
                 <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Ledger</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
-                <span className="text-text-muted">O</span>
-                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Companies</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
                 <span className="text-text-muted">P</span>
                 <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">People</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
+                <span className="text-text-muted">O</span>
+                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Companies</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
                 <span className="text-text-muted">R</span>
@@ -724,10 +868,6 @@ export function DashboardShell() {
               <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
                 <span className="text-text-muted">S</span>
                 <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Settings</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
-                <span className="text-text-muted">?</span>
-                <span className="text-text-heading bg-bg-primary px-1.5 py-0.5 rounded border border-border-normal">Help Menu</span>
               </div>
             </div>
 
@@ -767,11 +907,16 @@ export function DashboardShell() {
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {[
                 { tab: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
+                { tab: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
+                { tab: 'tasks', label: 'Tasks', icon: <ListTodo className="w-5 h-5" /> },
+                { tab: 'members', label: 'Members', icon: <User className="w-5 h-5" /> },
+                { tab: 'assets', label: 'Assets', icon: <Wrench className="w-5 h-5" /> },
+                { tab: 'documents', label: 'Documents', icon: <FileText className="w-5 h-5" /> },
                 { tab: 'ledger', label: 'Ledger', icon: <ReceiptText className="w-5 h-5" /> },
                 { tab: 'people', label: 'People', icon: <Users className="w-5 h-5" /> },
                 { tab: 'organizations', label: 'Organizations', icon: <Building2 className="w-5 h-5" /> },
                 { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5" /> },
+                { tab: 'meetings', label: 'Meetings', icon: <BookOpen className="w-5 h-5" /> },
                 ...(role === 'Super Admin' ? [{ tab: 'users', label: 'Users', icon: <Shield className="w-5 h-5" /> }] : []),
                 { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5" /> },
                 { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
@@ -779,7 +924,7 @@ export function DashboardShell() {
                 <button
                   key={item.tab}
                   onClick={() => {
-                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings');
+                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents');
                     setShowMobileSidebar(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { guardCreate } from '@/lib/permissions';
+import { getSession } from '@/lib/session';
 
 export async function GET() {
   try {
@@ -42,8 +42,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await guardCreate();
-  if (denied) return denied;
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
 
   try {
     const data = await request.json();
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
       data: {
         action: 'Created',
         user: user || 'System',
-        role: userRole || 'Treasurer',
+        role: userRole || 'Founder',
         details: `Added person profile: ${name} (${role})`,
       },
     });

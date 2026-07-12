@@ -116,3 +116,219 @@ model MeetingNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Member {
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
+  name             String              @unique
+  photo            String?
+  email            String              @unique
+  phone            String
+  college          String
+  department       String
+  year             String
+  orgName          String?
+  designation      String?
+  skills           String[]
+  domains          String[]
+  position         String
+  role             String              // Founder | Core Team | Lead | Executive | Volunteer | Member | Alumni
+  status           String              // Active | Inactive
+  availability     String              // High | Medium | Low
+  bio              String?
+  linkedin         String?
+  github           String?
+  portfolio        String?
+  emergencyContact String?
+  joinedDate       DateTime            @default(now())
+  notes            String?
+  attendance       Float               @default(100.0)
+  badges           String[]
+  certificates     String[]
+  registrations    EventRegistration[]
+  tasksAssigned    Task[]              @relation("Assignee")
+  tasksReported    Task[]              @relation("Reporter")
+  activityHistory  MemberActivity[]
+  assetsHeld       Asset[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model MemberActivity {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  memberId  String   @db.ObjectId
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  action    String
+  date      DateTime @default(now())
+}
+
+model Event {
+  id                   String              @id @default(auto()) @map("_id") @db.ObjectId
+  title                String
+  slug                 String              @unique
+  banner               String?
+  description          String
+  category             String
+  venue                String
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime
+  capacity             Int
+  status               String              // Draft | Upcoming | Past | Cancelled
+  visibility           String              // Public | Internal
+  budget               Float               @default(0)
+  expectedRevenue      Float               @default(0)
+  sponsors             String[]
+  speakers             String[]
+  volunteers           String[]
+  organizers           String[]
+  agenda               String?
+  resources            String?
+  registrations        EventRegistration[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model EventRegistration {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String   @db.ObjectId
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId  String?  @db.ObjectId
+  member    Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  name      String
+  email     String
+  status    String   // Registered | Attended | No-Show
+  qrCode    String?
+  feedback  String?
+  rating    Int?
+  createdAt DateTime @default(now())
+}
+
+model Asset {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  assetId      String             @unique
+  name         String
+  category     String
+  purchaseDate DateTime
+  purchaseCost Float
+  vendor       String
+  warranty     String?
+  condition    String             // Excellent | Good | Needs Repair | Damaged | Lost
+  status       String             // Available | Issued | Maintenance | Lost
+  location     String
+  holderId     String?            @db.ObjectId
+  holder       Member?            @relation(fields: [holderId], references: [id], onDelete: SetNull)
+  qrCode       String?
+  history      AssetHistory[]
+  maintenances AssetMaintenance[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model AssetHistory {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  assetId  String   @db.ObjectId
+  asset    Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  action   String   // Issued | Returned | Lost | Damaged
+  holder   String?  // Name of holder at that time
+  date     DateTime @default(now())
+  notes    String?
+}
+
+model AssetMaintenance {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  assetId    String    @db.ObjectId
+  asset      Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  startDate  DateTime
+  endDate    DateTime?
+  cost       Float     @default(0)
+  issue      String
+  resolution String?
+  status     String    // Pending | Completed
+}
+
+model Task {
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
+  title            String
+  description      String?
+  priority         String              // Low | Medium | High | Urgent
+  status           String              // Backlog | Todo | In Progress | Review | Completed
+  dueDate          DateTime?
+  assigneeId       String?             @db.ObjectId
+  assignee         Member?             @relation("Assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporterId       String?             @db.ObjectId
+  reporter         Member?             @relation("Reporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  labels           String[]
+  attachments      String[]
+  comments         TaskComment[]
+  checklist        TaskChecklistItem[]
+  activity         TaskActivity[]
+  isRecurring      Boolean             @default(false)
+  recurringPattern String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model TaskComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  taskId    String   @db.ObjectId
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    String
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model TaskChecklistItem {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  taskId      String  @db.ObjectId
+  task        Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean @default(false)
+}
+
+model TaskActivity {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  taskId    String   @db.ObjectId
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      String
+  change    String
+  createdAt DateTime @default(now())
+}
+
+model DocFolder {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  parentId  String?   @db.ObjectId
+  parent    DocFolder? @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subfolders DocFolder[] @relation("FolderHierarchy")
+  files     DocFile[]
+  createdAt DateTime  @default(now())
+}
+
+model DocFile {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  folderId   String       @db.ObjectId
+  folder     DocFolder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  content    String
+  type       String       @default("markdown") // "markdown" | "link" | "file"
+  fileUrl    String?      // For file uploads and links
+  fileSize   Int?         // Size of uploaded files
+  mimeType   String?      // MIME type of uploaded files
+  tags       String[]
+  isPinned   Boolean      @default(false)
+  isFavorite Boolean      @default(false)
+  versions   DocVersion[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model DocVersion {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileId    String   @db.ObjectId
+  file      DocFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  version   Int
+  content   String
+  updatedBy String
+  createdAt DateTime @default(now())
+}
+

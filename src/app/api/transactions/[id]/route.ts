@@ -91,7 +91,7 @@ export async function PUT(
       data: {
         action: actionText,
         user: user || transactionBy || 'System',
-        role: role || 'Treasurer',
+        role: role || 'Founder',
         details: `${actionText} transaction ${id} for ${party}: changed amount to INR ${amount} (Status: ${status})`,
       },
     });

@@ -11,8 +11,8 @@ export function usePermissions() {
 
   return {
     role,
-    canCreate: ['Super Admin', 'Finance Head', 'Treasurer', 'Committee Member'].includes(role),
-    canEdit: ['Super Admin', 'Finance Head', 'Treasurer'].includes(role),
+    canCreate: ['Super Admin', 'Finance Head', 'Founder', 'Committee Member'].includes(role),
+    canEdit: ['Super Admin', 'Finance Head', 'Founder'].includes(role),
     canDelete: role === 'Super Admin',
     canEditSettings: ['Super Admin', 'Finance Head'].includes(role),
     canManageUsers: role === 'Super Admin',
