@@ -18,7 +18,11 @@ import {
   Upload,
   QrCode,
   CheckCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Scale,
+  TrendingUp,
+  TrendingDown,
+  Clock
 } from 'lucide-react';
 
 interface Transaction {
@@ -56,6 +60,27 @@ export function LedgerTable({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
+
+  // Global statistics state
+  const [stats, setStats] = useState<{
+    netBalance: number;
+    totalIncome: number;
+    totalExpenses: number;
+    pendingIncome: number;
+    pendingExpenses: number;
+  } | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/dashboard/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.kpi);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   // Selection state for bulk operations
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -172,6 +197,7 @@ export function LedgerTable({
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchTransactions();
+      fetchStats();
     }, 0);
     // Load saved filters
     const saved = localStorage.getItem('cyberx_saved_filters');
@@ -179,7 +205,7 @@ export function LedgerTable({
       setTimeout(() => setSavedFilters(JSON.parse(saved)), 0);
     }
     return () => clearTimeout(timer);
-  }, [fetchTransactions, refreshTrigger]);
+  }, [fetchTransactions, fetchStats, refreshTrigger]);
 
   const fetchOrganizations = useCallback(async () => {
     try {
@@ -578,7 +604,80 @@ export function LedgerTable({
         </div>
       </div>
 
-      {/* 2. ADVANCED FILTERS PANEL */}
+      {/* 2. LEDGER KPI GRID */}
+      {stats ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* NET BALANCE */}
+          <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex flex-col justify-between hover:border-primary transition-all duration-200">
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono font-bold text-text-muted tracking-wider uppercase">NET BALANCE</span>
+              <span className="p-1 rounded bg-primary/10 text-primary"><Scale className="w-3.5 h-3.5" /></span>
+            </div>
+            <div className="mt-2">
+              <h3 className={`text-lg font-bold font-display ${stats.netBalance >= 0 ? 'text-cyber-success' : 'text-cyber-danger'}`}>
+                {formatCurrency(stats.netBalance)}
+              </h3>
+              <span className="text-[9px] font-mono text-text-muted leading-tight">Total Treasury cash</span>
+            </div>
+          </div>
+
+          {/* TOTAL REVENUE */}
+          <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex flex-col justify-between hover:border-primary transition-all duration-200">
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono font-bold text-text-muted tracking-wider uppercase">TOTAL REVENUE</span>
+              <span className="p-1 rounded bg-cyber-success/10 text-cyber-success"><TrendingUp className="w-3.5 h-3.5" /></span>
+            </div>
+            <div className="mt-2">
+              <h3 className="text-lg font-bold font-display text-cyber-success">
+                {formatCurrency(stats.totalIncome)}
+              </h3>
+              <span className="text-[9px] font-mono text-text-muted leading-tight">Received income stream</span>
+            </div>
+          </div>
+
+          {/* TOTAL EXPENSES */}
+          <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex flex-col justify-between hover:border-primary transition-all duration-200">
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono font-bold text-text-muted tracking-wider uppercase">TOTAL EXPENSES</span>
+              <span className="p-1 rounded bg-cyber-danger/10 text-cyber-danger"><TrendingDown className="w-3.5 h-3.5" /></span>
+            </div>
+            <div className="mt-2">
+              <h3 className="text-lg font-bold font-display text-cyber-danger">
+                {formatCurrency(stats.totalExpenses)}
+              </h3>
+              <span className="text-[9px] font-mono text-text-muted leading-tight">Spent resource cash flow</span>
+            </div>
+          </div>
+
+          {/* PENDING OUTSTANDINGS */}
+          <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex flex-col justify-between hover:border-primary transition-all duration-200">
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono font-bold text-text-muted tracking-wider uppercase">PENDING OUTSTANDINGS</span>
+              <span className="p-1 rounded bg-cyber-warning/10 text-cyber-warning"><Clock className="w-3.5 h-3.5" /></span>
+            </div>
+            <div className="mt-2">
+              <h3 className="text-lg font-bold font-display text-cyber-warning">
+                {formatCurrency(stats.pendingIncome + stats.pendingExpenses)}
+              </h3>
+              <div className="flex gap-2 text-[8px] font-mono text-text-muted leading-tight">
+                <span>In: {formatCurrency(stats.pendingIncome)}</span>
+                <span>•</span>
+                <span>Out: {formatCurrency(stats.pendingExpenses)}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+          {[...Array(4)].map((_, idx) => (
+            <div key={idx} className="h-20 bg-bg-surface border border-border-normal rounded-xl animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {/* 3. ADVANCED FILTERS PANEL */}
       {showFilters && (
         <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 animate-in slide-in-from-top-4 duration-200">
           <div className="flex items-center justify-between border-b border-border-normal/40 pb-2">

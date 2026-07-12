@@ -1,13 +1,12 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Offline | CyberX',
-  description: 'You are currently offline.',
-};
+'use client';
 
 export default function OfflinePage() {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <title>Offline | CyberX</title>
+        <meta name="description" content="You are currently offline." />
+      </head>
       <body
         style={{
           margin: 0,
