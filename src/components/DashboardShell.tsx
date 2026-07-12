@@ -79,7 +79,7 @@ export function DashboardShell() {
     : 'dashboard';
 
   const setCurrentTab = (tab: string) => {
-    router.push(`/dashboard/${tab}`);
+    router.push(`/${tab}`);
   };
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);

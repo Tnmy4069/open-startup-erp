@@ -4,9 +4,6 @@ import { decrypt } from '@/lib/session';
 // Paths that are always public (no session required)
 const PUBLIC_PATHS = ['/', '/api/auth/login'];
 
-// Paths that require authentication
-const PROTECTED_PREFIXES = ['/dashboard', '/api/'];
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -30,7 +27,7 @@ export async function middleware(request: NextRequest) {
   const session = token ? await decrypt(token) : null;
 
   const isPublic = PUBLIC_PATHS.includes(pathname);
-  const needsAuth = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+  const needsAuth = !isPublic;
 
   // Authenticated user visiting the login page (/) → send to dashboard
   if (isPublic && session) {
@@ -38,7 +35,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Unauthenticated user trying to access protected route → send to login
-  if (needsAuth && !session && !isPublic) {
+  if (needsAuth && !session) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
