@@ -13,29 +13,6 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-/** Waits until the SW registration has an active (not just installing) worker. */
-function waitForActiveServiceWorker(
-  registration: ServiceWorkerRegistration,
-  timeoutMs = 10000
-): Promise<ServiceWorkerRegistration> {
-  return new Promise((resolve, reject) => {
-    if (registration.active) { resolve(registration); return; }
-    const timer = setTimeout(() => reject(new Error('Timed out waiting for Service Worker to activate.')), timeoutMs);
-    const trackWorker = (worker: ServiceWorker) => {
-      if (worker.state === 'activated') { clearTimeout(timer); resolve(registration); return; }
-      worker.addEventListener('statechange', function fn() {
-        if (worker.state === 'activated') { worker.removeEventListener('statechange', fn); clearTimeout(timer); resolve(registration); }
-      });
-    };
-    if (registration.installing) trackWorker(registration.installing);
-    else if (registration.waiting) trackWorker(registration.waiting);
-    else registration.addEventListener('updatefound', function fn() {
-      registration.removeEventListener('updatefound', fn);
-      if (registration.installing) trackWorker(registration.installing);
-    });
-  });
-}
-
 
 export function SettingsPanel() {
   const { role, refreshTrigger, triggerNotification } = useApp();
@@ -81,17 +58,13 @@ export function SettingsPanel() {
         return;
       }
 
-      const registration = await navigator.serviceWorker.getRegistration('/');
-      if (!registration) {
-        // Register if not yet registered
-        const newReg = await navigator.serviceWorker.register('/sw.js', {
-          scope: '/',
-          updateViaCache: 'none',
-        });
-        await subscribeWithReg(newReg);
-      } else {
-        await subscribeWithReg(registration);
+      // Ensure SW is registered
+      if (!navigator.serviceWorker.controller) {
+        await navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' });
       }
+
+      // Use navigator.serviceWorker.ready — resolves once SW is activated
+      await subscribeWithReady();
     } catch (e) {
       console.error(e);
       alert('Subscription failed: ' + (e as Error).message);
@@ -100,18 +73,21 @@ export function SettingsPanel() {
     }
   };
 
-  const subscribeWithReg = async (registration: ServiceWorkerRegistration) => {
+  const subscribeWithReady = async () => {
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidKey) {
       alert('VAPID public key is missing in environment.');
       return;
     }
 
-    // Wait for the SW to fully activate before subscribing
-    const activeReg = await waitForActiveServiceWorker(registration);
+    // navigator.serviceWorker.ready resolves when a SW with "activated" status exists
+    const registration = await navigator.serviceWorker.ready;
 
     const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-    const subscription = await activeReg.pushManager.subscribe({
+
+    // Check for existing subscription first
+    const existingSub = await registration.pushManager.getSubscription();
+    const subscription = existingSub || await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });
@@ -119,10 +95,7 @@ export function SettingsPanel() {
     const res = await fetch('/api/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'subscribe',
-        subscription,
-      }),
+      body: JSON.stringify({ action: 'subscribe', subscription }),
     });
 
     if (res.ok) {

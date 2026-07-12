@@ -19,57 +19,20 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 /**
- * Wait until the service worker registration has an active worker.
- * Returns the registration once the SW is in "activated" state.
- * Timeout after 10s to avoid hanging forever.
+ * Uses the browser-native `navigator.serviceWorker.ready` promise which resolves
+ * only once a SW with "activated" status is controlling the scope.
+ * This is the correct, race-condition-free way to wait for SW activation.
  */
-function waitForActiveServiceWorker(
-  registration: ServiceWorkerRegistration,
-  timeoutMs = 10000
-): Promise<ServiceWorkerRegistration> {
-  return new Promise((resolve, reject) => {
-    // Already active — resolve immediately
-    if (registration.active) {
-      resolve(registration);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      reject(new Error('[Push SW] Timed out waiting for Service Worker to activate.'));
-    }, timeoutMs);
-
-    // The SW that is installing or waiting will eventually become active
-    const trackWorker = (worker: ServiceWorker) => {
-      if (worker.state === 'activated') {
-        clearTimeout(timer);
-        resolve(registration);
-        return;
-      }
-      worker.addEventListener('statechange', function onStateChange() {
-        if (worker.state === 'activated') {
-          worker.removeEventListener('statechange', onStateChange);
-          clearTimeout(timer);
-          resolve(registration);
-        }
-      });
-    };
-
-    // Track whichever worker is in progress right now
-    if (registration.installing) {
-      trackWorker(registration.installing);
-    } else if (registration.waiting) {
-      trackWorker(registration.waiting);
-    } else {
-      // No worker in-progress yet — watch for one to appear
-      registration.addEventListener('updatefound', function onUpdateFound() {
-        registration.removeEventListener('updatefound', onUpdateFound);
-        if (registration.installing) trackWorker(registration.installing);
-      });
-    }
-  });
+async function waitUntilSWReady(timeoutMs = 15000): Promise<ServiceWorkerRegistration> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('[Push SW] Timed out waiting for SW to become ready.')), timeoutMs)
+    ),
+  ]);
 }
 
-async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
+async function subscribeUserToPush() {
   try {
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidKey) {
@@ -77,7 +40,7 @@ async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
       return;
     }
 
-    // Check permission
+    // Check permission — only proceed if granted
     if (Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
@@ -90,27 +53,37 @@ async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
       return;
     }
 
-    // ── Wait for SW to be fully activated before subscribing ──────────────
-    console.log('[Push SW] Waiting for Service Worker to activate...');
-    const activeReg = await waitForActiveServiceWorker(registration);
-    console.log('[Push SW] Service Worker is active. Subscribing to push...');
+    // ── Wait for an active SW via the browser-native ready promise ────────
+    console.log('[Push SW] Waiting for SW to be ready...');
+    const registration = await waitUntilSWReady();
+    console.log('[Push SW] SW is ready. Subscribing to push...');
 
     const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-    const subscription = await activeReg.pushManager.subscribe({
+
+    // Check if already subscribed — avoid re-subscribing on every page load
+    const existingSub = await registration.pushManager.getSubscription();
+    if (existingSub) {
+      console.log('[Push SW] Already subscribed, syncing with server...');
+      // Sync with server in case it was lost from DB
+      await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'subscribe', subscription: existingSub }),
+      }).catch(() => {});
+      return;
+    }
+
+    const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });
 
-    console.log('[Push SW] Subscribed:', subscription.endpoint.slice(0, 60));
+    console.log('[Push SW] New subscription created:', subscription.endpoint.slice(0, 60));
 
-    // Save/update subscription on server
     const res = await fetch('/api/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'subscribe',
-        subscription,
-      }),
+      body: JSON.stringify({ action: 'subscribe', subscription }),
     });
 
     if (res.ok) {
@@ -119,7 +92,7 @@ async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
       console.error('[Push SW] Failed to save subscription:', await res.text());
     }
   } catch (error) {
-    console.error('[Push SW] Error subscribing user:', error);
+    console.error('[Push SW] Error:', error);
   }
 }
 
@@ -127,7 +100,6 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
-    // Check navigator support
     if (
       typeof window === 'undefined' ||
       !('serviceWorker' in navigator)
@@ -135,28 +107,19 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
 
     const register = async () => {
       try {
-        // Check if there is already a registered service worker for scope
-        const existing = await navigator.serviceWorker.getRegistration('/');
-        if (existing) {
-          registrationRef.current = existing;
-          if ('pushManager' in existing && typeof Notification !== 'undefined') {
-            // Quietly sync subscription if already granted — still wait for active
-            if (Notification.permission === 'granted') {
-              subscribeUserToPush(existing);
-            }
-          }
-          return;
-        }
-
+        // Register (or get existing) the service worker
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
           updateViaCache: 'none',
         });
         registrationRef.current = registration;
 
-        // Auto subscribe user to push — waitForActiveServiceWorker is called inside
+        // Auto-subscribe to push if permission already granted
+        // Uses navigator.serviceWorker.ready internally — no race condition
         if ('pushManager' in registration && typeof Notification !== 'undefined') {
-          subscribeUserToPush(registration);
+          if (Notification.permission === 'granted') {
+            subscribeUserToPush();
+          }
         }
 
         // Check for updates every time the page gains focus
@@ -172,7 +135,6 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
               newWorker.state === 'installed' &&
               navigator.serviceWorker.controller
             ) {
-              // A new version is ready — notify parent
               onUpdateAvailable(registration);
             }
           });
@@ -181,10 +143,7 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
         registration.addEventListener('updatefound', handleUpdateFound);
 
         // Handle case where SW is already waiting when page loads
-        if (
-          registration.waiting &&
-          navigator.serviceWorker.controller
-        ) {
+        if (registration.waiting && navigator.serviceWorker.controller) {
           onUpdateAvailable(registration);
         }
 
