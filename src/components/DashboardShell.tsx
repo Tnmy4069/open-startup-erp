@@ -48,6 +48,8 @@ import { TasksPanel } from './TasksPanel';
 import { DocumentsPanel } from './DocumentsPanel';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 
+import { useParams, useRouter } from 'next/navigation';
+
 export function DashboardShell() {
   const {
     user,
@@ -59,7 +61,27 @@ export function DashboardShell() {
     logout,
   } = useApp();
 
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements'>('dashboard');
+  const params = useParams();
+  const router = useRouter();
+
+  // Validate and resolve active tab from catch-all URL segment
+  const tabParam = params?.tab;
+  const resolvedTab = Array.isArray(tabParam) ? tabParam[0] : (tabParam || 'dashboard');
+
+  const VALID_TABS = [
+    'dashboard', 'ledger', 'organizations', 'people', 'reports', 'logs',
+    'settings', 'users', 'meetings', 'members', 'events', 'assets',
+    'tasks', 'documents', 'announcements'
+  ];
+
+  const currentTab = VALID_TABS.includes(resolvedTab)
+    ? (resolvedTab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements')
+    : 'dashboard';
+
+  const setCurrentTab = (tab: string) => {
+    router.push(`/dashboard/${tab}`);
+  };
+
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
