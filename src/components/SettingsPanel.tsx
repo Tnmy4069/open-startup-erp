@@ -124,8 +124,17 @@ export function SettingsPanel() {
       return;
     }
 
-    // navigator.serviceWorker.ready resolves when a SW with "activated" status exists
-    const registration = await navigator.serviceWorker.ready;
+    // navigator.serviceWorker.ready resolves when a SW with "activated" status exists.
+    // Add a 12s timeout in case it hangs (e.g. stale SW stuck in installing state).
+    const registration = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(
+          'Service Worker is taking too long to activate.\n\n' +
+          'Fix: Open DevTools → Application → Service Workers → click "skipWaiting" or "Unregister", then reload the page.'
+        )), 12000)
+      ),
+    ]);
 
     const applicationServerKey = urlBase64ToUint8Array(vapidKey);
 

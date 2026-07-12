@@ -6,7 +6,7 @@
 //   API mutations  → Never cached (pass-through only)
 //   GET /api/      → Network-First (no cache)
 
-const CACHE_VERSION = 'cyberx-v1';
+const CACHE_VERSION = 'cyberx-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const FONT_CACHE = `${CACHE_VERSION}-fonts`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
@@ -30,11 +30,18 @@ const PRECACHE_URLS = [
 // ─── Install ─────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(
-        PRECACHE_URLS.map((url) => new Request(url, { cache: 'reload' }))
+    caches.open(STATIC_CACHE).then(async (cache) => {
+      // Cache each URL individually — a single 404 won't block the install
+      await Promise.allSettled(
+        PRECACHE_URLS.map((url) =>
+          cache.add(new Request(url, { cache: 'reload' })).catch(() => {
+            // Silently skip assets that fail (e.g. missing images in dev)
+          })
+        )
       );
-    }).then(() => self.skipWaiting())
+      // Always call skipWaiting so SW activates even if some assets are missing
+      return self.skipWaiting();
+    })
   );
 });
 
