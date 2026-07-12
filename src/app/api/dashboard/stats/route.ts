@@ -7,9 +7,20 @@ export async function GET() {
     const session = await getSession();
 
     const transactions = await prisma.transaction.findMany();
-    const reminders = await prisma.reminder.findMany({
-      where: { status: 'Active' },
-      orderBy: { dueDate: 'asc' },
+    
+    // Generate reminders dynamically from actual pending transactions in the DB
+    // to ensure no stale dummy data is shown and all lists match active entries.
+    const pendingTransactions = transactions.filter(tx => tx.status === 'Pending');
+    const reminders = pendingTransactions.map((tx) => {
+      const isIncome = tx.type === 'Income' || tx.type === 'Refund';
+      return {
+        id: tx.id,
+        title: `Approve: ${tx.type} to/from ${tx.party} (${tx.purpose})`,
+        dueDate: tx.date,
+        amount: tx.amount,
+        type: isIncome ? 'Pending Payment' : 'Pending Reimbursement',
+        status: 'Active',
+      };
     });
     const logs = await prisma.activityLog.findMany({
       orderBy: { timestamp: 'desc' },
