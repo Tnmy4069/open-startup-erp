@@ -163,3 +163,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+// DELETE /api/alerts — remove a push subscription by endpoint
+export async function DELETE(request: Request) {
+  try {
+    const { endpoint } = await request.json();
+    if (!endpoint) {
+      return NextResponse.json({ error: 'endpoint is required.' }, { status: 400 });
+    }
+    await prisma.pushSubscription.deleteMany({ where: { endpoint } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const err = error as Error;
+    console.error('DELETE /api/alerts error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
