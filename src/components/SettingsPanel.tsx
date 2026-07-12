@@ -1,8 +1,17 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X } from 'lucide-react';
+import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell } from 'lucide-react';
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 
 export function SettingsPanel() {
@@ -22,7 +31,105 @@ export function SettingsPanel() {
   const [categories, setCategories] = useState('');
   const [paymentMethods, setPaymentMethods] = useState('');
 
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password'>('general');
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password' | 'notifications'>('general');
+
+  // Push Notifications state
+  const [swSupported, setSwSupported] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [subscribing, setSubscribing] = useState(false);
+  const [subSuccess, setSubSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSwSupported('serviceWorker' in navigator && 'PushManager' in window);
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleSubscribe = async () => {
+    if (!swSupported) return;
+    setSubscribing(true);
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      if (permission !== 'granted') {
+        alert('Notification permission not granted.');
+        setSubscribing(false);
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      if (!registration) {
+        // Register if not yet registered
+        const newReg = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none',
+        });
+        await subscribeWithReg(newReg);
+      } else {
+        await subscribeWithReg(registration);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Subscription failed: ' + (e as Error).message);
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
+  const subscribeWithReg = async (registration: ServiceWorkerRegistration) => {
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidKey) {
+      alert('VAPID public key is missing in environment.');
+      return;
+    }
+
+    const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey,
+    });
+
+    const res = await fetch('/api/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'subscribe',
+        subscription,
+      }),
+    });
+
+    if (res.ok) {
+      setSubSuccess(true);
+      triggerNotification('This device is now registered for live push notifications.', 'Subscribed');
+    } else {
+      throw new Error(await res.text());
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    try {
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'broadcast',
+          title: 'CyberX Test Alert',
+          body: 'This is a test push notification sent to active devices!',
+          url: '/dashboard',
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        alert(`Test broadcast sent successfully to ${result.sentCount} devices.`);
+      } else {
+        alert('Failed to send test broadcast: ' + (await res.text()));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Broadcast request failed.');
+    }
+  };
 
   // Change Password states
   const [cpCurrentPw, setCpCurrentPw] = useState('');
@@ -200,6 +307,16 @@ export function SettingsPanel() {
           >
             <KeyRound className="w-4 h-4 shrink-0" />
             <span>Change Password</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('notifications')}
+            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+              activeSubTab === 'notifications' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <Bell className="w-4 h-4 shrink-0" />
+            <span>Device Notifications</span>
           </button>
 
           {isReadOnlyUser && activeSubTab !== 'password' && (
@@ -494,6 +611,110 @@ export function SettingsPanel() {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* DEVICE NOTIFICATIONS SECTION */}
+          {activeSubTab === 'notifications' && (
+            <div className="space-y-6 max-w-lg animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Device Notification Configurations"}
+                </h3>
+                <p className="text-[10px] text-text-muted font-mono mt-2">
+                  Configure push notifications on this specific browser device.
+                </p>
+              </div>
+
+              {!swSupported ? (
+                <div className="p-4 rounded-xl border border-cyber-danger/20 bg-cyber-danger/5 space-y-2">
+                  <div className="flex items-center gap-2 text-cyber-danger font-mono font-bold">
+                    <ShieldAlert className="w-4 h-4 shrink-0" />
+                    <span>Browser Not Supported</span>
+                  </div>
+                  <p className="text-[10px] text-text-muted leading-relaxed">
+                    This browser does not support Service Workers or Push Notifications. Try using Chrome, Firefox or Edge, or make sure you are accessing the site via a secure connection (HTTPS or localhost).
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  
+                  {/* Status Indicator */}
+                  <div className="p-4 rounded-xl border border-border-normal bg-bg-elevated/10 space-y-4">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-text-muted font-mono">Permission Status:</span>
+                      <span className={`px-2.5 py-1 rounded-full font-mono text-[9px] font-bold uppercase tracking-wider border ${
+                        notificationPermission === 'granted'
+                          ? 'bg-cyber-success/10 text-cyber-success border-cyber-success/20'
+                          : notificationPermission === 'denied'
+                          ? 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/20'
+                          : 'bg-cyber-warning/10 text-cyber-warning border-cyber-warning/20'
+                      }`}>
+                        {notificationPermission}
+                      </span>
+                    </div>
+
+                    <div className="text-[10px] text-text-muted leading-relaxed">
+                      {notificationPermission === 'granted' ? (
+                        <p className="text-cyber-success font-semibold">
+                          ✓ Push notifications are enabled on this device! You will receive live alerts for ledger activities.
+                        </p>
+                      ) : notificationPermission === 'denied' ? (
+                        <p className="text-cyber-danger">
+                          ⚠ Notifications are blocked. Please click the site settings icon in your browser URL bar and change Notification permission to &quot;Allow&quot; to subscribe this device.
+                        </p>
+                      ) : (
+                        <p>
+                          Notifications are not yet authorized. Click below to grant permissions and register this browser device.
+                        </p>
+                      )}
+                    </div>
+
+                    {notificationPermission !== 'denied' && (
+                      <button
+                        onClick={handleSubscribe}
+                        disabled={subscribing}
+                        className={`w-full h-11 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer ${
+                          notificationPermission === 'granted'
+                            ? 'bg-bg-primary hover:bg-bg-elevated border border-border-normal text-text-heading'
+                            : 'bg-primary hover:bg-opacity-95 text-black'
+                        }`}
+                      >
+                        {subscribing ? (
+                          <span className="animate-spin inline-block w-4 h-4 border-2 border-current/30 border-t-current rounded-full" />
+                        ) : (
+                          <Bell className="w-4 h-4" />
+                        )}
+                        <span>
+                          {notificationPermission === 'granted'
+                            ? 'Re-Sync Subscription'
+                            : subscribing
+                            ? 'Requesting...'
+                            : 'Enable Push Notifications'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Test Trigger */}
+                  {notificationPermission === 'granted' && (
+                    <div className="p-4 rounded-xl border border-border-normal bg-bg-surface space-y-3 animate-in fade-in duration-200">
+                      <span className="text-[10px] font-mono text-text-muted block">VERIFICATION TOOL</span>
+                      <p className="text-[10px] text-text-muted leading-relaxed">
+                        Send a test push message broadcast to verify your browser receives notifications correctly.
+                      </p>
+                      <button
+                        onClick={handleSendTestNotification}
+                        className="h-10 px-4 rounded-lg bg-cyber-success/15 hover:bg-cyber-success/20 text-cyber-success border border-cyber-success/30 font-semibold text-xs active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Send Test Broadcast</span>
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              )}
             </div>
           )}
 

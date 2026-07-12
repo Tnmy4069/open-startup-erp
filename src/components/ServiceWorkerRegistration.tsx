@@ -70,16 +70,27 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
-    // Only register in production — Turbopack dev server cannot serve sw.js
-    // correctly and throws InvalidStateError if attempted in development.
+    // Check navigator support
     if (
       typeof window === 'undefined' ||
-      !('serviceWorker' in navigator) ||
-      process.env.NODE_ENV !== 'production'
+      !('serviceWorker' in navigator)
     ) return;
 
     const register = async () => {
       try {
+        // Check if there is already a registered service worker for scope
+        const existing = await navigator.serviceWorker.getRegistration('/');
+        if (existing) {
+          registrationRef.current = existing;
+          if ('pushManager' in existing && typeof Notification !== 'undefined') {
+            // Quietly sync subscription if already granted
+            if (Notification.permission === 'granted') {
+              subscribeUserToPush(existing);
+            }
+          }
+          return;
+        }
+
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
           updateViaCache: 'none',
@@ -92,7 +103,7 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
         }
 
         // Check for updates every time the page gains focus
-        const checkForUpdate = () => registration.update();
+        const checkForUpdate = () => registration.update().catch(() => {});
         window.addEventListener('focus', checkForUpdate);
 
         // Detect a new service worker waiting to activate

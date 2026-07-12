@@ -63,7 +63,7 @@ export function DashboardShell() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
-  
+
   // Dialog state trigger (New transaction)
   const [openNewTxDrawer, setOpenNewTxDrawer] = useState(false);
 
@@ -92,7 +92,7 @@ export function DashboardShell() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName.toLowerCase();
       const isCliActive = document.activeElement === cliInputRef.current;
-      
+
       if (activeTag === 'input' || activeTag === 'textarea') {
         if (e.key === 'Escape') {
           (document.activeElement as HTMLElement).blur();
@@ -167,7 +167,7 @@ export function DashboardShell() {
     const input = cliInput.trim();
     const args = input.split(/\s+/);
     const cmd = args[0].toLowerCase();
-    
+
     let output = '';
 
     switch (cmd) {
@@ -268,10 +268,10 @@ export function DashboardShell() {
 
   return (
     <div className="flex h-screen bg-bg-primary text-text-body font-sans overflow-hidden">
-      
+
       {/* SIDEBAR NAVIGATION */}
       <aside className="w-64 flex flex-col border-r border-border-normal bg-bg-surface hidden md:flex">
-        
+
         {/* LOGO AREA — always dark bg so logo pops in both themes */}
         <div className="h-[72px] flex items-center justify-center px-4 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
           <img src="/cyberx-logo2.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
@@ -281,11 +281,10 @@ export function DashboardShell() {
           {/* Dashboard */}
           <button
             onClick={() => setCurrentTab('dashboard')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'dashboard'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'dashboard'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <LayoutDashboard className="w-4 h-4" />
@@ -297,11 +296,10 @@ export function DashboardShell() {
           {/* Meetings */}
           <button
             onClick={() => setCurrentTab('meetings')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'meetings'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'meetings'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <BookOpen className="w-4 h-4" />
@@ -313,11 +311,10 @@ export function DashboardShell() {
           {/* Tasks */}
           <button
             onClick={() => setCurrentTab('tasks')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'tasks'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'tasks'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <ListTodo className="w-4 h-4" />
@@ -329,11 +326,10 @@ export function DashboardShell() {
           {/* Events */}
           <button
             onClick={() => setCurrentTab('events')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'events'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'events'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4" />
@@ -345,11 +341,10 @@ export function DashboardShell() {
           {/* Members */}
           <button
             onClick={() => setCurrentTab('members')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'members'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'members'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <User className="w-4 h-4" />
@@ -361,11 +356,10 @@ export function DashboardShell() {
           {/* Assets */}
           <button
             onClick={() => setCurrentTab('assets')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'assets'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'assets'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <Wrench className="w-4 h-4" />
@@ -377,11 +371,10 @@ export function DashboardShell() {
           {/* Documents */}
           <button
             onClick={() => setCurrentTab('documents')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'documents'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'documents'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <FileText className="w-4 h-4" />
@@ -393,11 +386,10 @@ export function DashboardShell() {
           {/* Ledger */}
           <button
             onClick={() => setCurrentTab('ledger')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'ledger'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'ledger'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <ReceiptText className="w-4 h-4" />
@@ -409,11 +401,10 @@ export function DashboardShell() {
           {/* People */}
           <button
             onClick={() => setCurrentTab('people')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'people'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'people'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <Users className="w-4 h-4" />
@@ -425,11 +416,10 @@ export function DashboardShell() {
           {/* Organizations */}
           <button
             onClick={() => setCurrentTab('organizations')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'organizations'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'organizations'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <Building2 className="w-4 h-4" />
@@ -441,11 +431,10 @@ export function DashboardShell() {
           {/* Reports */}
           <button
             onClick={() => setCurrentTab('reports')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'reports'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'reports'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-4 h-4" />
@@ -458,11 +447,10 @@ export function DashboardShell() {
           {role === 'Super Admin' && (
             <button
               onClick={() => setCurrentTab('users')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-                currentTab === 'users'
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'users'
                   ? 'bg-primary text-black font-bold'
                   : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <Shield className="w-4 h-4" />
@@ -475,11 +463,10 @@ export function DashboardShell() {
           {/* Activity Log */}
           <button
             onClick={() => setCurrentTab('logs')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'logs'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'logs'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <ScrollText className="w-4 h-4" />
@@ -491,11 +478,10 @@ export function DashboardShell() {
           {/* Settings */}
           <button
             onClick={() => setCurrentTab('settings')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
-              currentTab === 'settings'
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'settings'
                 ? 'bg-primary text-black font-bold'
                 : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <Settings className="w-4 h-4" />
@@ -507,7 +493,7 @@ export function DashboardShell() {
 
         {/* BOTTOM QUICK CTAS */}
         <div className="p-4 border-t border-border-normal space-y-2">
-          {role !== 'Read Only' && (
+          {/* {role !== 'Read Only' && (
             <button
               onClick={() => {
                 setCurrentTab('ledger');
@@ -525,7 +511,7 @@ export function DashboardShell() {
           >
             <Keyboard className="w-4 h-4 text-text-muted" />
             <span>Shortcuts (?)</span>
-          </button>
+          </button> */}
           {/* Logout */}
           <button
             onClick={logout}
@@ -539,10 +525,10 @@ export function DashboardShell() {
 
       {/* MAIN CONTAINER */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
+
         {/* STICKY HEADER (72px) */}
         <header className="h-[72px] shrink-0 sticky top-0 z-40 flex items-center justify-between px-6 border-b border-border-normal bg-bg-surface/90 backdrop-blur-md">
-          
+
           {/* SEARCH TRIGGER */}
           <div className="w-96 relative hidden md:block">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -565,7 +551,7 @@ export function DashboardShell() {
               </button>
             )}
           </div>
-          
+
           <div className="flex items-center gap-3 md:hidden">
             <button
               onClick={() => setShowMobileSidebar(true)}
@@ -579,7 +565,7 @@ export function DashboardShell() {
 
           {/* ACTIONS & SIMULATOR CONTROL */}
           <div className="flex items-center gap-2 sm:gap-4">
-            
+
             {/* TERMINAL CLI TOGGLE */}
             <button
               onClick={() => {
@@ -689,7 +675,7 @@ export function DashboardShell() {
               </div>
               <span className="text-[9px] text-text-muted">Press ` or ESC to close</span>
             </div>
-            
+
             {/* Console Log Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-black/40 text-text-body font-mono">
               {cliHistory.map((line, idx) => {
@@ -722,7 +708,7 @@ export function DashboardShell() {
         {/* SUBPAGE CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-bg-primary p-6 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
-            
+
             {currentTab === 'dashboard' && (
               <DashboardHome
                 globalSearch={globalSearchVal}
@@ -738,7 +724,7 @@ export function DashboardShell() {
             {currentTab === 'announcements' && (
               <AnnouncementsPanel />
             )}
-            
+
             {currentTab === 'ledger' && (
               <LedgerTable
                 globalSearch={globalSearchVal}
@@ -815,7 +801,7 @@ export function DashboardShell() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs font-mono">
               <div className="flex justify-between items-center py-1 border-b border-border-normal/40">
                 <span className="text-text-muted">Ctrl + K / /</span>
@@ -887,11 +873,11 @@ export function DashboardShell() {
       {showMobileSidebar && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           {/* Backdrop screen dimming */}
-          <div 
+          <div
             onClick={() => setShowMobileSidebar(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" 
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
           />
-          
+
           {/* Drawer Panel */}
           <aside className="relative flex flex-col w-64 max-w-xs bg-bg-surface border-r border-border-normal h-full shadow-2xl animate-in slide-in-from-left duration-200">
             {/* Logo Area — always dark bg */}
@@ -899,7 +885,7 @@ export function DashboardShell() {
               <div className="flex items-center gap-3">
                 <img src="/cyberx-logo2.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
               </div>
-              <button 
+              <button
                 onClick={() => setShowMobileSidebar(false)}
                 className="text-white/60 hover:text-white p-1 rounded-lg"
               >
@@ -930,11 +916,10 @@ export function DashboardShell() {
                     setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements');
                     setShowMobileSidebar(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                    currentTab === item.tab
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${currentTab === item.tab
                       ? 'bg-primary text-black font-semibold'
                       : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     {item.icon}
