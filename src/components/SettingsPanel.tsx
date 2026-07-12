@@ -13,6 +13,29 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+/** Waits until the SW registration has an active (not just installing) worker. */
+function waitForActiveServiceWorker(
+  registration: ServiceWorkerRegistration,
+  timeoutMs = 10000
+): Promise<ServiceWorkerRegistration> {
+  return new Promise((resolve, reject) => {
+    if (registration.active) { resolve(registration); return; }
+    const timer = setTimeout(() => reject(new Error('Timed out waiting for Service Worker to activate.')), timeoutMs);
+    const trackWorker = (worker: ServiceWorker) => {
+      if (worker.state === 'activated') { clearTimeout(timer); resolve(registration); return; }
+      worker.addEventListener('statechange', function fn() {
+        if (worker.state === 'activated') { worker.removeEventListener('statechange', fn); clearTimeout(timer); resolve(registration); }
+      });
+    };
+    if (registration.installing) trackWorker(registration.installing);
+    else if (registration.waiting) trackWorker(registration.waiting);
+    else registration.addEventListener('updatefound', function fn() {
+      registration.removeEventListener('updatefound', fn);
+      if (registration.installing) trackWorker(registration.installing);
+    });
+  });
+}
+
 
 export function SettingsPanel() {
   const { role, refreshTrigger, triggerNotification } = useApp();
@@ -84,8 +107,11 @@ export function SettingsPanel() {
       return;
     }
 
+    // Wait for the SW to fully activate before subscribing
+    const activeReg = await waitForActiveServiceWorker(registration);
+
     const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-    const subscription = await registration.pushManager.subscribe({
+    const subscription = await activeReg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });

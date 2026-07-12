@@ -18,6 +18,57 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+/**
+ * Wait until the service worker registration has an active worker.
+ * Returns the registration once the SW is in "activated" state.
+ * Timeout after 10s to avoid hanging forever.
+ */
+function waitForActiveServiceWorker(
+  registration: ServiceWorkerRegistration,
+  timeoutMs = 10000
+): Promise<ServiceWorkerRegistration> {
+  return new Promise((resolve, reject) => {
+    // Already active — resolve immediately
+    if (registration.active) {
+      resolve(registration);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      reject(new Error('[Push SW] Timed out waiting for Service Worker to activate.'));
+    }, timeoutMs);
+
+    // The SW that is installing or waiting will eventually become active
+    const trackWorker = (worker: ServiceWorker) => {
+      if (worker.state === 'activated') {
+        clearTimeout(timer);
+        resolve(registration);
+        return;
+      }
+      worker.addEventListener('statechange', function onStateChange() {
+        if (worker.state === 'activated') {
+          worker.removeEventListener('statechange', onStateChange);
+          clearTimeout(timer);
+          resolve(registration);
+        }
+      });
+    };
+
+    // Track whichever worker is in progress right now
+    if (registration.installing) {
+      trackWorker(registration.installing);
+    } else if (registration.waiting) {
+      trackWorker(registration.waiting);
+    } else {
+      // No worker in-progress yet — watch for one to appear
+      registration.addEventListener('updatefound', function onUpdateFound() {
+        registration.removeEventListener('updatefound', onUpdateFound);
+        if (registration.installing) trackWorker(registration.installing);
+      });
+    }
+  });
+}
+
 async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
   try {
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -26,7 +77,7 @@ async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
       return;
     }
 
-    // Check if permission is default, ask for it
+    // Check permission
     if (Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
@@ -39,14 +90,18 @@ async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
       return;
     }
 
-    // Retrieve or create push subscription
+    // ── Wait for SW to be fully activated before subscribing ──────────────
+    console.log('[Push SW] Waiting for Service Worker to activate...');
+    const activeReg = await waitForActiveServiceWorker(registration);
+    console.log('[Push SW] Service Worker is active. Subscribing to push...');
+
     const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-    const subscription = await registration.pushManager.subscribe({
+    const subscription = await activeReg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });
 
-    console.log('[Push SW] Active subscription:', subscription);
+    console.log('[Push SW] Subscribed:', subscription.endpoint.slice(0, 60));
 
     // Save/update subscription on server
     const res = await fetch('/api/alerts', {
@@ -58,7 +113,9 @@ async function subscribeUserToPush(registration: ServiceWorkerRegistration) {
       }),
     });
 
-    if (!res.ok) {
+    if (res.ok) {
+      console.log('[Push SW] Subscription saved to server.');
+    } else {
       console.error('[Push SW] Failed to save subscription:', await res.text());
     }
   } catch (error) {
@@ -83,7 +140,7 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
         if (existing) {
           registrationRef.current = existing;
           if ('pushManager' in existing && typeof Notification !== 'undefined') {
-            // Quietly sync subscription if already granted
+            // Quietly sync subscription if already granted — still wait for active
             if (Notification.permission === 'granted') {
               subscribeUserToPush(existing);
             }
@@ -97,7 +154,7 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
         });
         registrationRef.current = registration;
 
-        // Auto subscribe user to push if permission is granted/default
+        // Auto subscribe user to push — waitForActiveServiceWorker is called inside
         if ('pushManager' in registration && typeof Notification !== 'undefined') {
           subscribeUserToPush(registration);
         }
@@ -149,4 +206,3 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
 
   return null;
 }
-
