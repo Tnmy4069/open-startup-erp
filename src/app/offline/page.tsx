@@ -23,7 +23,7 @@ export default function OfflinePage() {
       >
         {/* Logo */}
         <img
-          src="/cyberx-logo.png"
+          src="/cyberx-logo2.png"
           alt="CyberX"
           style={{
             height: '72px',
