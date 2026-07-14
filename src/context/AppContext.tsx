@@ -40,6 +40,8 @@ interface AppContextType {
   refreshData: () => void;
   refreshTrigger: number;
   triggerNotification: (message: string, type: string) => void;
+  memberRegistered: boolean;
+  setMemberRegistered: (registered: boolean) => void;
   logout: () => Promise<void>;
   authLoading: boolean;
 }
@@ -54,6 +56,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [reminders, setReminders] = useState<AppReminder[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [memberRegistered, setMemberRegistered] = useState<boolean>(true);
 
   // Derive role from user — default to Read Only if somehow no user
   const role: UserRole = (user?.role as UserRole) ?? 'Read Only';
@@ -65,11 +68,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser({ userId: data.userId, username: data.username, role: data.role as UserRole });
+        setMemberRegistered(!!data.memberRegistered);
       } else {
         setUser(null);
+        setMemberRegistered(true);
       }
     } catch {
       setUser(null);
+      setMemberRegistered(true);
     } finally {
       setAuthLoading(false);
     }
@@ -137,6 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
+    setMemberRegistered(true);
     router.push('/');
   };
 
@@ -156,6 +163,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         triggerNotification,
         logout,
         authLoading,
+        memberRegistered,
+        setMemberRegistered,
       }}
     >
       {children}

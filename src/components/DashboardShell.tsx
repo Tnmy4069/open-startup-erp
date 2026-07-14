@@ -59,7 +59,129 @@ export function DashboardShell() {
     notifications,
     setNotifications,
     logout,
+    memberRegistered,
+    setMemberRegistered,
   } = useApp();
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showBlocker = mounted && !!user && role !== 'Super Admin' && !memberRegistered;
+
+  // Blocker form state
+  const [blockerName, setBlockerName] = useState('');
+  const [blockerEmail, setBlockerEmail] = useState('');
+  const [blockerPhone, setBlockerPhone] = useState('');
+  const [blockerMemberType, setBlockerMemberType] = useState<'Student' | 'Professional'>('Student');
+  const [blockerCollege, setBlockerCollege] = useState('');
+  const [blockerDept, setBlockerDept] = useState('');
+  const [blockerYear, setBlockerYear] = useState('');
+  const [blockerOrgName, setBlockerOrgName] = useState('');
+  const [blockerDesignation, setBlockerDesignation] = useState('');
+  const [blockerSkills, setBlockerSkills] = useState('');
+  const [blockerDomains, setBlockerDomains] = useState('');
+  const [blockerBio, setBlockerBio] = useState('');
+  const [blockerLinkedin, setBlockerLinkedin] = useState('');
+  const [blockerGithub, setBlockerGithub] = useState('');
+  const [blockerPortfolio, setBlockerPortfolio] = useState('');
+  const [blockerEmergency, setBlockerEmergency] = useState('');
+  const [blockerAvail, setBlockerAvail] = useState('High');
+  const [blockerSubmitting, setBlockerSubmitting] = useState(false);
+  const [blockerError, setBlockerError] = useState('');
+
+  // Prefill fields when user is fetched
+  useEffect(() => {
+    if (user) {
+      if (user.username.includes('@')) {
+        setBlockerEmail(user.username);
+        const namePart = user.username.split('@')[0];
+        setBlockerName(namePart.charAt(0).toUpperCase() + namePart.slice(1));
+      } else {
+        setBlockerName(user.username.charAt(0).toUpperCase() + user.username.slice(1));
+        setBlockerEmail('');
+      }
+    }
+  }, [user]);
+
+  const handleBlockerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blockerName.trim()) {
+      setBlockerError('Name is required.');
+      return;
+    }
+    if (!blockerEmail.trim()) {
+      setBlockerError('Email is required.');
+      return;
+    }
+    if (!blockerPhone.trim()) {
+      setBlockerError('Phone number is required.');
+      return;
+    }
+    if (!blockerEmergency.trim()) {
+      setBlockerError('Emergency contact is required.');
+      return;
+    }
+
+    if (blockerMemberType === 'Student') {
+      if (!blockerCollege.trim() || !blockerDept.trim() || !blockerYear.trim()) {
+        setBlockerError('College, Department, and Year are required for students.');
+        return;
+      }
+    } else {
+      if (!blockerOrgName.trim() || !blockerDesignation.trim()) {
+        setBlockerError('Organization name and designation are required for professionals.');
+        return;
+      }
+    }
+
+    setBlockerSubmitting(true);
+    setBlockerError('');
+
+    try {
+      const payload = {
+        name: blockerName.trim(),
+        email: blockerEmail.trim(),
+        phone: blockerPhone.trim(),
+        college: blockerMemberType === 'Student' ? blockerCollege.trim() : '',
+        department: blockerMemberType === 'Student' ? blockerDept.trim() : '',
+        year: blockerMemberType === 'Student' ? blockerYear.trim() : '',
+        orgName: blockerMemberType === 'Professional' ? blockerOrgName.trim() : '',
+        designation: blockerMemberType === 'Professional' ? blockerDesignation.trim() : '',
+        position: 'Member',
+        role: role || 'Member',
+        status: 'Active',
+        availability: blockerAvail,
+        bio: blockerBio.trim(),
+        linkedin: blockerLinkedin.trim(),
+        github: blockerGithub.trim(),
+        portfolio: blockerPortfolio.trim(),
+        skills: blockerSkills.split(',').map((s) => s.trim()).filter(Boolean),
+        domains: blockerDomains.split(',').map((d) => d.trim()).filter(Boolean),
+        emergencyContact: blockerEmergency.trim(),
+        notes: 'Self-registered profile during login verification',
+      };
+
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit registration form.');
+      }
+
+      setMemberRegistered(true);
+      window.location.reload();
+    } catch (err: any) {
+      setBlockerError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setBlockerSubmitting(false);
+    }
+  };
 
   const params = useParams();
   const router = useRouter();
@@ -111,6 +233,8 @@ export function DashboardShell() {
 
   // Keyboard shortcut listener
   useEffect(() => {
+    if (showBlocker) return; // Prevent hotkeys when registration blocker is active
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName.toLowerCase();
       const isCliActive = document.activeElement === cliInputRef.current;
@@ -180,7 +304,7 @@ export function DashboardShell() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [theme, role, logout]); // Bind dependencies to ensure updated handler context
+  }, [theme, role, logout, showBlocker]); // Bind dependencies to ensure updated handler context
 
   const handleCliSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -289,7 +413,274 @@ export function DashboardShell() {
   const unreadNotifCount = notifications.filter((n) => n.status === 'Unread').length;
 
   return (
-    <div className="flex h-screen bg-bg-primary text-text-body font-sans overflow-hidden">
+    <div className="flex h-screen bg-bg-primary text-text-body font-sans overflow-hidden relative w-full">
+      {/* MANDATORY REGISTRATION BLOCKER POPUP */}
+      {showBlocker && (
+        <div className="fixed inset-0 z-[9999] bg-black overflow-y-auto font-mono p-4 md:p-6 flex flex-col items-center justify-start">
+          <div className="w-full max-w-2xl bg-bg-surface border border-border-normal rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col gap-6 animate-in zoom-in-95 duration-200 my-auto">
+            {/* Title / Header */}
+            <div>
+              <p className="text-[10px] text-primary tracking-[0.2em] font-bold">&gt; VERIFICATION REQUIRED</p>
+              <h2 className="text-xl font-bold text-text-heading mt-1">Complete Member Profile</h2>
+              <p className="text-xs text-text-muted mt-1.5 leading-relaxed">
+                To access the CyberX Operations Suite, please provide your community member registry details. This is a one-time setup required for security auditing and role mapping.
+              </p>
+            </div>
+
+            {/* Error Notifications */}
+            {blockerError && (
+              <div className="flex items-center gap-2.5 p-3.5 bg-cyber-danger/10 border border-cyber-danger/30 rounded-lg text-cyber-danger text-xs">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{blockerError}</span>
+              </div>
+            )}
+
+            {/* Registration Form */}
+            <form onSubmit={handleBlockerSubmit} className="space-y-4 text-xs text-text-body">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">FULL NAME *</label>
+                  <input
+                    type="text"
+                    required
+                    value={blockerName}
+                    onChange={(e) => setBlockerName(e.target.value)}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    placeholder="e.g. Tanmay Hirodkar"
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">EMAIL ADDRESS *</label>
+                  <input
+                    type="email"
+                    required
+                    value={blockerEmail}
+                    onChange={(e) => setBlockerEmail(e.target.value)}
+                    disabled={user?.username.includes('@')}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed font-mono text-xs"
+                    placeholder="e.g. user@cyberx.org.in"
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">PHONE NUMBER *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={blockerPhone}
+                    onChange={(e) => setBlockerPhone(e.target.value)}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    placeholder="e.g. +91 9999988888"
+                  />
+                </div>
+
+                {/* Emergency Contact */}
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">EMERGENCY CONTACT *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={blockerEmergency}
+                    onChange={(e) => setBlockerEmergency(e.target.value)}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    placeholder="Emergency phone number"
+                  />
+                </div>
+              </div>
+
+              {/* Member Type */}
+              <div className="space-y-1">
+                <label className="text-[9px] text-text-muted tracking-wider block font-semibold">MEMBER TYPE *</label>
+                <div className="grid grid-cols-2 gap-2 bg-bg-primary p-1 rounded-lg border border-border-normal">
+                  <button
+                    type="button"
+                    onClick={() => setBlockerMemberType('Student')}
+                    className={`py-2 text-xs font-semibold rounded-md transition-all duration-150 ${blockerMemberType === 'Student' ? 'bg-primary text-black font-bold' : 'text-text-muted hover:text-text-heading'}`}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBlockerMemberType('Professional')}
+                    className={`py-2 text-xs font-semibold rounded-md transition-all duration-150 ${blockerMemberType === 'Professional' ? 'bg-primary text-black font-bold' : 'text-text-muted hover:text-text-heading'}`}
+                  >
+                    Professional / Other
+                  </button>
+                </div>
+              </div>
+
+              {/* Conditional Section */}
+              {blockerMemberType === 'Student' ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-bg-primary/50 border border-border-normal/40 rounded-xl animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-text-muted tracking-wider block font-semibold">COLLEGE / SCHOOL *</label>
+                    <input
+                      type="text"
+                      required
+                      value={blockerCollege}
+                      onChange={(e) => setBlockerCollege(e.target.value)}
+                      className="w-full h-9 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                      placeholder="e.g. VJTI"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-text-muted tracking-wider block font-semibold">DEPARTMENT *</label>
+                    <input
+                      type="text"
+                      required
+                      value={blockerDept}
+                      onChange={(e) => setBlockerDept(e.target.value)}
+                      className="w-full h-9 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                      placeholder="e.g. IT, Comps"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-text-muted tracking-wider block font-semibold">YEAR *</label>
+                    <select
+                      required
+                      value={blockerYear}
+                      onChange={(e) => setBlockerYear(e.target.value)}
+                      className="w-full h-9 bg-bg-primary border border-border-normal rounded-lg px-2 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    >
+                      <option value="">Select Year</option>
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                      <option value="Alumni">Alumni / Other</option>
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-bg-primary/50 border border-border-normal/40 rounded-xl animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-text-muted tracking-wider block font-semibold">ORGANIZATION / COMPANY *</label>
+                    <input
+                      type="text"
+                      required
+                      value={blockerOrgName}
+                      onChange={(e) => setBlockerOrgName(e.target.value)}
+                      className="w-full h-9 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                      placeholder="e.g. Security Firm Ltd"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-text-muted tracking-wider block font-semibold">DESIGNATION *</label>
+                    <input
+                      type="text"
+                      required
+                      value={blockerDesignation}
+                      onChange={(e) => setBlockerDesignation(e.target.value)}
+                      className="w-full h-9 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                      placeholder="e.g. Lead Analyst"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Skills and Domains */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">SKILLS (COMMA SEPARATED)</label>
+                  <input
+                    type="text"
+                    value={blockerSkills}
+                    onChange={(e) => setBlockerSkills(e.target.value)}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    placeholder="e.g. React, Docker, Pentesting"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">DOMAINS (COMMA SEPARATED)</label>
+                  <input
+                    type="text"
+                    value={blockerDomains}
+                    onChange={(e) => setBlockerDomains(e.target.value)}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    placeholder="e.g. Web Dev, Cryptography"
+                  />
+                </div>
+              </div>
+
+              {/* Availability and Socials */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">WEEKLY AVAILABILITY *</label>
+                  <div className="flex gap-4 mt-1.5">
+                    {['High', 'Medium', 'Low'].map((level) => (
+                      <label key={level} className="flex items-center gap-2 cursor-pointer text-text-heading">
+                        <input
+                          type="radio"
+                          name="availability"
+                          checked={blockerAvail === level}
+                          onChange={() => setBlockerAvail(level)}
+                          className="text-primary focus:ring-primary h-4 w-4 bg-bg-primary border-border-normal"
+                        />
+                        <span>{level}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] text-text-muted tracking-wider block font-semibold">LINKEDIN PROFILE URL</label>
+                  <input
+                    type="url"
+                    value={blockerLinkedin}
+                    onChange={(e) => setBlockerLinkedin(e.target.value)}
+                    className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary font-mono text-xs"
+                    placeholder="https://linkedin.com/in/..."
+                  />
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div className="space-y-1">
+                <label className="text-[9px] text-text-muted tracking-wider block font-semibold">SHORT BIO / SUMMARY</label>
+                <textarea
+                  value={blockerBio}
+                  onChange={(e) => setBlockerBio(e.target.value)}
+                  className="w-full h-16 bg-bg-primary border border-border-normal rounded-lg p-3 text-text-heading focus:outline-none focus:border-primary resize-none font-mono text-xs"
+                  placeholder="Introduce yourself..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-border-normal">
+                <button
+                  type="submit"
+                  disabled={blockerSubmitting}
+                  className="flex-1 h-11 bg-primary text-black font-bold tracking-wider rounded-lg hover:bg-opacity-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 text-xs"
+                >
+                  {blockerSubmitting ? (
+                    <>
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-current/30 border-t-current rounded-full" />
+                      REGISTERING...
+                    </>
+                  ) : (
+                    'REGISTER PROFILE & ENTER'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="h-11 px-5 border border-cyber-danger/30 text-cyber-danger hover:bg-cyber-danger/10 rounded-lg transition-all flex items-center justify-center gap-2 text-xs"
+                >
+                  <LogOut className="w-4 h-4" />
+                  LOGOUT
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Main content block, non-interactive when registration blocker is active */}
+      <div className={`flex flex-1 h-screen overflow-hidden ${showBlocker ? 'pointer-events-none select-none' : ''}`}>
 
       {/* SIDEBAR NAVIGATION */}
       <aside className="w-64 flex flex-col border-r border-border-normal bg-bg-surface hidden md:flex">
@@ -981,6 +1372,7 @@ export function DashboardShell() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }

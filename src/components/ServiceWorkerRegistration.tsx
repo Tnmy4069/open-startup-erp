@@ -105,6 +105,20 @@ export function ServiceWorkerRegistration({ onUpdateAvailable }: UpdateToastProp
       !('serviceWorker' in navigator)
     ) return;
 
+    if (process.env.NODE_ENV === 'development') {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then((success) => {
+            if (success) {
+              console.log('[SW] Unregistered active service worker in development to bypass caching');
+              window.location.reload();
+            }
+          });
+        }
+      });
+      return;
+    }
+
     const register = async () => {
       try {
         // Register (or get existing) the service worker

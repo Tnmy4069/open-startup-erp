@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     const {
+      userId,
       name,
       photo,
       email,
@@ -93,8 +94,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 });
     }
 
+    // Role safety logic: force userId if not Super Admin or Co-Founder
+    let memberUserId = userId;
+    if (session.role !== 'Super Admin' && session.role !== 'Co-Founder') {
+      memberUserId = session.userId;
+    }
+
+    // Check for duplicate user accounts linking to members
+    if (memberUserId && memberUserId !== 'superadmin') {
+      const existing = await prisma.member.findUnique({
+        where: { userId: memberUserId }
+      });
+      if (existing) {
+        return NextResponse.json({ error: 'A member profile is already associated with this user account.' }, { status: 400 });
+      }
+    }
+
     const member = await prisma.member.create({
       data: {
+        userId: memberUserId || null,
         name,
         photo,
         email,

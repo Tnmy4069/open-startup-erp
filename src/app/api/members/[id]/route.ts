@@ -71,6 +71,7 @@ export async function PUT(
     }
 
     const {
+      userId,
       name,
       photo,
       email,
@@ -97,9 +98,18 @@ export async function PUT(
       attendance
     } = data;
 
+    // Role safety logic: only Super Admin and Co-Founder can assign/change userId fields
+    let memberUserId = original.userId;
+    if (userId !== undefined) {
+      if (session.role === 'Super Admin' || session.role === 'Co-Founder') {
+        memberUserId = userId || null;
+      }
+    }
+
     const updated = await prisma.member.update({
       where: { id },
       data: {
+        userId: memberUserId,
         name: name !== undefined ? name : original.name,
         photo: photo !== undefined ? photo : original.photo,
         email: email !== undefined ? email : original.email,

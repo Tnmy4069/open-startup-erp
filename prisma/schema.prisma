@@ -120,6 +120,7 @@ model MeetingNote {
 
 model Member {
   id               String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String?             @unique
   name             String              @unique
   photo            String?
   email            String              @unique
