@@ -219,7 +219,7 @@ export function MeetingsPanel() {
                 {/* Card header */}
                 <div
                   onClick={() => toggleExpand(m.id)}
-                  className="px-6 py-4 flex items-center justify-between cursor-pointer select-none hover:bg-bg-elevated/10"
+                  className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer select-none hover:bg-bg-elevated/10 gap-3 sm:gap-0"
                 >
                   <div className="flex items-center gap-4 flex-wrap min-w-0">
                     <div className="flex items-center gap-2 text-primary font-mono text-xs shrink-0">
@@ -230,7 +230,7 @@ export function MeetingsPanel() {
                       {m.agenda}
                     </h4>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-4">
+                  <div className="flex items-center gap-2 shrink-0 sm:ml-4 justify-end">
                     <span className="text-[10px] text-text-muted font-mono hidden lg:inline">
                       by <b className="text-text-heading">{m.createdBy}</b>
                     </span>
@@ -256,7 +256,7 @@ export function MeetingsPanel() {
 
                 {/* Expanded markdown view */}
                 {isExpanded && (
-                  <div className="px-6 pb-6 pt-3 border-t border-border-normal/40 bg-black/5 space-y-4 animate-in slide-in-from-top-1 duration-150">
+                  <div className="px-4 sm:px-6 pb-6 pt-3 border-t border-border-normal/40 bg-black/5 space-y-4 animate-in slide-in-from-top-1 duration-150">
 
                     {/* Markdown rendered output */}
                     <div className="prose-meeting bg-bg-primary/60 border border-border-normal/60 rounded-xl p-5 overflow-x-auto">
@@ -323,7 +323,7 @@ export function MeetingsPanel() {
           <div className="bg-bg-surface border border-border-normal rounded-xl w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-150 mb-10">
 
             {/* Modal header */}
-            <div className="px-6 py-4 border-b border-border-normal flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-b border-border-normal flex items-center justify-between">
               <div>
                 <h3 className="font-display font-bold text-text-heading text-base">
                   {editingMeeting ? '// Edit Meeting Note' : '// Log New Meeting'}
@@ -337,7 +337,7 @@ export function MeetingsPanel() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 text-xs">
 
               {/* Date + Agenda row */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">

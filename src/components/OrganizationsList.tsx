@@ -370,7 +370,7 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
                   {"// No transaction ledger items recorded for this organization."}
                 </div>
               ) : (
-                <div className="border border-border-normal rounded-xl overflow-hidden">
+                <div className="border border-border-normal rounded-xl overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-border-normal bg-bg-elevated/40 text-text-muted font-mono">

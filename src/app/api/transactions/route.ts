@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     const purpose = searchParams.get('purpose') || '';
     const paymentMethod = searchParams.get('paymentMethod') || '';
     const party = searchParams.get('party') || '';
+    const transactionBy = searchParams.get('transactionBy') || '';
     
     // Range filters
     const dateFrom = searchParams.get('dateFrom') || '';
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
     if (purpose) where.purpose = purpose;
     if (paymentMethod) where.paymentMethod = paymentMethod;
     if (party) where.party = { contains: party };
+    if (transactionBy) where.transactionBy = transactionBy;
 
     // Amount Range
     where.amount = {

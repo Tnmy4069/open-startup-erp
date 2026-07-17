@@ -98,6 +98,7 @@ export function LedgerTable({
   const [filterPurpose, setFilterPurpose] = useState('');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState('');
   const [filterParty, setFilterParty] = useState('');
+  const [filterTransactionBy, setFilterTransactionBy] = useState('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [filterAmountMin, setFilterAmountMin] = useState('');
@@ -120,8 +121,18 @@ export function LedgerTable({
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setViewMode('card');
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setViewMode('card');
+      } else {
+        setViewMode('table');
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
 
@@ -161,6 +172,7 @@ export function LedgerTable({
         purpose: filterPurpose,
         paymentMethod: filterPaymentMethod,
         party: filterParty,
+        transactionBy: filterTransactionBy,
         dateFrom: filterDateFrom,
         dateTo: filterDateTo,
         amountMin: filterAmountMin,
@@ -189,6 +201,7 @@ export function LedgerTable({
     filterPurpose,
     filterPaymentMethod,
     filterParty,
+    filterTransactionBy,
     filterDateFrom,
     filterDateTo,
     filterAmountMin,
@@ -818,6 +831,19 @@ export function LedgerTable({
                 {paymentMethods.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
+            
+            {/* Logged By filter */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-text-muted font-medium">Logged By (Member)</label>
+              <select
+                value={filterTransactionBy}
+                onChange={(e) => setFilterTransactionBy(e.target.value)}
+                className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none"
+              >
+                <option value="">All Members</option>
+                {members.map((m) => <option key={m.id} value={m.name}>{m.name}</option>)}
+              </select>
+            </div>
           </div>
 
           {/* Action Row */}
@@ -1312,7 +1338,7 @@ export function LedgerTable({
           <div className="bg-bg-surface border-l border-border-normal w-full max-w-2xl h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
             
             {/* Drawer Header */}
-            <div className="h-[72px] shrink-0 px-6 border-b border-border-normal flex items-center justify-between bg-bg-elevated/20">
+            <div className="h-[72px] shrink-0 px-4 sm:px-6 border-b border-border-normal flex items-center justify-between bg-bg-elevated/20">
               <div>
                 <h3 className="font-display font-bold text-text-heading text-base">
                   {editingTx ? (isDuplicate ? '// Duplicate Transaction' : '// Edit Transaction') : '// Create Transaction'}
@@ -1333,7 +1359,7 @@ export function LedgerTable({
             </div>
 
             {/* Drawer Content */}
-            <form onSubmit={handleSubmitForm} className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-sans">
+            <form onSubmit={handleSubmitForm} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-xs text-sans">
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 

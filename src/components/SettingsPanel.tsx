@@ -372,10 +372,10 @@ export function SettingsPanel() {
       <div className="bg-bg-surface border border-border-normal rounded-xl overflow-hidden flex flex-col md:flex-row min-h-[450px]">
         
         {/* Settings Left Tab Menu */}
-        <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border-normal bg-bg-elevated/20 p-4 space-y-1.5">
+        <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border-normal bg-bg-elevated/20 p-4 flex flex-row md:flex-col overflow-x-auto gap-2 md:gap-0 md:space-y-1.5 hide-scrollbar">
           <button
             onClick={() => setActiveSubTab('general')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
               activeSubTab === 'general' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
@@ -385,7 +385,7 @@ export function SettingsPanel() {
           
           <button
             onClick={() => setActiveSubTab('banking')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
               activeSubTab === 'banking' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
@@ -395,7 +395,7 @@ export function SettingsPanel() {
 
           <button
             onClick={() => setActiveSubTab('ledger')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
               activeSubTab === 'ledger' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
@@ -405,7 +405,7 @@ export function SettingsPanel() {
 
           <button
             onClick={() => { setActiveSubTab('password'); setCpError(''); setCpSuccess(''); }}
-            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
               activeSubTab === 'password' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
@@ -415,7 +415,7 @@ export function SettingsPanel() {
 
           <button
             onClick={() => setActiveSubTab('notifications')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
               activeSubTab === 'notifications' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >
@@ -425,7 +425,7 @@ export function SettingsPanel() {
 
           <button
             onClick={() => setActiveSubTab('app-session')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
               activeSubTab === 'app-session' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
             }`}
           >

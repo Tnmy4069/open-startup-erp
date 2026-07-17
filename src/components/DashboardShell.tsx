@@ -417,7 +417,7 @@ export function DashboardShell() {
       {/* MANDATORY REGISTRATION BLOCKER POPUP */}
       {showBlocker && (
         <div className="fixed inset-0 z-[9999] bg-black overflow-y-auto font-mono p-4 md:p-6 flex flex-col items-center justify-start">
-          <div className="w-full max-w-2xl bg-bg-surface border border-border-normal rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col gap-6 animate-in zoom-in-95 duration-200 my-auto">
+          <div className="w-full max-w-2xl bg-bg-surface border border-border-normal rounded-2xl shadow-2xl p-5 md:p-8 flex flex-col gap-5 animate-in zoom-in-95 duration-200 my-auto">
             {/* Title / Header */}
             <div>
               <p className="text-[10px] text-primary tracking-[0.2em] font-bold">&gt; VERIFICATION REQUIRED</p>
@@ -1088,7 +1088,7 @@ export function DashboardShell() {
         )}
 
         {/* SUBPAGE CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto bg-bg-primary p-6 md:p-8">
+        <main className="flex-1 overflow-y-auto bg-bg-primary p-4 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
 
             {currentTab === 'dashboard' && (
