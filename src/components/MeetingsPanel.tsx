@@ -28,6 +28,7 @@ interface MeetingNote {
   notes: string;
   refLink: string | null;
   createdBy: string;
+  isPublic?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,6 +49,7 @@ export function MeetingsPanel() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
+  const [formIsPublic, setFormIsPublic] = useState(false);
 
   const notify = (msg: string, ok: boolean) => {
     setNotification({ msg, ok });
@@ -77,6 +79,7 @@ export function MeetingsPanel() {
     setFormRefLink('');
     setFormError('');
     setPreviewMode(false);
+    setFormIsPublic(false);
     setEditingMeeting(null);
     setShowAddModal(true);
   };
@@ -88,6 +91,7 @@ export function MeetingsPanel() {
     setFormRefLink(m.refLink || '');
     setFormError('');
     setPreviewMode(false);
+    setFormIsPublic(m.isPublic || false);
     setEditingMeeting(m);
     setShowAddModal(true);
   };
@@ -114,6 +118,7 @@ export function MeetingsPanel() {
         agenda: formAgenda.trim(),
         notes: formNotes,
         refLink: formRefLink.trim() || null,
+        isPublic: formIsPublic,
       };
 
       const res = editingMeeting
@@ -269,10 +274,27 @@ export function MeetingsPanel() {
 
                     {/* Footer */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 text-[10px] font-mono text-text-muted">
-                      <div>
+                      <div className="flex flex-wrap items-center gap-2">
                         <span>Logged by: <b className="text-text-heading">{m.createdBy}</b></span>
-                        <span className="mx-2">·</span>
+                        <span className="mx-1">·</span>
                         <span>{new Date(m.createdAt).toLocaleString()}</span>
+                        <span className="mx-1">·</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${m.isPublic ? 'bg-cyber-success/15 text-cyber-success border border-cyber-success/20' : 'bg-text-muted/10 text-text-muted border border-border-normal'}`}>
+                          {m.isPublic ? 'PUBLIC' : 'PRIVATE'}
+                        </span>
+                        {m.isPublic && (
+                          <button
+                            onClick={() => {
+                              const publicUrl = `${window.location.origin}/public/meetings/${m.id}`;
+                              navigator.clipboard.writeText(publicUrl);
+                              notify('Public link copied to clipboard!', true);
+                            }}
+                            className="ml-2 px-2 py-0.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded text-primary hover:text-text-heading text-[9px] font-bold font-mono transition-all flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-2.5 h-2.5" />
+                            <span>Copy Public Link</span>
+                          </button>
+                        )}
                       </div>
                       {m.refLink && (
                         <a
@@ -428,6 +450,24 @@ export function MeetingsPanel() {
                   placeholder="https://github.com/cyberx-org/issues/42 or any reference URL"
                   disabled={formLoading}
                 />
+              </div>
+
+              {/* Public Visibility Toggle */}
+              <div className="flex items-center justify-between p-3.5 bg-bg-primary/40 border border-border-normal rounded-lg">
+                <div>
+                  <span className="text-[10px] font-mono text-text-heading block font-semibold">PUBLIC LINK SHARING</span>
+                  <span className="text-[9px] text-text-muted font-mono">Anyone with the link can view this meeting log.</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={formIsPublic}
+                    onChange={(e) => setFormIsPublic(e.target.checked)}
+                    className="sr-only peer"
+                    disabled={formLoading}
+                  />
+                  <div className="relative w-9 h-5 bg-bg-surface border border-border-normal rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-muted peer-checked:after:bg-black peer-checked:bg-primary after:border-none after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-focus:outline-none"></div>
+                </label>
               </div>
 
               {/* Error */}

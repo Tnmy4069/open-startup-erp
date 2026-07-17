@@ -15,7 +15,7 @@ export async function PUT(
 
   try {
     const data = await request.json();
-    const { date, agenda, notes, refLink } = data;
+    const { date, agenda, notes, refLink, isPublic } = data;
 
     if (!agenda || !notes) {
       return NextResponse.json({ error: 'Agenda and notes are required.' }, { status: 400 });
@@ -36,6 +36,7 @@ export async function PUT(
         agenda,
         notes,
         refLink: refLink || null,
+        isPublic: isPublic !== undefined ? !!isPublic : original.isPublic,
       },
     });
 

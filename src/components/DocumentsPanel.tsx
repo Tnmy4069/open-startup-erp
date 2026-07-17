@@ -43,6 +43,7 @@ interface DocFile {
   tags: string[];
   isPinned: boolean;
   isFavorite: boolean;
+  isPublic?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -561,6 +562,49 @@ export function DocumentsPanel() {
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs">
+                    {/* Public Visibility Toggle */}
+                    <div className="flex items-center gap-1.5 border border-border-normal rounded-lg px-2.5 py-1 bg-bg-primary/40 font-mono">
+                      <Globe className={`w-3.5 h-3.5 ${fileDetail.isPublic ? 'text-cyber-success animate-pulse' : 'text-text-muted'}`} />
+                      <span className="text-[10px] text-text-muted select-none">PUBLIC:</span>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(`/api/documents/files/${fileDetail.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ isPublic: !fileDetail.isPublic })
+                            });
+                            if (res.ok) {
+                              const updated = await res.json();
+                              setFileDetail(updated);
+                              triggerNotification(updated.isPublic ? 'Document is now public' : 'Document is now private', 'Updated');
+                              fetchDocumentStructure();
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors ${
+                          fileDetail.isPublic ? 'bg-cyber-success/20 text-cyber-success hover:bg-cyber-success/30' : 'bg-text-muted/10 text-text-muted hover:bg-text-muted/20'
+                        }`}
+                      >
+                        {fileDetail.isPublic ? 'YES' : 'NO'}
+                      </button>
+                      {fileDetail.isPublic && (
+                        <button
+                          onClick={() => {
+                            const publicUrl = `${window.location.origin}/public/documents/${fileDetail.id}`;
+                            navigator.clipboard.writeText(publicUrl);
+                            triggerNotification('Public link copied!', 'System');
+                          }}
+                          className="p-1 text-primary hover:text-text-heading hover:bg-bg-elevated rounded transition-colors"
+                          title="Copy Public Share Link"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
                     {/* Favorite pin */}
                     <button
                       onClick={() => handleToggleFavorite(fileDetail)}

@@ -26,7 +26,10 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('cyberx_session')?.value;
   const session = token ? await decrypt(token) : null;
 
-  const isPublic = PUBLIC_PATHS.includes(pathname);
+  const isPublic = 
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith('/public/') ||
+    pathname.startsWith('/api/public/');
   const needsAuth = !isPublic;
 
   // Authenticated user visiting the login page (/) → send to dashboard

@@ -45,7 +45,7 @@ export async function PUT(
   try {
     const id = (await params).id;
     const data = await request.json();
-    const { name, content, tags, isPinned, isFavorite, rollbackVersion, type, fileUrl, fileSize, mimeType } = data;
+    const { name, content, tags, isPinned, isFavorite, rollbackVersion, type, fileUrl, fileSize, mimeType, isPublic } = data;
 
     const original = await prisma.docFile.findUnique({
       where: { id },
@@ -86,6 +86,7 @@ export async function PUT(
         tags: tags !== undefined ? tags : original.tags,
         isPinned: isPinned !== undefined ? !!isPinned : original.isPinned,
         isFavorite: isFavorite !== undefined ? !!isFavorite : original.isFavorite,
+        isPublic: isPublic !== undefined ? !!isPublic : original.isPublic,
       },
     });
 
