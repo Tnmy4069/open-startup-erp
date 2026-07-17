@@ -145,6 +145,7 @@ export function LedgerTable({
   const [uploadProgress, setUploadProgress] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([]);
+  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -219,11 +220,24 @@ export function LedgerTable({
     }
   }, []);
 
+  const fetchMembers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/members?limit=1000');
+      if (res.ok) {
+        const data = await res.json();
+        setMembers(data.members || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch members:', e);
+    }
+  }, []);
+
   useEffect(() => {
     if (openAddDrawer) {
       fetchOrganizations();
+      fetchMembers();
     }
-  }, [openAddDrawer, fetchOrganizations]);
+  }, [openAddDrawer, fetchOrganizations, fetchMembers]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -1352,9 +1366,14 @@ export function LedgerTable({
 
                 {/* Associated Organization */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Associated Organization (Optional)</label>
+                  <label className="text-text-heading font-semibold">Associated Org / Member (Optional)</label>
                   <select
-                    value={organizations.some((org) => org.name === formParty) ? formParty : ''}
+                    value={
+                      organizations.some((org) => org.name === formParty) ||
+                      members.some((m) => m.name === formParty)
+                        ? formParty
+                        : ''
+                    }
                     onChange={(e) => {
                       if (e.target.value) {
                         setFormParty(e.target.value);
@@ -1362,12 +1381,21 @@ export function LedgerTable({
                     }}
                     className="h-11 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none"
                   >
-                    <option value="">-- Or enter custom/member name below --</option>
-                    {organizations.map((org) => (
-                      <option key={org.id} value={org.name}>
-                        {org.name}
-                      </option>
-                    ))}
+                    <option value="">-- Or enter custom name below --</option>
+                    <optgroup label="Organizations">
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.name}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Members">
+                      {members.map((m) => (
+                        <option key={m.id} value={m.name}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                 </div>
 
@@ -1428,14 +1456,19 @@ export function LedgerTable({
                 {/* Logged by */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Transaction Logged By *</label>
-                  <input
-                    type="text"
+                  <select
                     required
-                    placeholder="Enter your name"
                     value={formTransactionBy}
                     onChange={(e) => setFormTransactionBy(e.target.value)}
-                    className="h-11 px-3.5 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
-                  />
+                    className="h-11 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none"
+                  >
+                    <option value="">-- Select Member --</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.name}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
               </div>

@@ -37,13 +37,29 @@ export async function GET(
     const eventsAttended = member.registrations.filter((r) => r.status === 'Attended').length;
     const tasksCompleted = member.tasksAssigned.filter((t) => t.status === 'Completed').length;
 
+    // Fetch transaction ledger figures
+    const txs = await prisma.transaction.findMany({
+      where: { party: member.name },
+      select: { amount: true, type: true, status: true },
+    });
+
+    const totalReceived = txs
+      .filter((t) => t.status === 'Completed' && (t.type === 'Income' || t.type === 'Refund'))
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const totalPaid = txs
+      .filter((t) => t.status === 'Completed' && t.type === 'Expense')
+      .reduce((acc, t) => acc + t.amount, 0);
+
     return NextResponse.json({
       ...member,
       stats: {
         eventsAttended,
         tasksCompleted,
         totalTasks: member.tasksAssigned.length,
-        totalAssets: member.assetsHeld.length
+        totalAssets: member.assetsHeld.length,
+        totalReceived,
+        totalPaid
       }
     });
   } catch (error: any) {

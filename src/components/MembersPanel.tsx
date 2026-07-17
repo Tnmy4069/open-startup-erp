@@ -68,11 +68,21 @@ interface MemberDetail extends Member {
     tasksCompleted: number;
     totalTasks: number;
     totalAssets: number;
+    totalReceived: number;
+    totalPaid: number;
   };
 }
 
 export function MembersPanel({ globalSearch }: { globalSearch: string }) {
   const { role, refreshTrigger, triggerNotification } = useApp();
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(val);
+  };
 
   const [members, setMembers] = useState<Member[]>([]);
   const [total, setTotal] = useState(0);
@@ -819,6 +829,18 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                   <div className="bg-bg-primary border border-border-normal/40 p-2.5 rounded-lg">
                     <span className="text-text-muted block">EVENTS</span>
                     <p className="text-sm font-bold text-cyber-info mt-1">{detail.stats.eventsAttended}</p>
+                  </div>
+                </div>
+
+                {/* Ledger figures */}
+                <div className="grid grid-cols-2 gap-2.5 text-center font-mono text-[10px]">
+                  <div className="bg-bg-primary border border-border-normal/40 p-2.5 rounded-lg text-cyber-success">
+                    <span className="text-text-muted block">TOTAL RECEIVED</span>
+                    <p className="text-[11px] font-bold mt-1">{formatCurrency(detail.stats.totalReceived || 0)}</p>
+                  </div>
+                  <div className="bg-bg-primary border border-border-normal/40 p-2.5 rounded-lg text-cyber-danger">
+                    <span className="text-text-muted block">TOTAL PAID OUT</span>
+                    <p className="text-[11px] font-bold mt-1">{formatCurrency(detail.stats.totalPaid || 0)}</p>
                   </div>
                 </div>
 
