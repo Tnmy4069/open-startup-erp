@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff } from 'lucide-react';
+import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -15,7 +15,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 
 export function SettingsPanel() {
-  const { role, refreshTrigger, triggerNotification } = useApp();
+  const { role, refreshTrigger, triggerNotification, logout } = useApp();
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +31,59 @@ export function SettingsPanel() {
   const [categories, setCategories] = useState('');
   const [paymentMethods, setPaymentMethods] = useState('');
 
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password' | 'notifications'>('general');
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password' | 'notifications' | 'app-session'>('general');
+
+  // PWA & Session states
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showReinstallGuide, setShowReinstallGuide] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Detect if already running in standalone mode
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true;
+
+    setIsInstalled(isStandalone);
+
+    if ((window as any).deferredPrompt) {
+      setDeferredPrompt((window as any).deferredPrompt);
+    }
+
+    const handleInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      (window as any).deferredPrompt = e;
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      (window as any).deferredPrompt = null;
+    };
+
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    const promptEvent = deferredPrompt || (window as any).deferredPrompt;
+    if (!promptEvent) return;
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+    }
+    setDeferredPrompt(null);
+    (window as any).deferredPrompt = null;
+  };
 
   // Push Notifications state
   const [swSupported, setSwSupported] = useState(false);
@@ -369,6 +421,16 @@ export function SettingsPanel() {
           >
             <Bell className="w-4 h-4 shrink-0" />
             <span>Device Notifications</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('app-session')}
+            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
+              activeSubTab === 'app-session' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+            }`}
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            <span>App &amp; Session</span>
           </button>
 
           {isReadOnlyUser && activeSubTab !== 'password' && (
@@ -818,6 +880,126 @@ export function SettingsPanel() {
 
                 </div>
               )}
+            </div>
+          )}
+
+          {/* APP & SESSION SECTION */}
+          {activeSubTab === 'app-session' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              
+              {/* Application installation */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Application Settings"}
+                </h3>
+                
+                <div className="p-4 bg-bg-primary border border-border-normal rounded-xl space-y-4">
+                  <div>
+                    <h4 className="font-bold text-text-heading text-sm">PWA Installation Status</h4>
+                    <p className="text-[11px] text-text-muted mt-0.5">
+                      Install CyberX on your local system or mobile phone home screen for offline access and native-like desktop performance.
+                    </p>
+                  </div>
+
+                  {isInstalled ? (
+                    <div className="flex flex-col gap-3 bg-bg-surface p-4 border border-border-normal rounded-lg">
+                      <div className="flex items-center gap-2 text-cyber-success font-mono text-[10px] font-semibold">
+                        <CheckCircle className="w-4 h-4 shrink-0" />
+                        <span>CyberX is already installed and running in standalone mode.</span>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-border-normal/40 flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-[10px] font-mono text-text-muted">Want to run setup again or switch devices?</span>
+                          <button
+                            onClick={() => {
+                              const promptEvent = deferredPrompt || (window as any).deferredPrompt;
+                              if (promptEvent) {
+                                handleInstallApp();
+                              } else {
+                                setShowReinstallGuide((prev) => !prev);
+                              }
+                            }}
+                            className="h-9 px-4 bg-bg-elevated hover:bg-bg-primary border border-border-normal hover:border-primary text-text-heading font-semibold rounded-lg flex items-center gap-1.5 transition-all text-[11px] cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Reinstall App</span>
+                          </button>
+                        </div>
+
+                        {showReinstallGuide && (
+                          <div className="p-3 bg-bg-primary/60 border border-border-normal rounded-lg mt-2 text-[10.5px] text-text-body space-y-2 font-mono leading-relaxed">
+                            <div className="flex items-center justify-between">
+                              <span className="text-primary font-bold">REINSTALLATION PROCEDURE:</span>
+                              <button onClick={() => setShowReinstallGuide(false)} className="text-text-muted hover:text-text-heading text-xs">✕</button>
+                            </div>
+                            <ol className="list-decimal list-inside space-y-1 text-text-muted">
+                              <li>Open the installed <b className="text-text-heading">CyberX</b> application window.</li>
+                              <li>Click the <b className="text-text-heading">three-dots menu (...)</b> at the top right of the app window.</li>
+                              <li>Select <b className="text-text-heading">"Uninstall CyberX..."</b> (or "Remove app") and confirm.</li>
+                              <li>Return to this browser window and click <button onClick={() => { setIsInstalled(false); setShowReinstallGuide(false); }} className="text-primary hover:underline font-bold font-mono">Reset State</button> to prompt installation again.</li>
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : deferredPrompt ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-bg-surface p-4 border border-border-normal rounded-lg">
+                      <div className="text-[11px] font-mono text-text-body">
+                        <span>Status: <b className="text-primary font-bold">Installable</b></span>
+                      </div>
+                      <button
+                        onClick={handleInstallApp}
+                        className="h-10 px-5 bg-primary hover:bg-opacity-90 text-black font-bold rounded-lg flex items-center gap-2 transition-all self-start sm:self-auto text-xs cursor-pointer"
+                      >
+                        <Download className="w-4 h-4 text-black" />
+                        <span>Install Application</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-bg-surface border border-border-normal rounded-lg text-text-muted font-mono text-[10px] justify-between">
+                      <span>App is running in browser context. (PWA installation not prompted yet or not supported in this browser)</span>
+                      <button
+                        onClick={() => {
+                          setIsInstalled(true);
+                        }}
+                        className="px-2 py-1 border border-border-normal rounded font-mono hover:text-text-heading text-[9px] hover:border-primary transition-colors"
+                      >
+                        Mock Installed
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Session / Authentication */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {"// Session Parameters"}
+                </h3>
+                
+                <div className="p-4 bg-bg-primary border border-border-normal rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-bold text-text-heading text-sm">Active Session</h4>
+                    <p className="text-[11px] text-text-muted mt-0.5">
+                      Log out from this secure terminal. This will clear session cookies and require login again.
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to logout?')) {
+                        logout();
+                      }
+                    }}
+                    className="h-10 px-5 bg-cyber-danger/15 hover:bg-cyber-danger/25 border border-cyber-danger/30 text-cyber-danger font-bold rounded-lg flex items-center gap-2 transition-all self-start sm:self-auto text-xs font-mono cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 text-cyber-danger" />
+                    <span>LOGOUT SESSION</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           )}
 

@@ -26,6 +26,7 @@ export function PWAProviders() {
     // Capture the install prompt
     const handleInstallPrompt = (e: Event) => {
       e.preventDefault();
+      (window as any).deferredPrompt = e;
       const dismissed = localStorage.getItem('pwa-install-dismissed');
       const dismissedAt = dismissed ? parseInt(dismissed) : 0;
       const thirtyDays = 30 * 24 * 60 * 60 * 1000;

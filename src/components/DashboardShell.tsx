@@ -903,37 +903,6 @@ export function DashboardShell() {
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'settings' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>S</kbd>
           </button>
         </nav>
-
-        {/* BOTTOM QUICK CTAS */}
-        <div className="p-4 border-t border-border-normal space-y-2">
-          {/* {role !== 'Read Only' && (
-            <button
-              onClick={() => {
-                setCurrentTab('ledger');
-                setOpenNewTxDrawer(true);
-              }}
-              className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-medium transition-all duration-150"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="text-xs">New Transaction</span>
-            </button>
-          )}
-          <button
-            onClick={() => setShowShortcutsHelp(true)}
-            className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border-normal text-text-body hover:bg-bg-elevated transition-all duration-150 text-xs"
-          >
-            <Keyboard className="w-4 h-4 text-text-muted" />
-            <span>Shortcuts (?)</span>
-          </button> */}
-          {/* Logout */}
-          <button
-            onClick={logout}
-            className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-cyber-danger/30 text-cyber-danger/80 hover:bg-cyber-danger/10 hover:text-cyber-danger transition-all duration-150 text-xs font-mono"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
-          </button>
-        </div>
       </aside>
 
       {/* MAIN CONTAINER */}
