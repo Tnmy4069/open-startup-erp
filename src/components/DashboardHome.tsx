@@ -154,23 +154,6 @@ export function DashboardHome({
     }).format(val);
   };
 
-  if (loading || !data) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-28 bg-bg-surface border border-border-normal rounded-xl animate-pulse" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-bg-surface border border-border-normal rounded-xl animate-pulse" />
-          <div className="h-80 bg-bg-surface border border-border-normal rounded-xl animate-pulse" />
-        </div>
-      </div>
-    );
-  }
-
-  const { kpi, charts, reminders, recentLogs, myTasks, myAssets, myEvents } = data;
   const COLORS = ['#FFD54A', '#5CAEFF', '#35D07F', '#FFC857', '#FF5C5C', '#A855F7', '#EC4899'];
 
   // Render role-specific dashboards
@@ -270,7 +253,30 @@ export function DashboardHome({
         </div>
       </div>
 
-      {/* -------------------- 1. SUPER ADMIN / FINANCE HEAD DASHBOARD -------------------- */}
+      {/* -------------------- DYNAMIC DASHBOARD DATA -------------------- */}
+      {loading || !data ? (
+        <div className="space-y-6 animate-pulse mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-28 bg-bg-surface border border-border-normal rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-bg-surface border border-border-normal rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-80 bg-bg-surface border border-border-normal rounded-xl" />
+            <div className="h-80 bg-bg-surface border border-border-normal rounded-xl" />
+          </div>
+        </div>
+      ) : (
+        (() => {
+          const { kpi, charts, reminders, recentLogs, myTasks, myAssets, myEvents } = data;
+          return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              {/* -------------------- 1. SUPER ADMIN / FINANCE HEAD DASHBOARD -------------------- */}
       {isFinanceOrAdmin && (
         <>
           {/* KPI GRID */}
@@ -890,6 +896,11 @@ export function DashboardHome({
 
           </div>
         </div>
+      )}
+
+            </div>
+          );
+        })()
       )}
 
     </div>
