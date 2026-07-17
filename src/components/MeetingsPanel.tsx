@@ -19,6 +19,7 @@ import {
   ChevronUp,
   Eye,
   Code2,
+  Share2,
 } from 'lucide-react';
 
 interface MeetingNote {
@@ -234,6 +235,46 @@ export function MeetingsPanel() {
                     <span className="text-[10px] text-text-muted font-mono hidden lg:inline">
                       by <b className="text-text-heading">{m.createdBy}</b>
                     </span>
+                    {m.isPublic && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const publicUrl = `${window.location.origin}/public/meetings/${m.id}`;
+                            navigator.clipboard.writeText(publicUrl);
+                            notify('Public link copied to clipboard!', true);
+                          }}
+                          className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors"
+                          title="Copy Public Link"
+                        >
+                          <LinkIcon className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const publicUrl = `${window.location.origin}/public/meetings/${m.id}`;
+                            if (navigator.share) {
+                              try {
+                                await navigator.share({
+                                  title: m.agenda,
+                                  text: `Check out this meeting note: ${m.agenda}`,
+                                  url: publicUrl,
+                                });
+                              } catch (error) {
+                                console.error('Error sharing:', error);
+                              }
+                            } else {
+                              navigator.clipboard.writeText(publicUrl);
+                              notify('Public link copied to clipboard!', true);
+                            }
+                          }}
+                          className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors"
+                          title="Share Public Link"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={(e) => { e.stopPropagation(); openEdit(m); }}
                       className="p-1.5 rounded hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors"
@@ -282,19 +323,6 @@ export function MeetingsPanel() {
                         <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${m.isPublic ? 'bg-cyber-success/15 text-cyber-success border border-cyber-success/20' : 'bg-text-muted/10 text-text-muted border border-border-normal'}`}>
                           {m.isPublic ? 'PUBLIC' : 'PRIVATE'}
                         </span>
-                        {m.isPublic && (
-                          <button
-                            onClick={() => {
-                              const publicUrl = `${window.location.origin}/public/meetings/${m.id}`;
-                              navigator.clipboard.writeText(publicUrl);
-                              notify('Public link copied to clipboard!', true);
-                            }}
-                            className="ml-2 px-2 py-0.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded text-primary hover:text-text-heading text-[9px] font-bold font-mono transition-all flex items-center gap-1"
-                          >
-                            <ExternalLink className="w-2.5 h-2.5" />
-                            <span>Copy Public Link</span>
-                          </button>
-                        )}
                       </div>
                       {m.refLink && (
                         <a
