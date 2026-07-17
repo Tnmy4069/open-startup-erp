@@ -11,6 +11,8 @@ if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const notifications = await prisma.notification.findMany({
@@ -162,6 +164,38 @@ export async function POST(request: Request) {
         status: 'Unread',
       },
     });
+
+    // Also send as a push notification to all subscribed devices
+    const subscriptions = await prisma.pushSubscription.findMany();
+    if (subscriptions.length > 0) {
+      const payload = JSON.stringify({
+        title: `System: ${type || 'Alert'}`,
+        body: message,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: { url: '/dashboard' },
+      });
+
+      await Promise.allSettled(
+        subscriptions.map(async (sub) => {
+          try {
+            await webpush.sendNotification(
+              {
+                endpoint: sub.endpoint,
+                keys: { p256dh: sub.p256dh, auth: sub.auth },
+              },
+              payload,
+              { headers: { 'Urgency': 'normal' }, TTL: 86400 }
+            );
+          } catch (error: any) {
+            if (error.statusCode === 410 || error.statusCode === 404) {
+              await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
+            }
+          }
+        })
+      );
+    }
+
     return NextResponse.json(newNotification);
   } catch (error) {
     const err = error as Error;

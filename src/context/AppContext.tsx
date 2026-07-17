@@ -109,6 +109,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!authLoading && user) {
       fetchAlerts();
+      
+      // Poll for new notifications every 15 seconds
+      const intervalId = setInterval(() => {
+        fetchAlerts();
+      }, 15000);
+
+      return () => clearInterval(intervalId);
     }
   }, [authLoading, user, refreshTrigger, fetchAlerts]);
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { guardCreate } from '@/lib/permissions';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const organizations = await prisma.organization.findMany({

@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import { guardUsers } from '@/lib/permissions';
 
 // GET /api/users — list all DB users with subscription status (Super Admin only)
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const forbidden = await guardUsers();
   if (forbidden) return forbidden;
