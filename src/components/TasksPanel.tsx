@@ -18,7 +18,9 @@ import {
   Tag,
   Clock,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 
 interface Member {
@@ -53,8 +55,8 @@ interface Task {
   priority: string;
   status: string;
   dueDate: string | null;
-  assigneeId: string | null;
-  assignee: Member | null;
+  assigneeIds: string[];
+  assignees: Member[];
   reporterId: string | null;
   reporter: Member | null;
   labels: string[];
@@ -102,6 +104,7 @@ export function TasksPanel() {
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   // Form States
   const [formTitle, setFormTitle] = useState('');
@@ -109,7 +112,7 @@ export function TasksPanel() {
   const [formPriority, setFormPriority] = useState('Medium');
   const [formStatus, setFormStatus] = useState('Todo');
   const [formDueDate, setFormDueDate] = useState('');
-  const [formAssigneeId, setFormAssigneeId] = useState('');
+  const [formAssigneeIds, setFormAssigneeIds] = useState<string[]>([]);
   const [formLabels, setFormLabels] = useState('');
   const [formIsRecurring, setFormIsRecurring] = useState(false);
   const [formRecurringPattern, setFormRecurringPattern] = useState('Weekly');
@@ -182,26 +185,45 @@ export function TasksPanel() {
   }, []);
 
   const handleOpenAdd = (columnName?: string) => {
+    setEditingTaskId(null);
     setFormTitle('');
     setFormDesc('');
     setFormPriority('Medium');
     setFormStatus(columnName || 'Todo');
     setFormDueDate('');
-    setFormAssigneeId('');
+    setFormAssigneeIds([]);
     setFormLabels('');
     setFormIsRecurring(false);
     setFormRecurringPattern('Weekly');
     setShowAddModal(true);
   };
 
-  const handleCreateTask = async (e: React.FormEvent) => {
+  const handleOpenEdit = (task: TaskDetail) => {
+    setEditingTaskId(task.id);
+    setFormTitle(task.title);
+    setFormDesc(task.description || '');
+    setFormPriority(task.priority);
+    setFormStatus(task.status);
+    setFormDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
+    setFormAssigneeIds(task.assignees.map(a => a.id));
+    setFormLabels(task.labels.join(', '));
+    setFormIsRecurring(task.isRecurring);
+    setFormRecurringPattern(task.recurringPattern || 'Weekly');
+    setShowAddModal(true);
+  };
+
+  const handleSubmitTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
+      const isEdit = !!editingTaskId;
+      const url = isEdit ? `/api/tasks/${editingTaskId}` : '/api/tasks';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: formTitle,
@@ -209,7 +231,7 @@ export function TasksPanel() {
           priority: formPriority,
           status: formStatus,
           dueDate: formDueDate || null,
-          assigneeId: formAssigneeId || null,
+          assigneeIds: formAssigneeIds,
           labels: formLabels.split(',').map((l) => l.trim()).filter(Boolean),
           isRecurring: formIsRecurring,
           recurringPattern: formIsRecurring ? formRecurringPattern : null,
@@ -218,11 +240,14 @@ export function TasksPanel() {
 
       if (res.ok) {
         setShowAddModal(false);
-        triggerNotification(`Created task: ${formTitle}`, 'Created');
+        triggerNotification(isEdit ? `Updated task: ${formTitle}` : `Created task: ${formTitle}`, isEdit ? 'Updated' : 'Created');
         fetchTasks();
+        if (isEdit && selectedTaskId === editingTaskId) {
+          fetchTaskDetail(editingTaskId);
+        }
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to create task');
+        alert(err.error || (isEdit ? 'Failed to update task' : 'Failed to create task'));
       }
     } catch (e) {
       console.error(e);
@@ -386,6 +411,20 @@ export function TasksPanel() {
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </select>
+          
+          <button
+            onClick={() => {
+              const myId = members.find(m => m.name.toLowerCase() === sessionUser?.username.toLowerCase())?.id;
+              if (myId) {
+                setAssigneeFilter(assigneeFilter === myId ? '' : myId);
+              } else {
+                triggerNotification('Could not find your member profile.', 'Error');
+              }
+            }}
+            className={`h-10 px-2 border rounded-lg text-[11px] font-mono font-semibold transition-colors ${assigneeFilter === members.find(m => m.name.toLowerCase() === sessionUser?.username.toLowerCase())?.id ? 'bg-primary/20 text-primary border-primary' : 'bg-bg-primary border-border-normal text-text-muted hover:text-text-heading'}`}
+          >
+            My Tasks
+          </button>
         </div>
       </div>
 
@@ -393,12 +432,12 @@ export function TasksPanel() {
       <div className="flex flex-col lg:flex-row gap-6">
         
         {/* KANBAN BOARD COLUMNS */}
-        <div className="flex-1 overflow-x-auto pb-4">
-          <div className="flex gap-5 min-w-[1000px] h-[550px] items-stretch">
+        <div className="flex-1 overflow-x-auto pb-4 snap-x snap-mandatory">
+          <div className="flex gap-4 sm:gap-5 w-max min-w-full h-[600px] items-stretch px-2 sm:px-0">
             {COLUMNS.map((colName) => {
               const colTasks = tasks.filter((t) => t.status === colName);
               return (
-                <div key={colName} className="flex-1 bg-bg-surface/30 border border-border-normal/60 rounded-xl p-4 flex flex-col justify-between select-none">
+                <div key={colName} className="w-[85vw] sm:w-auto sm:flex-1 shrink-0 snap-center bg-bg-surface/30 border border-border-normal/60 rounded-xl p-4 flex flex-col justify-between select-none">
                   
                   {/* Column Title */}
                   <div className="flex items-center justify-between border-b border-border-normal/40 pb-3 mb-4">
@@ -451,26 +490,44 @@ export function TasksPanel() {
                         {/* Card Footer / Assignee / Due Date */}
                         <div className="flex items-center justify-between border-t border-border-normal/40 pt-3.5 text-[9px] font-mono">
                           
-                          {/* Due Date */}
-                          <div className="flex items-center gap-1 text-text-muted shrink-0">
-                            <Calendar className="w-3 h-3" />
-                            <span>{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'No Due'}</span>
+                          {/* Due Date & Checklist */}
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className={`flex items-center gap-1 ${
+                              t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'Completed' ? 'text-cyber-danger font-bold' : 
+                              t.dueDate && new Date(t.dueDate) < new Date(Date.now() + 172800000) && t.status !== 'Completed' ? 'text-cyber-warning font-bold' : 
+                              'text-text-muted'
+                            }`}>
+                              <Calendar className="w-3 h-3" />
+                              <span>{t.dueDate ? new Date(t.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No Due'}</span>
+                            </div>
+                            
+                            {/* We don't have checklist count in summary tasks list currently, unless we add it to the API response. */}
                           </div>
 
-                          {/* Assignee Avatar */}
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-text-heading font-semibold truncate max-w-20">
-                              {t.assignee ? t.assignee.name : 'Unassigned'}
-                            </span>
-                            <div className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-[9px] text-primary font-bold">
-                              {t.assignee ? t.assignee.name.charAt(0).toUpperCase() : '?'}
-                            </div>
+                          {/* Assignees Avatars */}
+                          <div className="flex items-center gap-1 min-w-0">
+                            {t.assignees && t.assignees.length > 0 ? (
+                              <div className="flex -space-x-1.5">
+                                {t.assignees.slice(0, 3).map((a, i) => (
+                                  <div key={a.id} title={a.name} className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[9px] text-primary font-bold z-10">
+                                    {a.name.charAt(0).toUpperCase()}
+                                  </div>
+                                ))}
+                                {t.assignees.length > 3 && (
+                                  <div className="w-5 h-5 rounded-full bg-bg-elevated border border-border-normal flex items-center justify-center text-[8px] text-text-muted z-0">
+                                    +{t.assignees.length - 3}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-text-muted text-[10px]">Unassigned</span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Column Transition arrows (Accessible status changes) */}
+                        {/* Column Transition arrows (Accessible status changes for Mobile) */}
                         {role !== 'Read Only' && (
-                          <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 bg-bg-surface p-0.5 rounded border border-border-normal">
+                          <div className="absolute right-2 top-2 sm:opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-bg-surface p-1 rounded-lg border border-border-normal shadow-sm">
                             {colName !== 'Backlog' && (
                               <button
                                 onClick={(e) => {
@@ -543,15 +600,24 @@ export function TasksPanel() {
                     </div>
                   </div>
 
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     {role !== 'Read Only' && (
-                      <button
-                        onClick={() => handleDeleteTask(detail.id, detail.title)}
-                        className="p-1 text-text-muted hover:text-cyber-danger hover:bg-cyber-danger/10 rounded"
-                        title="Delete Task"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleOpenEdit(detail)}
+                          className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                          title="Edit Task"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(detail.id, detail.title)}
+                          className="p-1.5 text-text-muted hover:text-cyber-danger hover:bg-cyber-danger/10 rounded transition-colors"
+                          title="Delete Task"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
                     <button onClick={() => setSelectedTaskId(null)} className="p-1 text-text-muted hover:text-text-heading rounded">
                       <X className="w-4 h-4" />
@@ -569,8 +635,12 @@ export function TasksPanel() {
                 {/* Properties details */}
                 <div className="bg-bg-primary rounded-xl border border-border-normal/40 p-4 space-y-2 text-xs font-mono">
                   <div className="flex justify-between">
-                    <span className="text-text-muted">ASSIGNEE:</span>
-                    <span className="text-text-heading font-semibold">{detail.assignee ? detail.assignee.name : 'Unassigned'}</span>
+                    <span className="text-text-muted">ASSIGNEES:</span>
+                    <span className="text-text-heading font-semibold text-right max-w-[60%]">
+                      {detail.assignees && detail.assignees.length > 0 
+                        ? detail.assignees.map(a => a.name).join(', ') 
+                        : 'Unassigned'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">DUE DATE:</span>
@@ -586,7 +656,14 @@ export function TasksPanel() {
 
                 {/* Checklist widget */}
                 <div className="space-y-3">
-                  <span className="font-mono text-[10px] text-text-muted font-bold block">SUBTASKS CHECKLIST</span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[10px] text-text-muted font-bold block">SUBTASKS CHECKLIST</span>
+                    {detail.checklist.length > 0 && (
+                      <span className="text-[10px] font-mono font-bold text-primary">
+                        {detail.checklist.filter(c => c.isCompleted).length}/{detail.checklist.length}
+                      </span>
+                    )}
+                  </div>
                   
                   {detail.checklist.length > 0 && (
                     <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
@@ -666,17 +743,21 @@ export function TasksPanel() {
         )}
       </div>
 
-      {/* CREATE TASK MODAL */}
+      {/* ADD/EDIT TASK MODAL */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <form
-            onSubmit={handleCreateTask}
+            onSubmit={handleSubmitTask}
             className="bg-bg-surface border border-border-normal rounded-xl max-w-md w-full flex flex-col shadow-2xl animate-in scale-in duration-200"
           >
             <div className="px-6 py-4 border-b border-border-normal flex items-center justify-between">
               <div>
-                <h3 className="font-display font-bold text-text-heading text-base">{"// Initialize Sprint Task"}</h3>
-                <p className="text-[10px] text-text-muted font-mono mt-0.5">Assign backlog tasks, set priority logs and due dates.</p>
+                <h3 className="font-display font-bold text-text-heading text-base">
+                  {editingTaskId ? "// Edit Sprint Task" : "// Initialize Sprint Task"}
+                </h3>
+                <p className="text-[10px] text-text-muted font-mono mt-0.5">
+                  {editingTaskId ? "Update task details, assignees, and due dates." : "Assign backlog tasks, set priority logs and due dates."}
+                </p>
               </div>
               <button type="button" onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-heading">
                 <X className="w-5 h-5" />
@@ -698,17 +779,26 @@ export function TasksPanel() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Assignee</label>
-                  <select
-                    value={formAssigneeId}
-                    onChange={(e) => setFormAssigneeId(e.target.value)}
-                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none"
-                  >
-                    <option value="">Unassigned</option>
-                    {members.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
+                  <label className="text-text-heading font-semibold">Assignees</label>
+                  <div className="border border-border-normal bg-bg-primary rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
+                    {members.map(m => (
+                      <label key={m.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-bg-elevated rounded">
+                        <input
+                          type="checkbox"
+                          checked={formAssigneeIds.includes(m.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setFormAssigneeIds([...formAssigneeIds, m.id]);
+                            else setFormAssigneeIds(formAssigneeIds.filter(id => id !== m.id));
+                          }}
+                          className="w-3.5 h-3.5 accent-primary"
+                        />
+                        <span className="text-text-heading">{m.name}</span>
+                      </label>
                     ))}
-                  </select>
+                    {members.length === 0 && (
+                      <span className="text-text-muted text-[10px] p-1">No members found</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -803,7 +893,7 @@ export function TasksPanel() {
                 disabled={isSubmitting}
                 className="h-10 px-6 rounded-lg bg-primary hover:bg-opacity-90 text-black font-bold text-xs transition-all disabled:opacity-50"
               >
-                {isSubmitting ? 'CREATING...' : 'CREATE TASK'}
+                {isSubmitting ? 'SAVING...' : (editingTaskId ? 'UPDATE TASK' : 'CREATE TASK')}
               </button>
             </div>
           </form>

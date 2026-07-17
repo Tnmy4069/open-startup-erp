@@ -16,7 +16,7 @@ export async function GET(
     const task = await prisma.task.findUnique({
       where: { id },
       include: {
-        assignee: true,
+        assignees: true,
         reporter: true,
         comments: {
           orderBy: { createdAt: 'asc' },
@@ -63,7 +63,7 @@ export async function PUT(
       priority,
       status,
       dueDate,
-      assigneeId,
+      assigneeIds,
       labels,
       isRecurring,
       recurringPattern,
@@ -77,7 +77,7 @@ export async function PUT(
         priority: priority !== undefined ? priority : original.priority,
         status: status !== undefined ? status : original.status,
         dueDate: dueDate !== undefined ? (dueDate ? new Date(dueDate) : null) : original.dueDate,
-        assigneeId: assigneeId !== undefined ? assigneeId : original.assigneeId,
+        assigneeIds: assigneeIds !== undefined ? assigneeIds : original.assigneeIds,
         labels: labels !== undefined ? labels : original.labels,
         isRecurring: isRecurring !== undefined ? !!isRecurring : original.isRecurring,
         recurringPattern: recurringPattern !== undefined ? recurringPattern : original.recurringPattern,
@@ -92,13 +92,8 @@ export async function PUT(
     if (priority && priority !== original.priority) {
       changes.push(`priority to ${priority}`);
     }
-    if (assigneeId !== undefined && assigneeId !== original.assigneeId) {
-      if (assigneeId) {
-        const member = await prisma.member.findUnique({ where: { id: assigneeId } });
-        changes.push(`assignee to ${member ? member.name : 'Unknown'}`);
-      } else {
-        changes.push('assignee removed');
-      }
+    if (assigneeIds !== undefined && JSON.stringify(assigneeIds) !== JSON.stringify(original.assigneeIds)) {
+      changes.push(`assignees updated`);
     }
 
     if (changes.length > 0) {
@@ -112,12 +107,13 @@ export async function PUT(
     }
 
     // Trigger activity updates if completed
-    if (status === 'Completed' && original.status !== 'Completed' && updated.assigneeId) {
-      await prisma.memberActivity.create({
-        data: {
-          memberId: updated.assigneeId,
-          action: `Completed task: ${updated.title}`,
-        },
+    if (status === 'Completed' && original.status !== 'Completed' && updated.assigneeIds?.length > 0) {
+      const activities = updated.assigneeIds.map((id: string) => ({
+        memberId: id,
+        action: `Completed task: ${updated.title}`,
+      }));
+      await prisma.memberActivity.createMany({
+        data: activities,
       });
     }
 

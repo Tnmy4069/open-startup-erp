@@ -685,7 +685,7 @@ export function EventsPanel() {
             onSubmit={handleSubmit}
             className="bg-bg-surface border border-border-normal rounded-xl max-w-2xl w-full flex flex-col shadow-2xl animate-in scale-in duration-200"
           >
-            <div className="px-6 py-4 border-b border-border-normal flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-b border-border-normal flex items-center justify-between">
               <div>
                 <h3 className="font-display font-bold text-text-heading text-base">
                   {editingEvent ? "// Edit Event Details" : "// Create New Event Draft"}
@@ -697,8 +697,8 @@ export function EventsPanel() {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[70vh] space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 sm:p-6 overflow-y-auto max-h-[75vh] space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Event Title *</label>
                   <input
@@ -723,7 +723,7 @@ export function EventsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Category</label>
                   <select
@@ -758,7 +758,7 @@ export function EventsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Start Timestamp *</label>
                   <input
@@ -791,7 +791,7 @@ export function EventsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Budget (Allocated Outflows)</label>
                   <input
@@ -812,7 +812,7 @@ export function EventsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Sponsors (comma separated)</label>
                   <input
@@ -857,7 +857,7 @@ export function EventsPanel() {
 
             </div>
 
-            <div className="px-6 py-4 border-t border-border-normal bg-bg-elevated/20 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-border-normal bg-bg-elevated/20 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowFormModal(false)}
@@ -882,7 +882,7 @@ export function EventsPanel() {
       {/* REGISTRATION FORM MODAL */}
       {showRegModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleRegisterSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-6 space-y-4 animate-in scale-in duration-200">
+          <form onSubmit={handleRegisterSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-4 sm:p-6 space-y-4 animate-in scale-in duration-200">
             <div className="flex items-center justify-between border-b border-border-normal pb-3">
               <h3 className="font-display font-bold text-text-heading text-sm">{"// Register Attendee"}</h3>
               <button type="button" onClick={() => setShowRegModal(false)} className="text-text-muted hover:text-text-heading">

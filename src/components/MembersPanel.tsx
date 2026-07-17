@@ -23,11 +23,14 @@ import {
   TrendingUp,
   MapPin,
   ChevronDown,
-  Upload
+  Upload,
+  Share2,
+  Link as LinkIcon
 } from 'lucide-react';
 
 interface Member {
   id: string;
+  slug: string | null;
   name: string;
   photo: string | null;
   email: string;
@@ -50,7 +53,6 @@ interface Member {
   emergencyContact: string | null;
   joinedDate: string;
   notes: string | null;
-  attendance: number;
   badges: string[];
   certificates: string[];
 }
@@ -128,6 +130,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
   const [formOrgName, setFormOrgName] = useState('');
   const [formDesignation, setFormDesignation] = useState('');
   const [formMemberType, setFormMemberType] = useState<'Student' | 'Professional'>('Student');
+  const [formSlug, setFormSlug] = useState('');
 
   const fetchMembers = async () => {
     try {
@@ -205,6 +208,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
     setFormOrgName('');
     setFormDesignation('');
     setFormMemberType('Student');
+    setFormSlug('');
     setShowAddModal(true);
   };
 
@@ -232,6 +236,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
     setFormOrgName(m.orgName || '');
     setFormDesignation(m.designation || '');
     setFormMemberType((m.orgName || m.designation) ? 'Professional' : 'Student');
+    setFormSlug(m.slug || '');
     setShowAddModal(true);
   };
 
@@ -284,6 +289,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
         domains: formDomains.split(',').map((d) => d.trim()).filter(Boolean),
         emergencyContact: formEmergency,
         notes: formNotes,
+        slug: formSlug || null,
       };
 
       const res = await fetch(url, {
@@ -476,7 +482,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-text-heading font-display tracking-wide">{"// Member Operating Directory"}</h2>
-          <p className="text-[10px] text-text-muted font-mono mt-0.5 font-semibold">Track community profiles, domain skills, tasks and attendance logs</p>
+          <p className="text-[10px] text-text-muted font-mono mt-0.5 font-semibold">Track community profiles, domain skills and tasks</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -626,26 +632,41 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                           </div>
                         </div>
 
-                        {role !== 'Read Only' && (
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => handleOpenEdit(m, e)}
-                              className="p-1 rounded hover:bg-bg-elevated hover:text-text-heading text-text-muted"
-                              title="Edit Member"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            {(role === 'Super Admin' || role === 'Co-Founder') && (
+                        <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const slugOrId = m.slug || m.id;
+                              const publicUrl = `${window.location.origin}/public/members/${slugOrId}`;
+                              navigator.clipboard.writeText(publicUrl);
+                              triggerNotification('Public profile link copied!', 'Info');
+                            }}
+                            className="p-1 rounded hover:bg-bg-elevated hover:text-primary text-text-muted transition-colors"
+                            title="Copy Public Profile Link"
+                          >
+                            <LinkIcon className="w-3.5 h-3.5" />
+                          </button>
+                          {role !== 'Read Only' && (
+                            <>
                               <button
-                                onClick={(e) => handleDelete(m, e)}
-                                className="p-1 rounded hover:bg-cyber-danger/10 hover:text-cyber-danger text-text-muted"
-                                title="Remove Member"
+                                onClick={(e) => handleOpenEdit(m, e)}
+                                className="p-1 rounded hover:bg-bg-elevated hover:text-text-heading text-text-muted transition-colors"
+                                title="Edit Member"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Edit2 className="w-3.5 h-3.5" />
                               </button>
-                            )}
-                          </div>
-                        )}
+                              {(role === 'Super Admin' || role === 'Co-Founder') && (
+                                <button
+                                  onClick={(e) => handleDelete(m, e)}
+                                  className="p-1 rounded hover:bg-cyber-danger/10 hover:text-cyber-danger text-text-muted transition-colors"
+                                  title="Remove Member"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {/* Contact Info */}
@@ -743,12 +764,52 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setSelectedId(null)}
-                    className="p-1.5 hover:bg-bg-elevated hover:text-text-heading text-text-muted rounded-lg"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const slugOrId = detail.slug || detail.id;
+                        const publicUrl = `${window.location.origin}/public/members/${slugOrId}`;
+                        navigator.clipboard.writeText(publicUrl);
+                        triggerNotification('Public profile link copied!', 'Info');
+                      }}
+                      className="p-1.5 hover:bg-primary/10 hover:text-primary text-text-muted rounded-lg transition-colors"
+                      title="Copy Public Profile Link"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const slugOrId = detail.slug || detail.id;
+                        const publicUrl = `${window.location.origin}/public/members/${slugOrId}`;
+                        if (navigator.share) {
+                          try {
+                            await navigator.share({
+                              title: detail.name,
+                              text: `Check out ${detail.name}'s CyberX Profile`,
+                              url: publicUrl,
+                            });
+                          } catch (error) {
+                            console.error('Error sharing:', error);
+                          }
+                        } else {
+                          navigator.clipboard.writeText(publicUrl);
+                          triggerNotification('Public profile link copied!', 'Info');
+                        }
+                      }}
+                      className="p-1.5 hover:bg-primary/10 hover:text-primary text-text-muted rounded-lg transition-colors"
+                      title="Share Profile Link"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedId(null)}
+                      className="p-1.5 hover:bg-bg-elevated hover:text-text-heading text-text-muted rounded-lg"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Bio text */}
@@ -817,11 +878,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                 </div>
 
                 {/* Performance stats */}
-                <div className="grid grid-cols-3 gap-2.5 text-center font-mono text-[10px]">
-                  <div className="bg-bg-primary border border-border-normal/40 p-2.5 rounded-lg">
-                    <span className="text-text-muted block">ATTENDANCE</span>
-                    <p className="text-sm font-bold text-primary mt-1">{detail.attendance.toFixed(0)}%</p>
-                  </div>
+                <div className="grid grid-cols-2 gap-2.5 text-center font-mono text-[10px]">
                   <div className="bg-bg-primary border border-border-normal/40 p-2.5 rounded-lg">
                     <span className="text-text-muted block">TASKS DONE</span>
                     <p className="text-sm font-bold text-cyber-success mt-1">{detail.stats.tasksCompleted}/{detail.stats.totalTasks}</p>

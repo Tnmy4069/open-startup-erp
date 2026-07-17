@@ -621,7 +621,7 @@ export function AssetsPanel() {
             onSubmit={handleCreateAsset}
             className="bg-bg-surface border border-border-normal rounded-xl max-w-md w-full flex flex-col shadow-2xl animate-in scale-in duration-200"
           >
-            <div className="px-6 py-4 border-b border-border-normal flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-b border-border-normal flex items-center justify-between">
               <div>
                 <h3 className="font-display font-bold text-text-heading text-base">{"// Register System Asset"}</h3>
                 <p className="text-[10px] text-text-muted font-mono mt-0.5">Initialize device tracking barcode parameters.</p>
@@ -631,8 +631,8 @@ export function AssetsPanel() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 sm:p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Asset ID Code *</label>
                   <input
@@ -657,7 +657,7 @@ export function AssetsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Category</label>
                   <select
@@ -696,7 +696,7 @@ export function AssetsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Purchase Cost</label>
                   <input
@@ -738,7 +738,7 @@ export function AssetsPanel() {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-border-normal bg-bg-elevated/20 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-border-normal bg-bg-elevated/20 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
@@ -762,7 +762,7 @@ export function AssetsPanel() {
       {/* CHECKOUT ISSUE MODAL */}
       {showCheckoutModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleCheckoutSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-6 space-y-4 animate-in scale-in duration-200">
+          <form onSubmit={handleCheckoutSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-4 sm:p-6 space-y-4 animate-in scale-in duration-200">
             <div className="flex items-center justify-between border-b border-border-normal pb-3">
               <h3 className="font-display font-bold text-text-heading text-sm">{"// Issue Device to Member"}</h3>
               <button type="button" onClick={() => setShowCheckoutModal(false)} className="text-text-muted hover:text-text-heading">
@@ -821,7 +821,7 @@ export function AssetsPanel() {
       {/* RETURN MODAL */}
       {showReturnModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleReturnSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-6 space-y-4 animate-in scale-in duration-200">
+          <form onSubmit={handleReturnSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-4 sm:p-6 space-y-4 animate-in scale-in duration-200">
             <div className="flex items-center justify-between border-b border-border-normal pb-3">
               <h3 className="font-display font-bold text-text-heading text-sm">{"// Return Device to inventory"}</h3>
               <button type="button" onClick={() => setShowReturnModal(false)} className="text-text-muted hover:text-text-heading">
@@ -878,7 +878,7 @@ export function AssetsPanel() {
       {/* MAINTENANCE REPAIRS MODAL */}
       {showMaintenanceModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleMaintenanceSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-6 space-y-4 animate-in scale-in duration-200">
+          <form onSubmit={handleMaintenanceSubmit} className="bg-bg-surface border border-border-normal rounded-xl max-w-sm w-full p-4 sm:p-6 space-y-4 animate-in scale-in duration-200">
             <div className="flex items-center justify-between border-b border-border-normal pb-3">
               <h3 className="font-display font-bold text-text-heading text-sm">
                 {maintAction === 'Start' ? "// Report Device Repair" : "// Resolve Repair log"}

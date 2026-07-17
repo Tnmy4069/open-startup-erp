@@ -111,7 +111,7 @@ export async function PUT(
       notes,
       badges,
       certificates,
-      attendance
+      slug,
     } = data;
 
     // Role safety logic: only Super Admin and Co-Founder can assign/change userId fields
@@ -122,10 +122,28 @@ export async function PUT(
       }
     }
 
+    let normalizedSlug = original.slug;
+    if (slug !== undefined) {
+      if (slug) {
+        normalizedSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+        if (normalizedSlug !== original.slug) {
+          const existingSlug = await prisma.member.findFirst({
+            where: { slug: normalizedSlug }
+          });
+          if (existingSlug) {
+            return NextResponse.json({ error: 'This profile slug is already taken.' }, { status: 400 });
+          }
+        }
+      } else {
+        normalizedSlug = null;
+      }
+    }
+
     const updated = await prisma.member.update({
       where: { id },
       data: {
         userId: memberUserId,
+        slug: normalizedSlug,
         name: name !== undefined ? name : original.name,
         photo: photo !== undefined ? photo : original.photo,
         email: email !== undefined ? email : original.email,
@@ -149,7 +167,6 @@ export async function PUT(
         notes: notes !== undefined ? notes : original.notes,
         badges: badges !== undefined ? badges : original.badges,
         certificates: certificates !== undefined ? certificates : original.certificates,
-        attendance: attendance !== undefined ? parseFloat(attendance) : original.attendance,
       }
     });
 

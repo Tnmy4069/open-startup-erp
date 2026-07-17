@@ -123,6 +123,7 @@ model Member {
   id               String              @id @default(auto()) @map("_id") @db.ObjectId
   userId           String?             @unique
   name             String              @unique
+  slug             String?             @unique
   photo            String?
   email            String              @unique
   phone            String
@@ -144,11 +145,11 @@ model Member {
   emergencyContact String?
   joinedDate       DateTime            @default(now())
   notes            String?
-  attendance       Float               @default(100.0)
   badges           String[]
   certificates     String[]
   registrations    EventRegistration[]
-  tasksAssigned    Task[]              @relation("Assignee")
+  taskIds          String[]            @db.ObjectId
+  tasksAssigned    Task[]              @relation("TaskAssignees", fields: [taskIds], references: [id])
   tasksReported    Task[]              @relation("Reporter")
   activityHistory  MemberActivity[]
   assetsHeld       Asset[]
@@ -256,8 +257,8 @@ model Task {
   priority         String              // Low | Medium | High | Urgent
   status           String              // Backlog | Todo | In Progress | Review | Completed
   dueDate          DateTime?
-  assigneeId       String?             @db.ObjectId
-  assignee         Member?             @relation("Assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeIds      String[]            @db.ObjectId
+  assignees        Member[]            @relation("TaskAssignees", fields: [assigneeIds], references: [id])
   reporterId       String?             @db.ObjectId
   reporter         Member?             @relation("Reporter", fields: [reporterId], references: [id], onDelete: SetNull)
   labels           String[]

@@ -58,28 +58,12 @@ export async function PUT(
 
     // Add activity history for member if this is a registered member check-in
     if (registration.memberId && registration.status === 'Attended') {
-      // Update member attendance %
-      const member = await prisma.member.findUnique({
-        where: { id: registration.memberId },
-        include: { registrations: true }
+      await prisma.memberActivity.create({
+        data: {
+          memberId: registration.memberId,
+          action: `Attended event: ${registration.event.title}`,
+        }
       });
-      if (member) {
-        const totalEvents = member.registrations.length;
-        const attendedEvents = member.registrations.filter((r) => r.status === 'Attended').length;
-        const attendance = totalEvents > 0 ? (attendedEvents / totalEvents) * 100 : 100.0;
-
-        await prisma.member.update({
-          where: { id: registration.memberId },
-          data: { attendance }
-        });
-
-        await prisma.memberActivity.create({
-          data: {
-            memberId: registration.memberId,
-            action: `Attended event: ${registration.event.title}`,
-          }
-        });
-      }
     }
 
     return NextResponse.json(registration);

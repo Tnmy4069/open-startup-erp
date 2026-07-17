@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
             portfolio: m.portfolio || '',
             emergencyContact: m.emergencyContact || '',
             notes: m.notes || '',
-            attendance: 100.0,
             badges: [],
             certificates: [],
           }

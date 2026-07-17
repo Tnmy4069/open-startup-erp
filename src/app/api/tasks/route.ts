@@ -26,12 +26,12 @@ export async function GET(request: NextRequest) {
 
     if (priority) where.priority = priority;
     if (status) where.status = status;
-    if (assigneeId) where.assigneeId = assigneeId;
+    if (assigneeId) where.assigneeIds = { has: assigneeId };
 
     const tasks = await prisma.task.findMany({
       where,
       include: {
-        assignee: true,
+        assignees: true,
         reporter: true,
         checklist: true,
       },
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       priority,
       status,
       dueDate,
-      assigneeId,
+      assigneeIds,
       labels,
       isRecurring,
       recurringPattern,
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         priority: priority || 'Medium',
         status: status || 'Todo',
         dueDate: dueDate ? new Date(dueDate) : null,
-        assigneeId: assigneeId || null,
+        assigneeIds: assigneeIds || [],
         reporterId,
         labels: labels || [],
         isRecurring: !!isRecurring,
@@ -105,12 +105,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (assigneeId) {
-      await prisma.memberActivity.create({
-        data: {
-          memberId: assigneeId,
-          action: `Assigned task: ${title}`,
-        },
+    if (assigneeIds && assigneeIds.length > 0) {
+      const activities = assigneeIds.map((id: string) => ({
+        memberId: id,
+        action: `Assigned task: ${title}`,
+      }));
+      await prisma.memberActivity.createMany({
+        data: activities,
       });
     }
 

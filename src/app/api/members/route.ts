@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       portfolio,
       emergencyContact,
       notes,
+      slug,
     } = data;
 
     if (!name || !email) {
@@ -110,10 +111,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let normalizedSlug = null;
+    if (slug) {
+      normalizedSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+      if (normalizedSlug) {
+        const existingSlug = await prisma.member.findUnique({
+          where: { slug: normalizedSlug }
+        });
+        if (existingSlug) {
+          return NextResponse.json({ error: 'This profile slug is already taken.' }, { status: 400 });
+        }
+      } else {
+        normalizedSlug = null;
+      }
+    }
+
     const member = await prisma.member.create({
       data: {
         userId: memberUserId || null,
         name,
+        slug: normalizedSlug,
         photo,
         email,
         phone: phone || '',
@@ -134,7 +151,6 @@ export async function POST(request: NextRequest) {
         portfolio,
         emergencyContact,
         notes,
-        attendance: 100.0,
         badges: [],
         certificates: [],
       },
