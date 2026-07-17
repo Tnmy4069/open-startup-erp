@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useApp } from '@/context/AppContext';
+import { Preloader } from './Preloader';
 import {
   Folder,
   FileText,
@@ -539,8 +540,8 @@ export function DocumentsPanel() {
         <div className="flex-1 bg-bg-surface border border-border-normal rounded-xl p-6 flex flex-col justify-between items-stretch">
           {selectedFileId ? (
             loadingFile ? (
-              <div className="text-center py-24 font-mono text-xs text-text-muted animate-pulse">
-                {"// Fetching markdown file contents..."}
+              <div className="py-24 flex items-center justify-center">
+                <Preloader message="Fetching markdown file contents..." size="sm" />
               </div>
             ) : fileDetail ? (
               <div className="h-full flex flex-col justify-between space-y-4">

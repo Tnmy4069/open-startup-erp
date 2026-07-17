@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { Preloader } from './Preloader';
 import {
   Building2,
   User,
@@ -362,8 +363,8 @@ export function OrganizationsList({ globalSearch }: { globalSearch: string }) {
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh] text-xs">
               {loadingHistory ? (
-                <div className="text-center py-12 font-mono text-text-muted animate-pulse">
-                  {"// Fetching history ledger..."}
+                <div className="py-12 flex items-center justify-center">
+                  <Preloader message="Fetching history ledger..." size="sm" />
                 </div>
               ) : orgTransactions.length === 0 ? (
                 <div className="text-center py-12 font-mono text-text-muted">

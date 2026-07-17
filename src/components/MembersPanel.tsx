@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
+import { Preloader } from './Preloader';
 import {
   User,
   Plus,
@@ -737,8 +738,8 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
         {selectedId && (
           <div className="w-full lg:w-96 bg-bg-surface border border-border-normal rounded-xl p-6 flex flex-col justify-between min-h-[400px] shrink-0 animate-in fade-in slide-in-from-right-4 duration-200">
             {loadingDetail ? (
-              <div className="text-center py-20 font-mono text-xs text-text-muted animate-pulse">
-                {"// Fetching member profile logs..."}
+              <div className="py-20 flex items-center justify-center">
+                <Preloader message="Fetching member profile logs..." size="sm" />
               </div>
             ) : detail ? (
               <div className="space-y-6">

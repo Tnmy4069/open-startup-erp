@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { Preloader } from './Preloader';
 import {
   User,
   Plus,
@@ -330,8 +331,8 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
 
             <div className="p-6 overflow-y-auto max-h-[60vh] text-xs">
               {loadingHistory ? (
-                <div className="text-center py-12 font-mono text-text-muted animate-pulse">
-                  {"// Fetching history logs..."}
+                <div className="py-12 flex items-center justify-center">
+                  <Preloader message="Fetching history logs..." size="sm" />
                 </div>
               ) : personTransactions.length === 0 ? (
                 <div className="text-center py-12 font-mono text-text-muted">
