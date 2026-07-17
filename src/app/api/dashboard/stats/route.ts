@@ -44,8 +44,8 @@ export async function GET() {
       });
       if (member) {
         myTasks = await prisma.task.findMany({
-          where: { assigneeId: member.id },
-          include: { assignee: true }
+          where: { assigneeIds: { has: member.id } },
+          include: { assignees: true }
         });
         myAssets = await prisma.asset.findMany({
           where: { holderId: member.id }
