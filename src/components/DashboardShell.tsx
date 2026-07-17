@@ -204,6 +204,16 @@ export function DashboardShell() {
     router.push(`/${tab}`);
   };
 
+  const [mountedTabs, setMountedTabs] = useState<Set<string>>(new Set([currentTab]));
+  useEffect(() => {
+    setMountedTabs(prev => {
+      if (prev.has(currentTab)) return prev;
+      const next = new Set(prev);
+      next.add(currentTab);
+      return next;
+    });
+  }, [currentTab]);
+
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
@@ -1091,76 +1101,106 @@ export function DashboardShell() {
         <main className="flex-1 overflow-y-auto bg-bg-primary p-4 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
 
-            {currentTab === 'dashboard' && (
-              <DashboardHome
-                globalSearch={globalSearchVal}
-                onSelectLedger={() => setCurrentTab('ledger')}
-                onSelectTab={(tab) => setCurrentTab(tab as any)}
-                onNewTransaction={() => {
-                  setCurrentTab('ledger');
-                  setOpenNewTxDrawer(true);
-                }}
-              />
+            {mountedTabs.has('dashboard') && (
+              <div className={currentTab === 'dashboard' ? 'block' : 'hidden'}>
+                <DashboardHome
+                  globalSearch={globalSearchVal}
+                  onSelectLedger={() => setCurrentTab('ledger')}
+                  onSelectTab={(tab) => setCurrentTab(tab as any)}
+                  onNewTransaction={() => {
+                    setCurrentTab('ledger');
+                    setOpenNewTxDrawer(true);
+                  }}
+                />
+              </div>
             )}
 
-            {currentTab === 'announcements' && (
-              <AnnouncementsPanel />
+            {mountedTabs.has('announcements') && (
+              <div className={currentTab === 'announcements' ? 'block' : 'hidden'}>
+                <AnnouncementsPanel />
+              </div>
             )}
 
-            {currentTab === 'ledger' && (
-              <LedgerTable
-                globalSearch={globalSearchVal}
-                openAddDrawer={openNewTxDrawer}
-                setOpenAddDrawer={setOpenNewTxDrawer}
-              />
+            {mountedTabs.has('ledger') && (
+              <div className={currentTab === 'ledger' ? 'block' : 'hidden'}>
+                <LedgerTable
+                  globalSearch={globalSearchVal}
+                  openAddDrawer={openNewTxDrawer}
+                  setOpenAddDrawer={setOpenNewTxDrawer}
+                />
+              </div>
             )}
 
-            {currentTab === 'organizations' && (
-              <OrganizationsList globalSearch={globalSearchVal} />
+            {mountedTabs.has('organizations') && (
+              <div className={currentTab === 'organizations' ? 'block' : 'hidden'}>
+                <OrganizationsList globalSearch={globalSearchVal} />
+              </div>
             )}
 
-            {currentTab === 'people' && (
-              <PeopleList globalSearch={globalSearchVal} />
+            {mountedTabs.has('people') && (
+              <div className={currentTab === 'people' ? 'block' : 'hidden'}>
+                <PeopleList globalSearch={globalSearchVal} />
+              </div>
             )}
 
-            {currentTab === 'reports' && (
-              <ReportsPanel />
+            {mountedTabs.has('reports') && (
+              <div className={currentTab === 'reports' ? 'block' : 'hidden'}>
+                <ReportsPanel />
+              </div>
             )}
 
-            {currentTab === 'logs' && (
-              <AuditLogsList />
+            {mountedTabs.has('logs') && (
+              <div className={currentTab === 'logs' ? 'block' : 'hidden'}>
+                <AuditLogsList />
+              </div>
             )}
 
-            {currentTab === 'settings' && (
-              <SettingsPanel />
+            {mountedTabs.has('settings') && (
+              <div className={currentTab === 'settings' ? 'block' : 'hidden'}>
+                <SettingsPanel />
+              </div>
             )}
 
-            {currentTab === 'meetings' && (
-              <MeetingsPanel />
+            {mountedTabs.has('meetings') && (
+              <div className={currentTab === 'meetings' ? 'block' : 'hidden'}>
+                <MeetingsPanel />
+              </div>
             )}
 
-            {currentTab === 'users' && role === 'Super Admin' && (
-              <UsersPanel />
+            {mountedTabs.has('users') && role === 'Super Admin' && (
+              <div className={currentTab === 'users' ? 'block' : 'hidden'}>
+                <UsersPanel />
+              </div>
             )}
 
-            {currentTab === 'members' && (
-              <MembersPanel globalSearch={globalSearchVal} />
+            {mountedTabs.has('members') && (
+              <div className={currentTab === 'members' ? 'block' : 'hidden'}>
+                <MembersPanel globalSearch={globalSearchVal} />
+              </div>
             )}
 
-            {currentTab === 'events' && (
-              <EventsPanel />
+            {mountedTabs.has('events') && (
+              <div className={currentTab === 'events' ? 'block' : 'hidden'}>
+                <EventsPanel />
+              </div>
             )}
 
-            {currentTab === 'assets' && (
-              <AssetsPanel />
+            {mountedTabs.has('assets') && (
+              <div className={currentTab === 'assets' ? 'block' : 'hidden'}>
+                <AssetsPanel />
+              </div>
             )}
 
-            {currentTab === 'tasks' && (
-              <TasksPanel />
+            {mountedTabs.has('tasks') && (
+              <div className={currentTab === 'tasks' ? 'block' : 'hidden'}>
+                <TasksPanel />
+              </div>
             )}
 
-            {currentTab === 'documents' && (
-              <DocumentsPanel />
+            {mountedTabs.has('documents') && (
+              <div className={currentTab === 'documents' ? 'block' : 'hidden'}>
+                <DocumentsPanel />
+              </div>
             )}
 
           </div>
