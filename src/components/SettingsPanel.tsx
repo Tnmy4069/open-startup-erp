@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download } from 'lucide-react';
+import { Settings, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -433,12 +433,7 @@ export function SettingsPanel() {
             <span>App &amp; Session</span>
           </button>
 
-          {isReadOnlyUser && activeSubTab !== 'password' && (
-            <div className="mt-8 p-3 rounded-lg border border-cyber-warning/20 bg-cyber-warning/5 text-[10px] text-cyber-warning flex gap-2">
-              <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-              <p className="leading-tight">Read-only configurations. Switch simulator role to Super Admin to edit settings.</p>
-            </div>
-          )}
+
         </div>
 
         {/* Settings Right Panel */}
