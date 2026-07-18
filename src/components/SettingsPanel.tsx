@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download } from 'lucide-react';
+import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
