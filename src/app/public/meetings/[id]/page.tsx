@@ -63,7 +63,7 @@ export default function PublicMeetingView() {
       <header className="border-b border-border-normal bg-bg-surface/30 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/cyberx-logo2.png" alt="CyberX" className="h-7 w-auto object-contain" />
+            <img src="/cyberx-logo.webp" alt="CyberX" className="h-7 w-auto object-contain" />
             <span className="text-text-muted font-mono text-xs hidden sm:inline">|</span>
             <span className="text-[10px] text-text-muted font-mono tracking-widest hidden sm:inline">PUBLIC ARCHIVE</span>
           </div>

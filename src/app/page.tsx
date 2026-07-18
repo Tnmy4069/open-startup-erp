@@ -87,7 +87,7 @@ export default function HomePage() {
 
         {/* Brand */}
         <div className="text-center space-y-2 flex flex-col items-center justify-center">
-          <img src="/cyberx-logo2.png" alt="CyberX Logo" className="h-16 w-auto object-contain mb-2" />
+          <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-16 w-auto object-contain mb-2" />
           <p className="text-[10px] text-text-muted tracking-[0.3em]">FINANCIAL OPERATIONS SYSTEM</p>
         </div>
 

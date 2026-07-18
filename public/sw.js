@@ -10,10 +10,14 @@ self.addEventListener('push', function (event) {
   if (event.data) {
     try {
       const data = event.data.json();
+      const origin = self.location.origin;
+      const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : origin + '/icon-192.png';
+      const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : origin + '/icon-192.png';
+
       const options = {
         body: data.body,
-        icon: data.icon || '/icon-192.png',
-        badge: data.badge || '/icon-192.png',
+        icon: iconUrl,
+        badge: badgeUrl,
         data: data.data || { url: '/' },
         vibrate: [100, 50, 100],
       };
@@ -22,11 +26,12 @@ self.addEventListener('push', function (event) {
       );
     } catch (e) {
       console.error('Error parsing push data', e);
+      const origin = self.location.origin;
       event.waitUntil(
         self.registration.showNotification('CyberX Alert', {
           body: event.data.text(),
-          icon: '/icon-192.png',
-          badge: '/icon-192.png'
+          icon: origin + '/icon-192.png',
+          badge: origin + '/icon-192.png'
         })
       );
     }

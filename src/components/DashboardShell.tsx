@@ -697,7 +697,7 @@ export function DashboardShell() {
 
         {/* LOGO AREA — always dark bg so logo pops in both themes */}
         <div className="h-[72px] flex items-center justify-center px-4 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
-          <img src="/cyberx-logo2.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
+          <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-11 max-w-[200px] w-auto object-contain filter drop-shadow-[0_0_10px_rgba(255,213,74,0.3)]" />
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -952,7 +952,7 @@ export function DashboardShell() {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <img src="/cyberx-logo2.png" alt="CyberX Logo" className="h-8 w-auto object-contain" />
+            <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-8 w-auto object-contain" />
           </div>
 
           {/* ACTIONS & SIMULATOR CONTROL */}
@@ -1305,7 +1305,7 @@ export function DashboardShell() {
             {/* Logo Area — always dark bg */}
             <div className="h-[72px] flex items-center justify-between px-6 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
               <div className="flex items-center gap-3">
-                <img src="/cyberx-logo2.png" alt="CyberX Logo" className="h-10 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(255,213,74,0.4)]" />
+                <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-11 max-w-[180px] w-auto object-contain filter drop-shadow-[0_0_10px_rgba(255,213,74,0.3)]" />
               </div>
               <button
                 onClick={() => setShowMobileSidebar(false)}
