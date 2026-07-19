@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, ShieldAlert, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download } from 'lucide-react';
+import { Settings, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download, Ticket, ShieldAlert } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -16,7 +16,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export function SettingsPanel() {
   const { role, refreshTrigger, triggerNotification, logout } = useApp();
-  
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,8 +30,9 @@ export function SettingsPanel() {
   const [financialYear, setFinancialYear] = useState('2026-2027');
   const [categories, setCategories] = useState('');
   const [paymentMethods, setPaymentMethods] = useState('');
+  const [enableEventPass, setEnableEventPass] = useState(true);
 
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password' | 'notifications' | 'app-session'>('general');
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password' | 'notifications' | 'app-session' | 'event-pass'>('general');
 
   // PWA & Session states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -252,7 +253,7 @@ export function SettingsPanel() {
       const res = await fetch('/api/settings');
       if (res.ok) {
         const data = await res.json();
-        
+
         // Fill form states
         setCommunityName(data.communityName || '');
         setBankName(data.bankName || '');
@@ -263,11 +264,32 @@ export function SettingsPanel() {
         setFinancialYear(data.financialYear || '2026-2027');
         setCategories(data.categories || '');
         setPaymentMethods(data.paymentMethods || '');
+        setEnableEventPass(data.enableEventPass ?? true);
       }
     } catch (e) {
       console.error('Failed to load settings:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleEventPass = async (newValue: boolean) => {
+    setEnableEventPass(newValue);
+    try {
+      const res = await fetch('/api/settings/event-pass', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enableEventPass: newValue }),
+      });
+      if (res.ok) {
+        triggerNotification(`Event Pass generation is now ${newValue ? 'ENABLED' : 'DISABLED'}`, 'Updated');
+      } else {
+        alert('Failed to update Event Pass setting');
+        setEnableEventPass(!newValue);
+      }
+    } catch {
+      alert('Error updating setting');
+      setEnableEventPass(!newValue);
     }
   };
 
@@ -353,7 +375,7 @@ export function SettingsPanel() {
   if (loading) {
     return (
       <div className="text-center py-12 font-mono text-xs text-text-muted animate-pulse">
-      {"// Syncing configurations..."}
+        {"// Syncing configurations..."}
       </div>
     );
   }
@@ -362,7 +384,7 @@ export function SettingsPanel() {
 
   return (
     <div className="space-y-6">
-      
+
       {/* HEADER */}
       <div>
         <h2 className="text-xl font-bold text-text-heading font-display tracking-wide">{"// System Configurations"}</h2>
@@ -370,24 +392,22 @@ export function SettingsPanel() {
       </div>
 
       <div className="bg-bg-surface border border-border-normal rounded-xl overflow-hidden flex flex-col md:flex-row min-h-[450px]">
-        
+
         {/* Settings Left Tab Menu */}
         <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border-normal bg-bg-elevated/20 p-4 flex flex-row md:flex-col overflow-x-auto gap-2 md:gap-0 md:space-y-1.5 hide-scrollbar">
           <button
             onClick={() => setActiveSubTab('general')}
-            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
-              activeSubTab === 'general' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'general' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
           >
             <Settings className="w-4 h-4 shrink-0" />
             <span>Community Settings</span>
           </button>
-          
+
           <button
             onClick={() => setActiveSubTab('banking')}
-            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
-              activeSubTab === 'banking' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'banking' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
           >
             <CreditCard className="w-4 h-4 shrink-0" />
             <span>Bank &amp; UPI Details</span>
@@ -395,9 +415,8 @@ export function SettingsPanel() {
 
           <button
             onClick={() => setActiveSubTab('ledger')}
-            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
-              activeSubTab === 'ledger' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'ledger' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
           >
             <Tags className="w-4 h-4 shrink-0" />
             <span>Ledger Categories</span>
@@ -405,9 +424,8 @@ export function SettingsPanel() {
 
           <button
             onClick={() => { setActiveSubTab('password'); setCpError(''); setCpSuccess(''); }}
-            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
-              activeSubTab === 'password' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'password' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
           >
             <KeyRound className="w-4 h-4 shrink-0" />
             <span>Change Password</span>
@@ -415,19 +433,26 @@ export function SettingsPanel() {
 
           <button
             onClick={() => setActiveSubTab('notifications')}
-            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
-              activeSubTab === 'notifications' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'notifications' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
           >
             <Bell className="w-4 h-4 shrink-0" />
             <span>Device Notifications</span>
           </button>
 
           <button
+            onClick={() => setActiveSubTab('event-pass')}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'event-pass' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
+          >
+            <Ticket className="w-4 h-4 shrink-0" />
+            <span>Event Pass &amp; RSVPs</span>
+          </button>
+
+          <button
             onClick={() => setActiveSubTab('app-session')}
-            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${
-              activeSubTab === 'app-session' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
-            }`}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'app-session' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>App &amp; Session</span>
@@ -446,7 +471,7 @@ export function SettingsPanel() {
                 <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
                   {"// Community Details"}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-text-heading font-semibold">Community Name</label>
@@ -458,7 +483,7 @@ export function SettingsPanel() {
                       className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:border-primary focus:outline-none disabled:opacity-50"
                     />
                   </div>
-                  
+
                   <div className="flex flex-col gap-1.5">
                     <label className="text-text-heading font-semibold">Financial Year</label>
                     <input
@@ -508,7 +533,7 @@ export function SettingsPanel() {
                 <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
                   {"// Bank Details & UPI"}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-text-heading font-semibold">Bank Name</label>
@@ -578,7 +603,7 @@ export function SettingsPanel() {
                 <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
                   {"// Ledger Categories & Methods"}
                 </h3>
-                
+
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Transaction Purposes (Comma-separated)</label>
                   <textarea
@@ -764,26 +789,23 @@ export function SettingsPanel() {
                   )}
 
                   {/* Current Status Card */}
-                  <div className={`p-4 rounded-xl border space-y-3 ${
-                    isSubscribed
+                  <div className={`p-4 rounded-xl border space-y-3 ${isSubscribed
                       ? 'border-cyber-success/30 bg-cyber-success/5'
                       : 'border-border-normal bg-bg-elevated/10'
-                  }`}>
+                    }`}>
 
                     {/* Status row */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          isSubscribed ? 'bg-cyber-success/15' : 'bg-text-muted/10'
-                        }`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSubscribed ? 'bg-cyber-success/15' : 'bg-text-muted/10'
+                          }`}>
                           {isSubscribed
                             ? <Bell className="w-4 h-4 text-cyber-success" />
                             : <BellOff className="w-4 h-4 text-text-muted" />}
                         </div>
                         <div>
-                          <p className={`text-xs font-bold font-mono ${
-                            isSubscribed ? 'text-cyber-success' : 'text-text-muted'
-                          }`}>
+                          <p className={`text-xs font-bold font-mono ${isSubscribed ? 'text-cyber-success' : 'text-text-muted'
+                            }`}>
                             {isSubscribed ? 'Subscribed' : 'Not Subscribed'}
                           </p>
                           <p className="text-[9px] text-text-muted font-mono">
@@ -793,13 +815,12 @@ export function SettingsPanel() {
                           </p>
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${
-                        notificationPermission === 'granted'
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${notificationPermission === 'granted'
                           ? 'bg-cyber-success/10 text-cyber-success border-cyber-success/20'
                           : notificationPermission === 'denied'
-                          ? 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/20'
-                          : 'bg-cyber-warning/10 text-cyber-warning border-cyber-warning/20'
-                      }`}>
+                            ? 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/20'
+                            : 'bg-cyber-warning/10 text-cyber-warning border-cyber-warning/20'
+                        }`}>
                         {notificationPermission.toUpperCase()}
                       </span>
                     </div>
@@ -881,13 +902,13 @@ export function SettingsPanel() {
           {/* APP & SESSION SECTION */}
           {activeSubTab === 'app-session' && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              
+
               {/* Application installation */}
               <div className="space-y-4">
                 <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
                   {"// Application Settings"}
                 </h3>
-                
+
                 <div className="p-4 bg-bg-primary border border-border-normal rounded-xl space-y-4">
                   <div>
                     <h4 className="font-bold text-text-heading text-sm">PWA Installation Status</h4>
@@ -902,7 +923,7 @@ export function SettingsPanel() {
                         <CheckCircle className="w-4 h-4 shrink-0" />
                         <span>CyberX is already installed and running in standalone mode.</span>
                       </div>
-                      
+
                       <div className="pt-2 border-t border-border-normal/40 flex flex-col gap-2">
                         <div className="flex items-center justify-between gap-4">
                           <span className="text-[10px] font-mono text-text-muted">Want to run setup again or switch devices?</span>
@@ -972,7 +993,7 @@ export function SettingsPanel() {
                 <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
                   {"// Session Parameters"}
                 </h3>
-                
+
                 <div className="p-4 bg-bg-primary border border-border-normal rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h4 className="font-bold text-text-heading text-sm">Active Session</h4>
@@ -980,7 +1001,7 @@ export function SettingsPanel() {
                       Log out from this secure terminal. This will clear session cookies and require login again.
                     </p>
                   </div>
-                  
+
                   <button
                     onClick={() => {
                       if (confirm('Are you sure you want to logout?')) {
@@ -995,6 +1016,77 @@ export function SettingsPanel() {
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* EVENT PASS & RSVPS SECTION */}
+          {activeSubTab === 'event-pass' && (
+            <div className="space-y-6 max-w-lg animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5">
+                  {'// Event Pass & E-Ticket Controls'}
+                </h3>
+                <p className="text-[10px] text-text-muted font-mono mt-2">
+                  Any logged-in member or admin can control public Event Pass generation &amp; E-Ticket features.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className={`p-5 rounded-xl border space-y-4 transition-all ${
+                  enableEventPass
+                    ? 'border-cyber-success/40 bg-cyber-success/5'
+                    : 'border-border-normal bg-bg-elevated/10'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        enableEventPass ? 'bg-cyber-success/15 text-cyber-success' : 'bg-text-muted/10 text-text-muted'
+                      }`}>
+                        <Ticket className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-text-heading text-xs font-mono">
+                          Public Event Pass Generation
+                        </h4>
+                        <p className="text-[10px] text-text-muted font-mono mt-0.5">
+                          {enableEventPass
+                            ? 'ON — Public visitors receive E-Tickets upon RSVP'
+                            : 'OFF — Passes & QR generation currently paused'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Toggle Switch */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleEventPass(!enableEventPass)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        enableEventPass ? 'bg-primary' : 'bg-bg-elevated'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-black shadow-lg ring-0 transition duration-200 ease-in-out ${
+                          enableEventPass ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="pt-2 border-t border-border-normal/30 flex justify-between items-center text-[10px] font-mono text-text-muted">
+                    <span>STATUS: <strong className={enableEventPass ? 'text-cyber-success' : 'text-cyber-warning'}>{enableEventPass ? 'ACTIVE & ISSUING' : 'PAUSED'}</strong></span>
+                    <span>LOGGED-IN MEMBER CONTROL</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-bg-primary border border-border-normal/40 space-y-2 text-xs">
+                  <span className="font-mono text-[10px] font-bold text-text-heading uppercase block">Features when enabled:</span>
+                  <ul className="list-disc list-inside space-y-1 text-[11px] text-text-muted font-mono">
+                    <li>Instant CyberX E-Ticket generation upon RSVP on public event page</li>
+                    <li>SVG barcode &amp; QR verification string generation for event check-in</li>
+                    <li>Printable &amp; downloadable event pass for attendees</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 

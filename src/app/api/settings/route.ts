@@ -50,6 +50,7 @@ export async function PUT(request: NextRequest) {
       financialYear,
       categories,
       paymentMethods,
+      enableEventPass,
       user,
       role,
     } = data;
@@ -66,6 +67,7 @@ export async function PUT(request: NextRequest) {
         financialYear,
         categories,
         paymentMethods,
+        ...(enableEventPass !== undefined && { enableEventPass: Boolean(enableEventPass) }),
       },
       create: {
         id: 'global_config',
@@ -78,6 +80,7 @@ export async function PUT(request: NextRequest) {
         financialYear,
         categories,
         paymentMethods,
+        enableEventPass: enableEventPass !== undefined ? Boolean(enableEventPass) : true,
       },
     });
 
@@ -85,8 +88,8 @@ export async function PUT(request: NextRequest) {
       data: {
         action: 'Updated',
         user: user || 'System',
-        role: role || 'Super Admin',
-        details: 'Updated global system and community payment settings.',
+        role: role || 'Member',
+        details: 'Updated global system and community settings.',
       },
     });
 

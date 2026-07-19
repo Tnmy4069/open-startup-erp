@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/session';
 
+function parseEventWithMetadata(event: any) {
+  if (!event) return event;
+  let eventType = event.eventType || 'Offline';
+  let venue = event.venue || '';
+
+  const match = venue.match(/^\[(Online|Offline|Hybrid)\]\s*(.*)$/i);
+  if (match) {
+    eventType = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+    venue = match[2];
+  }
+
+  return {
+    ...event,
+    eventType,
+    venue: venue || event.venue || 'TBA',
+  };
+}
+
 export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session) {
@@ -37,7 +55,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(events);
+    const parsedEvents = events.map((e) => parseEventWithMetadata(e));
+
+    return NextResponse.json(parsedEvents);
   } catch (error: any) {
     console.error('GET /api/events error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -58,6 +78,7 @@ export async function POST(request: NextRequest) {
       banner,
       description,
       category,
+      eventType,
       venue,
       startDate,
       endDate,
@@ -79,6 +100,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title and slug are required.' }, { status: 400 });
     }
 
+    const targetType = eventType || 'Offline';
+    const cleanVenue = (venue || 'TBA').replace(/^\[(Online|Offline|Hybrid)\]\s*/i, '');
+    const formattedVenue = `[${targetType}] ${cleanVenue}`;
+
     const event = await prisma.event.create({
       data: {
         title,
@@ -86,7 +111,7 @@ export async function POST(request: NextRequest) {
         banner: banner || '',
         description: description || '',
         category: category || 'Technical',
-        venue: venue || 'Online',
+        venue: formattedVenue,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         registrationDeadline: new Date(registrationDeadline),
@@ -113,7 +138,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(event, { status: 201 });
+    return NextResponse.json(parseEventWithMetadata(event), { status: 201 });
   } catch (error: any) {
     console.error('POST /api/events error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

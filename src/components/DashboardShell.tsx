@@ -30,7 +30,8 @@ import {
   ListTodo,
   Wrench,
   FileText,
-  Megaphone
+  Megaphone,
+  QrCode
 } from 'lucide-react';
 import { DashboardHome } from './DashboardHome';
 import { LedgerTable } from './LedgerTable';
@@ -217,6 +218,45 @@ export function DashboardShell() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [globalSearchVal, setGlobalSearchVal] = useState('');
+
+  // Global QR Attendance Scanner Modal state
+  const [showGlobalQrModal, setShowGlobalQrModal] = useState(false);
+  const [globalQrInput, setGlobalQrInput] = useState('');
+  const [globalQrMessage, setGlobalQrMessage] = useState('');
+  const [globalQrSuccess, setGlobalQrSuccess] = useState<boolean | null>(null);
+  const [globalQrSubmitting, setGlobalQrSubmitting] = useState(false);
+
+  const handleGlobalQrCheckin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!globalQrInput.trim() || globalQrSubmitting) return;
+
+    setGlobalQrSubmitting(true);
+    setGlobalQrMessage('');
+    setGlobalQrSuccess(null);
+
+    try {
+      const res = await fetch('/api/events/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrCode: globalQrInput.trim() }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGlobalQrSuccess(true);
+        setGlobalQrMessage(data.message || `Check-in Successful! Attended: ${data.registration.name}`);
+        setGlobalQrInput('');
+      } else {
+        setGlobalQrSuccess(false);
+        setGlobalQrMessage(data.error || 'Invalid QR code check-in.');
+      }
+    } catch {
+      setGlobalQrSuccess(false);
+      setGlobalQrMessage('Network error processing QR check-in.');
+    } finally {
+      setGlobalQrSubmitting(false);
+    }
+  };
 
   // Dialog state trigger (New transaction)
   const [openNewTxDrawer, setOpenNewTxDrawer] = useState(false);
@@ -958,6 +998,21 @@ export function DashboardShell() {
           {/* ACTIONS & SIMULATOR CONTROL */}
           <div className="flex items-center gap-2 sm:gap-4">
 
+            {/* SCAN QR ATTENDANCE BUTTON */}
+            <button
+              onClick={() => {
+                setGlobalQrMessage('');
+                setGlobalQrSuccess(null);
+                setGlobalQrInput('');
+                setShowGlobalQrModal(true);
+              }}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black font-bold font-mono text-xs transition-all cursor-pointer shadow-sm"
+              title="Scan Event Pass QR Code to Mark Attendance"
+            >
+              <QrCode className="w-4 h-4" />
+              <span className="hidden sm:inline">SCAN QR</span>
+            </button>
+
             {/* TERMINAL CLI TOGGLE */}
             <button
               onClick={() => {
@@ -1378,6 +1433,97 @@ export function DashboardShell() {
               </button>
             </div>
           </aside>
+        </div>
+      )}
+
+      {/* GLOBAL QR ATTENDANCE MODAL FOR LOGGED-IN MEMBERS */}
+      {showGlobalQrModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-bg-surface border border-border-normal rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-border-normal pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-primary/15 border border-primary/30 text-primary">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-text-heading text-sm uppercase tracking-wider">{"// Member Attendance Scanner"}</h3>
+                  <p className="text-[10px] text-text-muted font-mono">Scan or paste any Event Pass QR code</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGlobalQrModal(false)}
+                className="p-1 text-text-muted hover:text-text-heading rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleGlobalQrCheckin} className="space-y-4 text-xs font-sans">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-text-heading font-semibold font-mono text-[10px] uppercase">INPUT QR CODE / TICKET CODE *</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    autoFocus
+                    required
+                    placeholder="e.g. CYBERX-PASS-WORKSHOP-..."
+                    value={globalQrInput}
+                    onChange={(e) => setGlobalQrInput(e.target.value)}
+                    className="w-full h-11 px-3 bg-bg-primary border border-border-normal rounded-xl text-text-heading font-mono text-xs focus:border-primary focus:outline-none tracking-wide"
+                  />
+                  {globalQrInput && (
+                    <button
+                      type="button"
+                      onClick={() => setGlobalQrInput('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-heading"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {globalQrMessage && (
+                <div className={`p-3.5 border rounded-xl flex items-start gap-2.5 text-xs font-mono animate-in fade-in duration-150 ${
+                  globalQrSuccess
+                    ? 'bg-cyber-success/15 border-cyber-success/40 text-cyber-success'
+                    : 'bg-cyber-danger/15 border-cyber-danger/40 text-cyber-danger'
+                }`}>
+                  {globalQrSuccess ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  )}
+                  <span className="leading-relaxed">{globalQrMessage}</span>
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowGlobalQrModal(false)}
+                  className="h-10 px-4 rounded-xl border border-border-normal hover:bg-bg-elevated font-mono text-xs font-semibold cursor-pointer"
+                >
+                  CLOSE
+                </button>
+                <button
+                  type="submit"
+                  disabled={globalQrSubmitting || !globalQrInput.trim()}
+                  className="h-10 px-6 rounded-xl bg-primary hover:bg-opacity-95 text-black font-bold font-mono text-xs transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                >
+                  {globalQrSubmitting ? (
+                    <span>MARKING...</span>
+                  ) : (
+                    <>
+                      <QrCode className="w-4 h-4" />
+                      <span>MARK ATTENDANCE</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

@@ -95,6 +95,7 @@ model Setting {
   financialYear    String  @default("2026-2027")
   categories       String  @default("Campus Session,Workshop,Sponsorship,Merchandise,Travel,Food,Equipment,Software,Marketing,Reimbursement,Miscellaneous")
   paymentMethods   String  @default("Cash,UPI,Bank,Card,Cheque")
+  enableEventPass  Boolean @default(true)
 }
 
 model User {
@@ -172,6 +173,7 @@ model Event {
   banner               String?
   description          String
   category             String
+  eventType            String?             @default("Offline") // Online | Offline | Hybrid
   venue                String
   startDate            DateTime
   endDate              DateTime
@@ -200,6 +202,7 @@ model EventRegistration {
   member    Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
   name      String
   email     String
+  phone     String?
   status    String   // Registered | Attended | No-Show
   qrCode    String?
   feedback  String?

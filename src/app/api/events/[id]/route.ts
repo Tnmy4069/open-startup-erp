@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/session';
 
+function parseEventWithMetadata(event: any) {
+  if (!event) return event;
+  let eventType = event.eventType || 'Offline';
+  let venue = event.venue || '';
+
+  const match = venue.match(/^\[(Online|Offline|Hybrid)\]\s*(.*)$/i);
+  if (match) {
+    eventType = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+    venue = match[2];
+  }
+
+  return {
+    ...event,
+    eventType,
+    venue: venue || event.venue || 'TBA',
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -28,7 +46,7 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
     }
 
-    return NextResponse.json(event);
+    return NextResponse.json(parseEventWithMetadata(event));
   } catch (error: any) {
     console.error('GET /api/events/[id] error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -59,6 +77,7 @@ export async function PUT(
       banner,
       description,
       category,
+      eventType,
       venue,
       startDate,
       endDate,
@@ -76,6 +95,15 @@ export async function PUT(
       resources,
     } = data;
 
+    // Build formatted venue string containing eventType metadata without unknown Prisma schema fields
+    let finalVenue = original.venue;
+    if (venue !== undefined || eventType !== undefined) {
+      const rawVenue = venue !== undefined ? venue : original.venue;
+      const rawType = eventType !== undefined ? eventType : 'Offline';
+      const cleanVenue = (rawVenue || '').replace(/^\[(Online|Offline|Hybrid)\]\s*/i, '');
+      finalVenue = `[${rawType}] ${cleanVenue}`;
+    }
+
     const updated = await prisma.event.update({
       where: { id },
       data: {
@@ -84,7 +112,7 @@ export async function PUT(
         banner: banner !== undefined ? banner : original.banner,
         description: description !== undefined ? description : original.description,
         category: category !== undefined ? category : original.category,
-        venue: venue !== undefined ? venue : original.venue,
+        venue: finalVenue,
         startDate: startDate !== undefined ? new Date(startDate) : original.startDate,
         endDate: endDate !== undefined ? new Date(endDate) : original.endDate,
         registrationDeadline: registrationDeadline !== undefined ? new Date(registrationDeadline) : original.registrationDeadline,
@@ -111,7 +139,7 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(parseEventWithMetadata(updated));
   } catch (error: any) {
     console.error('PUT /api/events/[id] error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -127,7 +155,6 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // Restrict to Super Admin / Co-Founder
   if (session.role !== 'Super Admin' && session.role !== 'Co-Founder') {
     return NextResponse.json({ error: 'Forbidden: only Super Admin and Co-Founder can delete events.' }, { status: 403 });
   }

@@ -21,13 +21,16 @@ import {
   FileText,
   TrendingUp,
   Tag,
-  CheckCircle
+  CheckCircle,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface EventRegistration {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   status: string;
   qrCode: string | null;
   feedback: string | null;
@@ -41,6 +44,7 @@ interface Event {
   banner: string | null;
   description: string;
   category: string;
+  eventType?: string | null;
   venue: string;
   startDate: string;
   endDate: string;
@@ -88,6 +92,7 @@ export function EventsPanel() {
   const [banner, setBanner] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Technical');
+  const [eventType, setEventType] = useState('Offline');
   const [venue, setVenue] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -108,6 +113,28 @@ export function EventsPanel() {
   const [showRegModal, setShowRegModal] = useState(false);
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
+
+  const handleCopyEventLink = (eventItem: Event) => {
+    const slugOrId = eventItem.slug || eventItem.id;
+    const publicUrl = `${window.location.origin}/public/events/${slugOrId}`;
+    navigator.clipboard.writeText(publicUrl);
+    triggerNotification(`Copied event link: ${eventItem.title}`, 'Copied');
+  };
+
+  const handlePosterUpload = (file: File) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Poster image must be less than 5MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setBanner(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const fetchEvents = async () => {
     try {
@@ -159,6 +186,7 @@ export function EventsPanel() {
       setBanner(e.banner || '');
       setDescription(e.description);
       setCategory(e.category);
+      setEventType(e.eventType || 'Offline');
       setVenue(e.venue);
       setStartDate(new Date(e.startDate).toISOString().slice(0, 16));
       setEndDate(new Date(e.endDate).toISOString().slice(0, 16));
@@ -181,6 +209,7 @@ export function EventsPanel() {
       setBanner('');
       setDescription('');
       setCategory('Technical');
+      setEventType('Offline');
       setVenue('');
       setStartDate('');
       setEndDate('');
@@ -230,6 +259,7 @@ export function EventsPanel() {
         banner,
         description,
         category,
+        eventType,
         venue,
         startDate,
         endDate,
@@ -317,30 +347,35 @@ export function EventsPanel() {
 
   const handleMockQrScan = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEvent) return;
+    if (!qrCodeInput) return;
 
     setQrMessage('');
     setQrSuccess(false);
 
     try {
-      const res = await fetch(`/api/events/${selectedEvent.id}/attendance`, {
-        method: 'PUT',
+      const res = await fetch('/api/events/scan', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ qrCode: qrCodeInput }),
       });
 
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.success) {
         setQrSuccess(true);
-        setQrMessage(`Check-in Successful! Attended: ${data.name}`);
+        setQrMessage(data.message || `Check-in Successful! Attended: ${data.registration.name}`);
         setQrCodeInput('');
-        fetchEventRegistrations(selectedEvent.id);
+        triggerNotification(`Check-in: ${data.registration.name}`, 'Attended');
+        if (selectedEvent) {
+          fetchEventRegistrations(selectedEvent.id);
+        }
       } else {
         setQrSuccess(false);
         setQrMessage(data.error || 'Check-in failed');
       }
     } catch (err) {
       console.error(err);
+      setQrSuccess(false);
+      setQrMessage('Network error processing QR check-in.');
     }
   };
 
@@ -415,9 +450,18 @@ export function EventsPanel() {
                   >
                     <div className="space-y-3">
                       <div>
-                        <span className="px-2 py-0.5 rounded bg-bg-elevated border border-border-normal text-[9px] font-mono font-semibold text-primary uppercase">
-                          {e.category}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded bg-bg-elevated border border-border-normal text-[9px] font-mono font-semibold text-primary uppercase">
+                            {e.category}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold border ${
+                            e.eventType === 'Online' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+                            e.eventType === 'Hybrid' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' :
+                            'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          }`}>
+                            {e.eventType === 'Online' ? '🌐 ONLINE' : e.eventType === 'Hybrid' ? '⚡ HYBRID' : '📍 OFFLINE'}
+                          </span>
+                        </div>
                         <h3 className="font-display font-bold text-text-heading text-sm mt-1">{e.title}</h3>
                       </div>
 
@@ -439,24 +483,36 @@ export function EventsPanel() {
                         <span>{e.registrations.length} / {e.capacity}</span>
                       </div>
                       
-                      {role !== 'Read Only' && (
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={(event) => { event.stopPropagation(); handleOpenForm(e); }}
-                            className="p-1.5 border border-border-normal hover:border-primary text-text-muted hover:text-text-heading rounded-lg"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          {(role === 'Super Admin' || role === 'Co-Founder') && (
+                      <div className="flex gap-1.5">
+                        <button
+                          title="Copy Public Event Link"
+                          onClick={(event) => { event.stopPropagation(); handleCopyEventLink(e); }}
+                          className="p-1.5 border border-border-normal hover:border-primary text-text-muted hover:text-primary rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {role !== 'Read Only' && (
+                          <>
                             <button
-                              onClick={(event) => { event.stopPropagation(); handleDelete(e); }}
-                              className="p-1.5 border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger rounded-lg"
+                              title="Edit Event"
+                              onClick={(event) => { event.stopPropagation(); handleOpenForm(e); }}
+                              className="p-1.5 border border-border-normal hover:border-primary text-text-muted hover:text-text-heading rounded-lg transition-colors cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Edit2 className="w-3.5 h-3.5" />
                             </button>
-                          )}
-                        </div>
-                      )}
+                            {(role === 'Super Admin' || role === 'Co-Founder') && (
+                              <button
+                                title="Delete Event"
+                                onClick={(event) => { event.stopPropagation(); handleDelete(e); }}
+                                className="p-1.5 border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -479,12 +535,21 @@ export function EventsPanel() {
                   <h3 className="font-display font-bold text-text-heading text-base mt-1.5">{selectedEvent.title}</h3>
                   <span className="text-[10px] text-text-muted font-mono">{selectedEvent.slug}</span>
                 </div>
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="p-1.5 hover:bg-bg-elevated hover:text-text-heading text-text-muted rounded-lg"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    title="Copy Public Event Link"
+                    onClick={() => handleCopyEventLink(selectedEvent)}
+                    className="p-1.5 hover:bg-bg-elevated hover:text-primary text-text-muted rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedEvent(null)}
+                    className="p-1.5 hover:bg-bg-elevated hover:text-text-heading text-text-muted rounded-lg transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Description */}
@@ -581,7 +646,8 @@ export function EventsPanel() {
                       <div key={reg.id} className="p-3 flex justify-between items-center">
                         <div className="min-w-0">
                           <p className="text-text-heading font-semibold truncate leading-tight">{reg.name}</p>
-                          <span className="text-[9px] text-text-muted font-mono truncate">{reg.email}</span>
+                          <p className="text-[9px] text-text-muted font-mono truncate">{reg.email}</p>
+                          {reg.phone && <span className="text-[9px] text-primary font-mono block truncate">{reg.phone}</span>}
                         </div>
                         
                         <button
@@ -602,8 +668,16 @@ export function EventsPanel() {
               </div>
 
               {/* Actions row */}
-              {role !== 'Read Only' && registrations.length > 0 && (
-                <div className="pt-2 border-t border-border-normal/40 flex justify-between gap-3">
+              <div className="pt-2 border-t border-border-normal/40 flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleCopyEventLink(selectedEvent)}
+                  className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black text-[10px] font-bold font-mono transition-all cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>COPY PUBLIC LINK</span>
+                </button>
+
+                {role !== 'Read Only' && registrations.length > 0 && (
                   <button
                     onClick={triggerEmailMock}
                     className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg border border-border-normal hover:bg-bg-elevated hover:text-text-heading text-[10px] font-bold font-mono transition-colors cursor-pointer"
@@ -611,15 +685,8 @@ export function EventsPanel() {
                     <Mail className="w-3.5 h-3.5" />
                     <span>EMAIL ALL</span>
                   </button>
-                  <button
-                    onClick={() => alert('Successfully generated certificate designs for attendees.')}
-                    className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg border border-border-normal hover:bg-bg-elevated hover:text-text-heading text-[10px] font-bold font-mono transition-colors cursor-pointer"
-                  >
-                    <Award className="w-3.5 h-3.5" />
-                    <span>CERTIFICATES</span>
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
 
             </div>
           </div>
@@ -723,7 +790,67 @@ export function EventsPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Event Poster Upload */}
+              <div className="flex flex-col gap-1.5 p-3.5 bg-bg-primary/60 border border-border-normal/60 rounded-xl space-y-2">
+                <label className="text-text-heading font-semibold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                    <span>Event Poster / Banner Image</span>
+                  </span>
+                  {banner && (
+                    <button
+                      type="button"
+                      onClick={() => setBanner('')}
+                      className="text-[10px] text-cyber-danger hover:underline font-mono"
+                    >
+                      REMOVE POSTER
+                    </button>
+                  )}
+                </label>
+
+                {banner ? (
+                  <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border-normal group">
+                    <img src={banner} alt="Poster preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <label className="px-3 py-1.5 bg-primary text-black font-bold font-mono text-[10px] rounded-lg cursor-pointer hover:bg-opacity-90">
+                        CHANGE POSTER
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handlePosterUpload(e.target.files[0]);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      placeholder="Paste Image URL (e.g. https://...)"
+                      value={banner}
+                      onChange={(e) => setBanner(e.target.value)}
+                      className="flex-1 h-10 px-3 bg-bg-surface border border-border-normal rounded-lg text-text-heading focus:outline-none font-mono text-[11px]"
+                    />
+                    <label className="h-10 px-4 bg-bg-elevated hover:bg-primary hover:text-black border border-border-normal text-text-heading rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>UPLOAD FILE</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) handlePosterUpload(e.target.files[0]);
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-text-heading font-semibold">Category</label>
                   <select
@@ -738,10 +865,22 @@ export function EventsPanel() {
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-text-heading font-semibold">Venue</label>
+                  <label className="text-text-heading font-semibold">Event Type</label>
+                  <select
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none font-mono"
+                  >
+                    <option value="Offline">📍 Offline</option>
+                    <option value="Online">🌐 Online</option>
+                    <option value="Hybrid">⚡ Hybrid</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-text-heading font-semibold">Venue / Link</label>
                   <input
                     type="text"
-                    placeholder="Seminar Hall 1"
+                    placeholder="Seminar Hall 1 / Zoom Link"
                     value={venue}
                     onChange={(e) => setVenue(e.target.value)}
                     className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none"
