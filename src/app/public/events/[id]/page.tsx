@@ -27,7 +27,9 @@ import {
   Terminal,
   Globe,
   Zap,
-  Check
+  Check,
+  Bot,
+  Wand2
 } from 'lucide-react';
 
 interface EventDetail {
@@ -92,6 +94,9 @@ export default function PublicEventPage() {
   const [activeApiEndpointIdx, setActiveApiEndpointIdx] = useState(0);
   const [activeApiTab, setActiveApiTab] = useState<'payload' | 'response' | 'curl' | 'errors'>('payload');
   const [copiedApiItem, setCopiedApiItem] = useState<string | null>(null);
+
+  // AI Prompt Corner State
+  const [activePromptIdx, setActivePromptIdx] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -170,7 +175,7 @@ export default function PublicEventPage() {
       }
     } catch {
       setLookupError('Failed to lookup registration.');
-    } finally {
+    } fontinally: {
       setLookupLoading(false);
     }
   };
@@ -446,7 +451,232 @@ export default function PublicEventPage() {
     }
   ];
 
+  // Pre-configured AI Prompts for Event Team & Developers
+  const aiPrompts = [
+    {
+      id: 'react-nextjs',
+      title: 'React / Next.js RSVP Form Component',
+      target: 'ChatGPT / Cursor / Copilot / Claude',
+      description: 'Generates a ready-to-use React RSVP form component with Tailwind CSS styling, state handling, and instant QR ticket pass generation.',
+      promptText: `Write a complete React component (Next.js App Router compatible) using Tailwind CSS for our event "${event.title}".
+
+API Contract & Specification:
+- Endpoint URL: ${currentOrigin}/api/public/events/${event.id}/rsvp
+- HTTP Method: POST
+- Headers: { "Content-Type": "application/json" }
+- Request Body Payload:
+  {
+    "name": "Full Name",
+    "email": "user@example.com",
+    "phone": "+91 9876543210",
+    "college": "University / Company Name"
+  }
+
+- Expected Success Response (HTTP 201):
+  {
+    "success": true,
+    "message": "RSVP confirmed successfully!",
+    "registration": {
+      "name": "Full Name",
+      "email": "user@example.com",
+      "qrCode": "CYBERX-PASS-..."
+    }
+  }
+
+Component Requirements:
+1. Form inputs for Full Name (required), Email Address (required), Phone Number (required), College/Organization.
+2. Submit button with a loading spinner state while fetching.
+3. Show error alert banner if response.ok is false.
+4. Upon successful RSVP, render a sleek digital ticket pass displaying attendee name, event title "${event.title}", and a scannable QR code image tag using:
+   https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=YOUR_QR_CODE_STRING`
+    },
+    {
+      id: 'html-embedded',
+      title: 'Standalone HTML / JS Embedded Form',
+      target: 'ChatGPT / Claude / DeepSeek',
+      description: 'Generates a single self-contained index.html file with glassmorphism dark styling for embedding in any landing page.',
+      promptText: `Create a single self-contained HTML page (index.html) with modern dark glassmorphism CSS to allow users to RSVP for "${event.title}".
+
+API Specification:
+- Endpoint URL: ${currentOrigin}/api/public/events/${event.id}/rsvp
+- HTTP Method: POST
+- Content-Type: application/json
+- Form Fields: name, email, phone, college
+
+Requirements:
+1. Embedded CSS styles in a <style> tag with dark theme background (#0a0a0b), yellow primary accents (#FFD54A), and responsive layout.
+2. Vanilla JavaScript fetch API inside a <script> tag to handle form submission asynchronously.
+3. Upon success, hide the form and display a digital event pass card displaying the attendee details and scannable QR ticket pass.`
+    },
+    {
+      id: 'scanner-script',
+      title: 'Venue Gate Scanner Script (Node / Python)',
+      target: 'Cursor / ChatGPT / Python CLI',
+      description: 'Generates a CLI script to scan QR code passes at the event entrance venue.',
+      promptText: `Write a Node.js CLI script for event venue staff to check in attendees for "${event.title}".
+
+Check-In Scan API Specification:
+- API Endpoint: ${currentOrigin}/api/events/scan
+- HTTP Method: POST
+- Headers: { "Content-Type": "application/json" }
+- Payload: { "qrCode": "SCANNED_QR_CODE_STRING" }
+
+Script Requirements:
+1. Continuously prompt staff for QR code input (or read barcode/QR scanner input from stdin).
+2. Send POST request to ${currentOrigin}/api/events/scan.
+3. If response returns success: true, print "✅ CHECK-IN SUCCESSFUL: [Attendee Name]" in green text.
+4. If alreadyAttended is true, print "⚠️ ALREADY CHECKED IN!" in yellow text.
+5. If invalid QR code, print "❌ INVALID PASS CODE" in red text.`
+    },
+    {
+      id: 'custom-system-prompt',
+      title: 'Complete AI System Integration Prompt',
+      target: 'Any AI Coding Assistant (Claude, GPT-4, Cursor, DeepSeek)',
+      description: 'Full production-grade system specification prompt containing ALL 6 APIs, payloads, responses, parameters, and error codes for complete application integration.',
+      promptText: `You are an expert AI Full-Stack Software Engineer & Systems Architect.
+Your task is to implement or update a complete RSVP, Ticket Pass & Gate Check-In Integration for our event "${event.title}" (Event ID: "${event.id}", Event Slug: "${event.slug}") connecting to the CyberX Event Management REST API platform.
+
+======================================================================
+1. EVENT METADATA & HOST CONTEXT
+======================================================================
+- Event Title: "${event.title}"
+- Event ID: "${event.id}"
+- Event Slug: "${event.slug}"
+- Event Category: "${event.category}"
+- Event Type: "${event.eventType || 'Offline'}"
+- Event Venue: "${event.venue}"
+- Max Capacity: ${event.capacity} seats
+- Base API Host URL: ${currentOrigin}
+
+======================================================================
+2. API ENDPOINTS SPECIFICATIONS & CONTRACTS (ALL 6 ENDPOINTS)
+======================================================================
+
+----------------------------------------------------------------------
+ENDPOINT 1: Public RSVP Submission (Attendee Registration)
+----------------------------------------------------------------------
+- Method & URL: POST ${currentOrigin}/api/public/events/${event.id}/rsvp
+- Description: Allows public attendees to register for "${event.title}". Generates a unique QR pass string instantly.
+- Request Headers: Content-Type: application/json
+- Request Body Payload:
+  {
+    "name": "Rahul Sharma",
+    "email": "rahul.sharma@example.com",
+    "phone": "+91 9876543210",
+    "college": "VIT Pune"
+  }
+- Expected Response (HTTP 201 Created):
+  {
+    "success": true,
+    "message": "RSVP confirmed successfully!",
+    "eventTitle": "${event.title}",
+    "enableEventPass": true,
+    "registration": {
+      "id": "REG_OBJECT_ID",
+      "eventId": "${event.id}",
+      "name": "Rahul Sharma",
+      "email": "rahul.sharma@example.com",
+      "phone": "+91 9876543210",
+      "status": "Registered",
+      "qrCode": "CYBERX-PASS-${event.slug.toUpperCase()}-TIMESTAMP-HEX",
+      "createdAt": "2026-07-19T22:00:00.000Z"
+    }
+  }
+- Error Handling:
+  * 400 Bad Request: Name and email are required.
+  * 400 Bad Request: Event registration has reached full capacity.
+  * 404 Not Found: Event ID or Slug not found.
+
+----------------------------------------------------------------------
+ENDPOINT 2: Public RSVP Status & Pass Lookup
+----------------------------------------------------------------------
+- Method & URL: GET ${currentOrigin}/api/public/events/${event.id}/rsvp?email=user@example.com
+- Description: Retrieves existing registration pass details by email or QR code string.
+- Query Parameters: ?email=user@example.com OR ?qrCode=CYBERX-PASS-...
+- Expected Response (HTTP 200 OK):
+  {
+    "found": true,
+    "eventTitle": "${event.title}",
+    "enableEventPass": true,
+    "registration": {
+      "id": "REG_OBJECT_ID",
+      "name": "Rahul Sharma",
+      "email": "rahul.sharma@example.com",
+      "status": "Registered",
+      "qrCode": "CYBERX-PASS-${event.slug.toUpperCase()}-..."
+    }
+  }
+- Error Handling: 404 Not Found if email is not registered.
+
+----------------------------------------------------------------------
+ENDPOINT 3: List Event Registrations & Live Statistics (Event Team)
+----------------------------------------------------------------------
+- Method & URL: GET ${currentOrigin}/api/events/${event.id}/registrations
+- Description: Retrieves complete RSVP list with calculated counts (total, attended, registered, noShow, spotsRemaining).
+- Query Parameters: ?search=query &status=Registered|Attended|No-Show
+- Expected Response (HTTP 200 OK):
+  {
+    "event": { "id": "${event.id}", "title": "${event.title}", "slug": "${event.slug}", "capacity": ${event.capacity} },
+    "stats": { "total": ${registeredCount}, "attended": ${Math.round(registeredCount * 0.7)}, "registered": ${Math.round(registeredCount * 0.3)}, "noShow": 0, "capacity": ${event.capacity}, "spotsRemaining": ${Math.max(0, event.capacity - registeredCount)} },
+    "registrations": [ { "id": "...", "name": "Rahul Sharma", "email": "rahul@example.com", "status": "Registered|Attended|No-Show", "qrCode": "..." } ]
+  }
+- Authorization: Requires valid session/organizer authentication.
+
+----------------------------------------------------------------------
+ENDPOINT 4: Manual Admin Add RSVP (Event Team)
+----------------------------------------------------------------------
+- Method & URL: POST ${currentOrigin}/api/events/${event.id}/registrations
+- Description: Organizer manually adds a participant to the registration database.
+- Request Body Payload:
+  {
+    "name": "Priya Verma",
+    "email": "priya.v@example.com",
+    "phone": "+91 9123456789",
+    "status": "Registered"
+  }
+- Expected Response (HTTP 201 Created):
+  { "id": "...", "eventId": "${event.id}", "name": "Priya Verma", "email": "priya.v@example.com", "status": "Registered", "qrCode": "CYBERX-PASS-..." }
+- Error Handling: 409 Conflict if email is already registered.
+
+----------------------------------------------------------------------
+ENDPOINT 5: Update Attendance & RSVP Record
+----------------------------------------------------------------------
+- Method & URL: PUT ${currentOrigin}/api/events/${event.id}/attendance
+- Description: Updates attendee status (Registered, Attended, No-Show) and optionally feedback/rating.
+- Request Body Payload:
+  {
+    "registrationId": "REG_OBJECT_ID",
+    "status": "Attended",
+    "feedback": "Great session!",
+    "rating": 5
+  }
+- Expected Response (HTTP 200 OK):
+  { "id": "REG_OBJECT_ID", "name": "Rahul Sharma", "status": "Attended", "feedback": "Great session!", "rating": 5 }
+
+----------------------------------------------------------------------
+ENDPOINT 6: Venue Gate QR Code Scanner Check-In
+----------------------------------------------------------------------
+- Method & URL: POST ${currentOrigin}/api/events/scan
+- Description: Instant gate scanner check-in for venue entrance staff.
+- Request Body Payload:
+  { "qrCode": "CYBERX-PASS-${event.slug.toUpperCase()}-..." }
+- Expected Response (HTTP 200 OK):
+  {
+    "success": true,
+    "alreadyAttended": false,
+    "message": "Check-in Successful! Marked Rahul Sharma as Attended.",
+    "registration": { "name": "Rahul Sharma", "email": "rahul.sharma@example.com", "status": "Attended" }
+  }
+
+======================================================================
+3. INSTRUCTIONS FOR CODE GENERATION
+======================================================================
+Please generate complete, robust, type-safe TypeScript / JavaScript code connecting our application to all these endpoints for "${event.title}". Include full error handling, clean state management, loading indicators, and scannable QR ticket pass rendering!`
+    }
+  ];
+
   const currentEndpoint = apiEndpoints[activeApiEndpointIdx];
+  const currentPrompt = aiPrompts[activePromptIdx];
 
   return (
     <div className="dark min-h-screen bg-[#0A0A0B] text-text-body font-sans antialiased flex flex-col justify-between selection:bg-primary selection:text-black">
@@ -905,7 +1135,7 @@ export default function PublicEventPage() {
 
         </div>
 
-        {/* FULL WIDTH SECTION: INTERACTIVE EVENT API DOCUMENTATION */}
+        {/* FULL WIDTH SECTION 1: INTERACTIVE EVENT API DOCUMENTATION */}
         <section className="mt-12 bg-bg-surface/60 border border-border-normal/70 rounded-2xl p-6 sm:p-8 space-y-6 print:hidden shadow-xl">
           
           {/* Section Header */}
@@ -1104,6 +1334,97 @@ export default function PublicEventPage() {
                   </table>
                 </div>
               )}
+            </div>
+
+          </div>
+        </section>
+
+        {/* FULL WIDTH SECTION 2: AI CODE PROMPT GENERATOR FOR EVENT TEAM */}
+        <section className="mt-8 bg-bg-surface/60 border border-primary/40 rounded-2xl p-6 sm:p-8 space-y-6 print:hidden shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full filter blur-3xl -z-10" />
+
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-normal/50 pb-5">
+            <div>
+              <div className="flex items-center gap-2 text-primary font-mono text-xs font-bold uppercase tracking-wider mb-1">
+                <Bot className="w-4 h-4 text-primary animate-bounce" />
+                <span>{"// AI CODE PROMPT CORNER FOR EVENT TEAM"}</span>
+              </div>
+              <h2 className="font-display font-extrabold text-xl text-text-heading flex items-center gap-2">
+                <span>Copy AI Code Prompts to Integrate API</span>
+                <Wand2 className="w-5 h-5 text-primary" />
+              </h2>
+              <p className="text-xs text-text-muted font-mono mt-0.5">
+                Copy pre-built prompts to ChatGPT, Cursor, Copilot, or Claude to generate RSVP forms, scanners, or custom integrations for {event.title}.
+              </p>
+            </div>
+
+            <span className="px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary font-mono text-[10px] font-bold tracking-wider uppercase shrink-0 self-start sm:self-auto">
+              🤖 AI READY PROMPTS
+            </span>
+          </div>
+
+          {/* Prompt Selector Pills */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border-normal">
+            {aiPrompts.map((p, idx) => {
+              const isSelected = idx === activePromptIdx;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setActivePromptIdx(idx)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-semibold transition-all shrink-0 cursor-pointer border ${
+                    isSelected
+                      ? 'bg-primary text-black border-primary font-bold shadow-md'
+                      : 'bg-bg-primary/50 border-border-normal/40 text-text-body hover:text-text-heading hover:border-border-normal'
+                  }`}
+                >
+                  <Bot className={`w-3.5 h-3.5 ${isSelected ? 'text-black' : 'text-primary'}`} />
+                  <span>{p.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Prompt Box */}
+          <div className="bg-bg-primary border border-border-normal/60 rounded-xl p-5 sm:p-6 space-y-4">
+            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border-normal/40 pb-3">
+              <div>
+                <span className="text-[10px] text-text-muted font-mono uppercase font-bold tracking-wider block">
+                  RECOMMENDED FOR: {currentPrompt.target}
+                </span>
+                <h3 className="font-display font-bold text-text-heading text-base">{currentPrompt.title}</h3>
+                <p className="text-xs text-text-body mt-0.5">{currentPrompt.description}</p>
+              </div>
+
+              <button
+                onClick={() => handleCopyText(currentPrompt.promptText, `prompt-${currentPrompt.id}`)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-opacity-95 text-black font-mono font-bold text-xs shadow-md transition-all cursor-pointer shrink-0"
+              >
+                {copiedApiItem === `prompt-${currentPrompt.id}` ? (
+                  <>
+                    <Check className="w-4 h-4 text-black" />
+                    <span>PROMPT COPIED!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>COPY PROMPT FOR AI</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Prompt Code Block */}
+            <div className="relative group">
+              <pre className="p-4 sm:p-5 bg-[#050506] border border-border-normal/50 rounded-xl text-xs font-mono text-text-heading whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto select-all">
+                {currentPrompt.promptText}
+              </pre>
+            </div>
+
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-[11px] font-mono text-primary">
+              <span>💡 Tip: Paste this prompt into ChatGPT, Cursor, or Claude to get 100% working code connected to this event!</span>
+              <span className="font-bold hidden sm:inline">Ctrl + V to paste</span>
             </div>
 
           </div>
