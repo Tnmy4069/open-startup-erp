@@ -160,7 +160,7 @@ export async function POST(
     const registration = await prisma.eventRegistration.create({
       data: {
         eventId: event.id,
-        memberId: memberId || null,
+        memberId: (memberId && isValidObjectId(memberId)) ? memberId : undefined,
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone ? String(phone).trim() : null,
