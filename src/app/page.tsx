@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Terminal, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { AppConfig } from '@/lib/config';
 
 const BOOT_LINES = [
-  '> CYBERX SECURE SHELL v2.4.1',
+  `> ${AppConfig.name.toUpperCase()} SECURE SHELL v2.4.1`,
   '> Initializing cryptographic subsystem...',
   '> Loading role-based access matrix...',
   '> Establishing secure channel...',
@@ -79,7 +80,7 @@ export default function HomePage() {
         className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, #FFD54A 0px, #FFD54A 1px, transparent 1px, transparent 3px)',
+            'repeating-linear-gradient(0deg, var(--primary-color) 0px, var(--primary-color) 1px, transparent 1px, transparent 3px)',
         }}
       />
 
@@ -87,7 +88,7 @@ export default function HomePage() {
 
         {/* Brand */}
         <div className="text-center space-y-2 flex flex-col items-center justify-center">
-          <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-16 w-auto object-contain mb-2" />
+          <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-16 w-auto object-contain mb-2" />
           <p className="text-[10px] text-text-muted tracking-[0.3em]">FINANCIAL OPERATIONS SYSTEM</p>
         </div>
 
@@ -189,8 +190,8 @@ export default function HomePage() {
 
             <p className="text-center text-[10px] text-text-muted font-mono">
               Contact Tanmay Hirodkar at{' '}
-              <a href="mailto:tanmay@cyberx.org.in" className="underline hover:opacity-80 text-text-heading">
-                tanmay@cyberx.org.in
+              <a href={`mailto:${AppConfig.contactEmail}`} className="underline hover:opacity-80 text-text-heading">
+                {AppConfig.contactEmail}
               </a>{' '}
               to get access credentials.
             </p>
@@ -199,7 +200,7 @@ export default function HomePage() {
 
 
         <p className="text-center text-[9px] text-text-muted tracking-widest">
-          CYBERX LEDGER &mdash; SECURE ACCESS ONLY
+          {AppConfig.name.toUpperCase()} LEDGER &mdash; SECURE ACCESS ONLY
         </p>
       </div>
     </div>

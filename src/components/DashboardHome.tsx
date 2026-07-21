@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { AppConfig } from '@/lib/config';
 import { useApp } from '@/context/AppContext';
 import {
   TrendingUp,
@@ -154,7 +155,7 @@ export function DashboardHome({
     }).format(val);
   };
 
-  const COLORS = ['#FFD54A', '#5CAEFF', '#35D07F', '#FFC857', '#FF5C5C', '#A855F7', '#EC4899'];
+  const COLORS = [AppConfig.themeColor, '#5CAEFF', '#35D07F', '#FFC857', '#FF5C5C', '#A855F7', '#EC4899'];
 
   // Render role-specific dashboards
   const isFinanceOrAdmin = role === 'Super Admin' || role === 'Co-Founder';
@@ -575,15 +576,15 @@ export function DashboardHome({
                 <AreaChart data={charts.monthlyCashFlow}>
                   <defs>
                     <linearGradient id="founderCfGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FFD54A" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#FFD54A" stopOpacity={0} />
+                      <stop offset="5%" stopColor={AppConfig.themeColor} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={AppConfig.themeColor} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
                   <XAxis dataKey="month" tick={{ fill: '#888', fontSize: 9 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#888', fontSize: 9 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', fontSize: '11px' }} />
-                  <Area type="monotone" dataKey="cashflow" stroke="#FFD54A" fill="url(#founderCfGrad)" strokeWidth={2} dot={{ r: 3, fill: '#FFD54A' }} />
+                  <Area type="monotone" dataKey="cashflow" stroke={AppConfig.themeColor} fill="url(#founderCfGrad)" strokeWidth={2} dot={{ r: 3, fill: AppConfig.themeColor }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

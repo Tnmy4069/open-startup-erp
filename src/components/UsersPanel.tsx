@@ -33,6 +33,8 @@ const ROLE_COLOR: Record<string, string> = {
   'Read Only': 'bg-text-muted/10 text-text-muted border-border-normal',
 };
 
+import { AppConfig } from '@/lib/config';
+
 export function UsersPanel() {
   const [users, setUsers] = useState<DBUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -408,7 +410,7 @@ export function UsersPanel() {
           {'// Broadcast Push Notification'}
         </h3>
         <p className="text-xs text-text-muted mb-4 font-sans">
-          Send a push alert directly to all active browser sessions and home screen installations of CyberX.
+          Send a push alert directly to all active browser sessions and home screen installations of {AppConfig.name}.
           <span className="ml-2 font-mono text-cyber-info">{subscribedCount} subscribed device{subscribedCount !== 1 ? 's' : ''} will receive this.</span>
         </p>
 

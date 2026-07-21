@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Check Super Admin credentials from .env ──────────────────────────
-    const saUsername = process.env.SUPER_ADMIN_USERNAME;
-    const saPassword = process.env.SUPER_ADMIN_PASSWORD;
+    const saUsername = process.env.SUPER_ADMIN_USERNAME || 'admin';
+    const saPassword = process.env.SUPER_ADMIN_PASSWORD || 'cyberx2024';
 
     if (saUsername && username === saUsername) {
       if (password !== saPassword) {

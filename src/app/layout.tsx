@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { PWAProviders } from '@/components/PWAProviders';
+import { AppConfig } from '@/lib/config';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -21,25 +22,25 @@ export const viewport: Viewport = {
   userScalable: true,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#FFD54A' },
-    { media: '(prefers-color-scheme: light)', color: '#FFD54A' },
+    { media: '(prefers-color-scheme: dark)', color: AppConfig.themeColor },
+    { media: '(prefers-color-scheme: light)', color: AppConfig.themeColor },
   ],
 };
 
 export const metadata: Metadata = {
   title: {
-    default: 'CyberX',
-    template: '%s | CyberX',
+    default: AppConfig.name,
+    template: `%s | ${AppConfig.name}`,
   },
-  description: 'CyberX Community Operating System — enterprise-grade financial tracker, member management, events, and analytics.',
-  applicationName: 'CyberX',
-  authors: [{ name: 'CyberX Team' }],
-  keywords: ['cyberx', 'community', 'finance', 'ledger', 'members', 'events', 'security'],
+  description: AppConfig.description,
+  applicationName: AppConfig.name,
+  authors: [{ name: `${AppConfig.name} Team` }],
+  keywords: [AppConfig.prefix, 'community', 'finance', 'ledger', 'members', 'events', 'security'],
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'CyberX',
+    title: AppConfig.name,
     startupImage: '/icon-512.png',
   },
   icons: {
@@ -57,9 +58,9 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: 'CyberX',
-    title: 'CyberX',
-    description: 'CyberX Community Operating System',
+    siteName: AppConfig.name,
+    title: AppConfig.name,
+    description: AppConfig.description,
     images: [{ url: '/icon-512.png' }],
   },
 };
@@ -72,7 +73,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      style={{
+        '--primary-color': AppConfig.themeColor,
+        '--link-color': AppConfig.themeColor,
+      } as React.CSSProperties}
     >
       <head>
         {/* Canonical icon references */}
@@ -83,14 +89,26 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="CyberX" />
+        <meta name="apple-mobile-web-app-title" content={AppConfig.name} />
 
         {/* MS Tile (Edge PWA on Windows) */}
         <meta name="msapplication-TileColor" content="#080808" />
         <meta name="msapplication-TileImage" content="/icon-192.png" />
-        <meta name="msapplication-navbutton-color" content="#FFD54A" />
+        <meta name="msapplication-navbutton-color" content={AppConfig.themeColor} />
+        <style
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `:root, html, body, .dark { --primary-color: ${AppConfig.themeColor} !important; }`,
+          }}
+        />
       </head>
-      <body className="min-h-full flex flex-col bg-bg-primary text-text-body font-sans transition-colors duration-150">
+      <body
+        className="min-h-full flex flex-col bg-bg-primary text-text-body font-sans transition-colors duration-150"
+        style={{
+          '--primary-color': AppConfig.themeColor,
+          '--link-color': AppConfig.themeColor,
+        } as React.CSSProperties}
+      >
         <Providers>
           {children}
           <PWAProviders />

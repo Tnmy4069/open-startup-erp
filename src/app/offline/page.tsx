@@ -53,7 +53,7 @@ export default function OfflinePage() {
             height="28"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#FFD54A"
+            stroke="var(--primary-color)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -98,7 +98,7 @@ export default function OfflinePage() {
           style={{
             padding: '12px 28px',
             borderRadius: '10px',
-            backgroundColor: '#FFD54A',
+            backgroundColor: 'var(--primary-color)',
             color: '#000000',
             border: 'none',
             cursor: 'pointer',

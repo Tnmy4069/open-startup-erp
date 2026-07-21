@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import {
   Filter,
   Plus,
@@ -554,7 +555,7 @@ export function LedgerTable({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `cyberx_ledger_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `${AppConfig.prefix}_ledger_${new Date().toISOString().slice(0, 10)}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -1523,7 +1524,7 @@ export function LedgerTable({
                       <label className="text-text-muted">UPI ID for transaction</label>
                       <input
                         type="text"
-                        placeholder="e.g. cyberx@hdfcbank"
+                        placeholder={`e.g. ${AppConfig.prefix}@hdfcbank`}
                         value={formUpiId}
                         onChange={(e) => setFormUpiId(e.target.value)}
                         className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"
@@ -1543,7 +1544,7 @@ export function LedgerTable({
                       <label className="text-text-muted">Payment Link (Optional)</label>
                       <input
                         type="text"
-                        placeholder="e.g. https://pay.cyberx..."
+                        placeholder={`e.g. https://pay.${AppConfig.orgDomain}...`}
                         value={formPaymentLink}
                         onChange={(e) => setFormPaymentLink(e.target.value)}
                         className="h-9 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"

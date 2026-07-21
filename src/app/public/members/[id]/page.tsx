@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { AppConfig } from '@/lib/config';
 import { 
   User, 
   MapPin, 
@@ -100,7 +101,7 @@ export default function PublicMemberProfileView() {
         className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, #FFD54A 0px, #FFD54A 1px, transparent 1px, transparent 3px)',
+            'repeating-linear-gradient(0deg, var(--primary-color) 0px, var(--primary-color) 1px, transparent 1px, transparent 3px)',
         }}
       />
 
@@ -108,7 +109,7 @@ export default function PublicMemberProfileView() {
       <header className="border-b border-border-normal bg-bg-surface/30 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/cyberx-logo.webp" alt="CyberX" className="h-7 w-auto object-contain" />
+            <img src={AppConfig.logoUrl} alt={AppConfig.name} className="h-7 w-auto object-contain" />
             <span className="text-text-muted font-mono text-xs hidden sm:inline">|</span>
             <span className="text-[10px] text-text-muted font-mono tracking-widest hidden sm:inline">MEMBER REGISTRY</span>
           </div>
@@ -333,7 +334,7 @@ export default function PublicMemberProfileView() {
       {/* Footer */}
       <footer className="border-t border-border-normal bg-bg-surface/10 py-6 text-center text-[10px] font-mono text-text-muted z-10">
         <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <span>&copy; {new Date().getFullYear()} CyberX Community. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} {AppConfig.name} Community. All rights reserved.</span>
           <span className="text-[9px] opacity-60">Verified Cryptographic Identity Node</span>
         </div>
       </footer>

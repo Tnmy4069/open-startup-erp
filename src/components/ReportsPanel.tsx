@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import {
   Download,
   Printer,
@@ -204,7 +205,7 @@ export function ReportsPanel() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `cyberx_${selectedReport}_report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `${AppConfig.prefix}_${selectedReport}_report_${new Date().toISOString().slice(0, 10)}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

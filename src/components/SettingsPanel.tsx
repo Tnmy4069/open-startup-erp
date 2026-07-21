@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import { Settings, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download, Ticket, ShieldAlert } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -219,7 +220,7 @@ export function SettingsPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'broadcast',
-          title: 'CyberX Test Alert',
+          title: `${AppConfig.name} Test Alert`,
           body: 'This is a test push notification sent to active devices!',
           url: '/dashboard',
         }),
@@ -913,7 +914,7 @@ export function SettingsPanel() {
                   <div>
                     <h4 className="font-bold text-text-heading text-sm">PWA Installation Status</h4>
                     <p className="text-[11px] text-text-muted mt-0.5">
-                      Install CyberX on your local system or mobile phone home screen for offline access and native-like desktop performance.
+                      Install {AppConfig.name} on your local system or mobile phone home screen for offline access and native-like desktop performance.
                     </p>
                   </div>
 
@@ -921,7 +922,7 @@ export function SettingsPanel() {
                     <div className="flex flex-col gap-3 bg-bg-surface p-4 border border-border-normal rounded-lg">
                       <div className="flex items-center gap-2 text-cyber-success font-mono text-[10px] font-semibold">
                         <CheckCircle className="w-4 h-4 shrink-0" />
-                        <span>CyberX is already installed and running in standalone mode.</span>
+                        <span>{AppConfig.name} is already installed and running in standalone mode.</span>
                       </div>
 
                       <div className="pt-2 border-t border-border-normal/40 flex flex-col gap-2">
@@ -950,9 +951,9 @@ export function SettingsPanel() {
                               <button onClick={() => setShowReinstallGuide(false)} className="text-text-muted hover:text-text-heading text-xs">✕</button>
                             </div>
                             <ol className="list-decimal list-inside space-y-1 text-text-muted">
-                              <li>Open the installed <b className="text-text-heading">CyberX</b> application window.</li>
+                              <li>Open the installed <b className="text-text-heading">{AppConfig.name}</b> application window.</li>
                               <li>Click the <b className="text-text-heading">three-dots menu (...)</b> at the top right of the app window.</li>
-                              <li>Select <b className="text-text-heading">"Uninstall CyberX..."</b> (or "Remove app") and confirm.</li>
+                              <li>Select <b className="text-text-heading">"Uninstall {AppConfig.name}..."</b> (or "Remove app") and confirm.</li>
                               <li>Return to this browser window and click <button onClick={() => { setIsInstalled(false); setShowReinstallGuide(false); }} className="text-primary hover:underline font-bold font-mono">Reset State</button> to prompt installation again.</li>
                             </ol>
                           </div>
@@ -1081,7 +1082,7 @@ export function SettingsPanel() {
                 <div className="p-4 rounded-xl bg-bg-primary border border-border-normal/40 space-y-2 text-xs">
                   <span className="font-mono text-[10px] font-bold text-text-heading uppercase block">Features when enabled:</span>
                   <ul className="list-disc list-inside space-y-1 text-[11px] text-text-muted font-mono">
-                    <li>Instant CyberX E-Ticket generation upon RSVP on public event page</li>
+                    <li>Instant {AppConfig.name} E-Ticket generation upon RSVP on public event page</li>
                     <li>SVG barcode &amp; QR verification string generation for event check-in</li>
                     <li>Printable &amp; downloadable event pass for attendees</li>
                   </ul>

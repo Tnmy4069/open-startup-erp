@@ -50,6 +50,7 @@ import { DocumentsPanel } from './DocumentsPanel';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 
 import { useParams, useRouter } from 'next/navigation';
+import { AppConfig } from '@/lib/config';
 
 export function DashboardShell() {
   const {
@@ -266,7 +267,7 @@ export function DashboardShell() {
   const [showCli, setShowCli] = useState(false);
   const [cliInput, setCliInput] = useState('');
   const [cliHistory, setCliHistory] = useState<string[]>([
-    'Welcome to CyberX SECURE CLI v1.0. Type "help" for a list of command queries.',
+    `Welcome to ${AppConfig.name} SECURE CLI v1.0. Type "help" for a list of command queries.`,
     'Usage: theme [light|dark|toggle], role [name], search [query], goto [tab], newtx, clear'
   ]);
 
@@ -473,7 +474,7 @@ export function DashboardShell() {
               <p className="text-[10px] text-primary tracking-[0.2em] font-bold">&gt; VERIFICATION REQUIRED</p>
               <h2 className="text-xl font-bold text-text-heading mt-1">Complete Member Profile</h2>
               <p className="text-xs text-text-muted mt-1.5 leading-relaxed">
-                To access the CyberX Operations Suite, please provide your community member registry details. This is a one-time setup required for security auditing and role mapping.
+                To access the {AppConfig.name} Operations Suite, please provide your community member registry details. This is a one-time setup required for security auditing and role mapping.
               </p>
             </div>
 
@@ -511,7 +512,7 @@ export function DashboardShell() {
                     onChange={(e) => setBlockerEmail(e.target.value)}
                     disabled={user?.username.includes('@')}
                     className="w-full h-10 bg-bg-primary border border-border-normal rounded-lg px-3 text-text-heading focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed font-mono text-xs"
-                    placeholder="e.g. user@cyberx.org.in"
+                    placeholder={`e.g. user@${AppConfig.orgDomain}`}
                   />
                 </div>
 
@@ -737,7 +738,7 @@ export function DashboardShell() {
 
         {/* LOGO AREA — always dark bg so logo pops in both themes */}
         <div className="h-[72px] flex items-center justify-center px-4 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
-          <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-11 max-w-[200px] w-auto object-contain filter drop-shadow-[0_0_10px_rgba(255,213,74,0.3)]" />
+          <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-11 max-w-[200px] w-auto object-contain" style={{ filter: `drop-shadow(0 0 10px ${AppConfig.themeColor}60)` }} />
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -992,7 +993,7 @@ export function DashboardShell() {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-8 w-auto object-contain" />
+            <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-8 w-auto object-contain" />
           </div>
 
           {/* ACTIONS & SIMULATOR CONTROL */}
@@ -1117,8 +1118,8 @@ export function DashboardShell() {
             {/* Terminal Header */}
             <div className="px-6 py-1.5 border-b border-border-normal bg-bg-surface flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Terminal className="w-3.5 h-3.5 text-primary filter drop-shadow-[0_0_4px_rgba(255,213,74,0.4)]" />
-                <span className="text-[10px] text-text-heading font-semibold">cyberx-ledger@secure-cli: ~</span>
+                <Terminal className="w-3.5 h-3.5 text-primary" style={{ filter: `drop-shadow(0 0 4px ${AppConfig.themeColor}80)` }} />
+                <span className="text-[10px] text-text-heading font-semibold">{AppConfig.prefix}-ledger@secure-cli: ~</span>
               </div>
               <span className="text-[9px] text-text-muted">Press ` or ESC to close</span>
             </div>
@@ -1360,7 +1361,7 @@ export function DashboardShell() {
             {/* Logo Area — always dark bg */}
             <div className="h-[72px] flex items-center justify-between px-6 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
               <div className="flex items-center gap-3">
-                <img src="/cyberx-logo.webp" alt="CyberX Logo" className="h-11 max-w-[180px] w-auto object-contain filter drop-shadow-[0_0_10px_rgba(255,213,74,0.3)]" />
+                <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-11 max-w-[180px] w-auto object-contain" style={{ filter: `drop-shadow(0 0 10px ${AppConfig.themeColor}60)` }} />
               </div>
               <button
                 onClick={() => setShowMobileSidebar(false)}
@@ -1467,7 +1468,7 @@ export function DashboardShell() {
                     type="text"
                     autoFocus
                     required
-                    placeholder="e.g. CYBERX-PASS-WORKSHOP-..."
+                    placeholder={`e.g. ${AppConfig.name.toUpperCase()}-PASS-WORKSHOP-...`}
                     value={globalQrInput}
                     onChange={(e) => setGlobalQrInput(e.target.value)}
                     className="w-full h-11 px-3 bg-bg-primary border border-border-normal rounded-xl text-text-heading font-mono text-xs focus:border-primary focus:outline-none tracking-wide"

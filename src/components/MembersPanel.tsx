@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import { Preloader } from './Preloader';
 import {
   User,
@@ -191,7 +192,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
     setFormName('');
     setFormEmail('');
     setFormPhone('');
-    setFormCollege('CYBERX CAMPUS');
+    setFormCollege(`${AppConfig.name.toUpperCase()} CAMPUS`);
     setFormDept('Computer Science');
     setFormYear('1st Year');
     setFormPosition('Volunteer');
@@ -343,7 +344,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `cyberx_member_registry_${Date.now()}.csv`);
+    link.setAttribute('download', `${AppConfig.prefix}_member_registry_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -788,7 +789,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                           try {
                             await navigator.share({
                               title: detail.name,
-                              text: `Check out ${detail.name}'s CyberX Profile`,
+                              text: `Check out ${detail.name}'s ${AppConfig.name} Profile`,
                               url: publicUrl,
                             });
                           } catch (error) {
@@ -1017,7 +1018,7 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
                   <input
                     type="email"
                     required
-                    placeholder="tanmay@cyberx.org.in"
+                    placeholder={`user@${AppConfig.orgDomain}`}
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
                     className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"

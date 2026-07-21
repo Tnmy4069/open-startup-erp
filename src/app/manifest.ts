@@ -1,15 +1,16 @@
 import type { MetadataRoute } from 'next';
+import { AppConfig } from '@/lib/config';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'CyberX',
-    short_name: 'CyberX',
-    description: 'CyberX Community Operating System',
+    name: AppConfig.name,
+    short_name: AppConfig.shortName,
+    description: AppConfig.description,
     start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    theme_color: '#FFD54A',
+    theme_color: AppConfig.themeColor,
     background_color: '#080808',
     lang: 'en',
     categories: ['education', 'productivity', 'security', 'community', 'developer'],

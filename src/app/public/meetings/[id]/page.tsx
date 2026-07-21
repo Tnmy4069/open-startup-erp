@@ -55,7 +55,7 @@ export default function PublicMeetingView() {
         className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, #FFD54A 0px, #FFD54A 1px, transparent 1px, transparent 3px)',
+            'repeating-linear-gradient(0deg, var(--primary-color) 0px, var(--primary-color) 1px, transparent 1px, transparent 3px)',
         }}
       />
 

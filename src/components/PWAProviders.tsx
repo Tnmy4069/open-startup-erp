@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { ServiceWorkerRegistration } from './ServiceWorkerRegistration';
+import { AppConfig } from '@/lib/config';
 
 export function PWAProviders() {
   const [updateRegistration, setUpdateRegistration] =
@@ -130,14 +131,14 @@ export function PWAProviders() {
             animation: 'pwa-slide-up 0.3s ease',
           }}
         >
-          <RefreshCw size={16} style={{ color: '#FFD54A', flexShrink: 0 }} />
+          <RefreshCw size={16} style={{ color: 'var(--primary-color)', flexShrink: 0 }} />
           <span style={{ color: '#D6D6D6' }}>New version available</span>
           <button
             onClick={handleRefresh}
             style={{
               padding: '6px 14px',
               borderRadius: '6px',
-              backgroundColor: '#FFD54A',
+              backgroundColor: 'var(--primary-color)',
               color: '#000000',
               border: 'none',
               cursor: 'pointer',
@@ -169,7 +170,7 @@ export function PWAProviders() {
       {showInstallBanner && !isInstalled && (
         <div
           role="complementary"
-          aria-label="Install CyberX"
+          aria-label={`Install ${AppConfig.name}`}
           style={{
             position: 'fixed',
             bottom: 0,
@@ -192,13 +193,13 @@ export function PWAProviders() {
           {/* Logo + Text */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
             <img
-              src="/icon-192.png"
-              alt="CyberX"
-              style={{ width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0 }}
+              src={AppConfig.logoUrl}
+              alt={AppConfig.name}
+              style={{ width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0, objectFit: 'contain' }}
             />
             <div>
               <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#FFFFFF' }}>
-                Install CyberX
+                Install {AppConfig.name}
               </p>
               <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>
                 Add to Home Screen for the best experience
@@ -225,7 +226,7 @@ export function PWAProviders() {
             <button
               onClick={handleInstall}
               style={{
-                backgroundColor: '#FFD54A',
+                backgroundColor: 'var(--primary-color)',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '8px 18px',

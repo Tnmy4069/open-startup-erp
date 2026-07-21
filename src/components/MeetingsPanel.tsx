@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import {
   Plus,
   Trash2,
@@ -475,7 +477,7 @@ export function MeetingsPanel() {
                   value={formRefLink}
                   onChange={(e) => setFormRefLink(e.target.value)}
                   className="h-10 bg-bg-primary border border-border-normal rounded-lg px-3.5 text-text-heading focus:outline-none focus:border-primary transition-colors font-mono text-[11px]"
-                  placeholder="https://github.com/cyberx-org/issues/42 or any reference URL"
+                  placeholder={`https://github.com/${AppConfig.prefix}-org/issues/42 or any reference URL`}
                   disabled={formLoading}
                 />
               </div>

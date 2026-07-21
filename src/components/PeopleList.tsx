@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import { Preloader } from './Preloader';
 import {
   User,
@@ -466,7 +467,7 @@ export function PeopleList({ globalSearch }: { globalSearch: string }) {
                   <input
                     type="email"
                     required
-                    placeholder="name@cyberx.org"
+                    placeholder={`name@${AppConfig.orgDomain}`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading placeholder-text-muted focus:border-primary focus:outline-none"

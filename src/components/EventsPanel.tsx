@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { AppConfig } from '@/lib/config';
 import {
   Calendar,
   Plus,
@@ -1194,7 +1195,7 @@ export function EventsPanel() {
             {/* DASHBOARD FOOTER */}
             <div className="p-3 sm:p-4 border-t border-border-normal bg-bg-elevated/20 flex flex-col sm:flex-row justify-between items-center gap-2 text-[10px] font-mono text-text-muted">
               <span>Showing {filteredRegistrations.length} of {registrations.length} attendees</span>
-              <span>🔒 Real-time CyberX Gate &amp; Registration Node</span>
+              <span>🔒 Real-time {AppConfig.name} Gate &amp; Registration Node</span>
             </div>
 
           </div>
@@ -1217,14 +1218,14 @@ export function EventsPanel() {
 
             <form onSubmit={handleMockQrScan} className="space-y-4">
               <p className="text-[11px] text-text-body font-sans leading-relaxed">
-                Check-in participants using their registered CyberX QR code strings (Simulated scanner input).
+                Check-in participants using their registered {AppConfig.name} QR code strings (Simulated scanner input).
               </p>
               
               <div className="flex flex-col gap-1.5 text-xs">
                 <label className="text-text-heading font-semibold font-mono">INPUT QR STRING</label>
                 <input
                   type="text"
-                  placeholder="e.g. CYBERX-PASS-..."
+                  placeholder={`e.g. ${AppConfig.name.toUpperCase()}-PASS-...`}
                   value={qrCodeInput}
                   onChange={(e) => setQrCodeInput(e.target.value)}
                   className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading font-mono focus:outline-none"
@@ -1555,7 +1556,7 @@ export function EventsPanel() {
                 <input
                   type="email"
                   required
-                  placeholder="john@cyberx.org"
+                  placeholder={`john@${AppConfig.orgDomain}`}
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading focus:outline-none"
