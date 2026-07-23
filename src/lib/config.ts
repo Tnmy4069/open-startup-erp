@@ -9,4 +9,22 @@ export const AppConfig = {
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'tanmay@cyberx.org.in',
   orgDomain: process.env.NEXT_PUBLIC_ORGANIZATION_DOMAIN || 'cyberx.org.in',
   prefix: (process.env.NEXT_PUBLIC_APP_SHORT_NAME || 'CyberX').toLowerCase().replace(/[^a-z0-9]/g, ''),
+  pwa: {
+    name: process.env.NEXT_PUBLIC_PWA_NAME || process.env.NEXT_PUBLIC_APP_NAME || 'CyberX',
+    shortName: process.env.NEXT_PUBLIC_PWA_SHORT_NAME || process.env.NEXT_PUBLIC_APP_SHORT_NAME || 'CyberX',
+    description: process.env.NEXT_PUBLIC_PWA_DESCRIPTION || process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'CyberX Community Operating System',
+    startUrl: process.env.NEXT_PUBLIC_PWA_START_URL || '/',
+    display: (process.env.NEXT_PUBLIC_PWA_DISPLAY as 'standalone' | 'fullscreen' | 'minimal-ui' | 'browser') || 'standalone',
+    orientation: (process.env.NEXT_PUBLIC_PWA_ORIENTATION as 'portrait' | 'any' | 'landscape') || 'portrait',
+    backgroundColor: process.env.NEXT_PUBLIC_PWA_BG_COLOR || '#080808',
+    installTitle: process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_TITLE || `Install ${process.env.NEXT_PUBLIC_APP_NAME || 'App'}`,
+    installDesc: process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_DESC || 'Add to Home Screen for the best experience',
+    icons: {
+      icon192: process.env.NEXT_PUBLIC_PWA_ICON_192 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/apthex-logo.png',
+      icon512: process.env.NEXT_PUBLIC_PWA_ICON_512 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/apthex-logo.png',
+      maskable192: process.env.NEXT_PUBLIC_PWA_ICON_MASKABLE_192 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/apthex-logo.png',
+      maskable512: process.env.NEXT_PUBLIC_PWA_ICON_MASKABLE_512 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/apthex-logo.png',
+      appleTouch: process.env.NEXT_PUBLIC_PWA_APPLE_TOUCH_ICON || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/apthex-logo.png',
+    },
+  },
 };

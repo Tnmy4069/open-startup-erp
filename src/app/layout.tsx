@@ -40,17 +40,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: AppConfig.name,
-    startupImage: AppConfig.iconUrl,
+    title: AppConfig.pwa.shortName,
+    startupImage: AppConfig.pwa.icons.icon512,
   },
   icons: {
     icon: [
       { url: AppConfig.faviconUrl },
-      { url: AppConfig.iconUrl, sizes: '192x192', type: 'image/png' },
-      { url: AppConfig.iconUrl, sizes: '512x512', type: 'image/png' },
+      { url: AppConfig.pwa.icons.icon192, sizes: '192x192', type: 'image/png' },
+      { url: AppConfig.pwa.icons.icon512, sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: AppConfig.iconUrl, sizes: '180x180', type: 'image/png' },
+      { url: AppConfig.pwa.icons.appleTouch, sizes: '180x180', type: 'image/png' },
     ],
     shortcut: AppConfig.faviconUrl,
   },
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     siteName: AppConfig.name,
     title: AppConfig.name,
     description: AppConfig.description,
-    images: [{ url: AppConfig.iconUrl }],
+    images: [{ url: AppConfig.pwa.icons.icon512 }],
   },
 };
 
@@ -84,17 +84,17 @@ export default function RootLayout({
       <head>
         {/* Canonical icon references */}
         <link rel="icon" href={AppConfig.faviconUrl} />
-        <link rel="apple-touch-icon" href={AppConfig.iconUrl} />
+        <link rel="apple-touch-icon" href={AppConfig.pwa.icons.appleTouch} />
 
         {/* Splash-screen / standalone theming */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content={AppConfig.name} />
+        <meta name="apple-mobile-web-app-title" content={AppConfig.pwa.shortName} />
 
         {/* MS Tile (Edge PWA on Windows) */}
-        <meta name="msapplication-TileColor" content="#080808" />
-        <meta name="msapplication-TileImage" content={AppConfig.iconUrl} />
+        <meta name="msapplication-TileColor" content={AppConfig.pwa.backgroundColor} />
+        <meta name="msapplication-TileImage" content={AppConfig.pwa.icons.icon192} />
         <meta name="msapplication-navbutton-color" content={AppConfig.themeColor} />
         <style
           suppressHydrationWarning

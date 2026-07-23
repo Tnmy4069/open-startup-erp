@@ -199,10 +199,10 @@ export function PWAProviders() {
             />
             <div>
               <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#FFFFFF' }}>
-                Install {AppConfig.name}
+                {AppConfig.pwa.installTitle}
               </p>
               <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>
-                Add to Home Screen for the best experience
+                {AppConfig.pwa.installDesc}
               </p>
             </div>
           </div>
