@@ -29,8 +29,10 @@ import {
   Zap,
   Check,
   Bot,
-  Wand2
+  Wand2,
+  Search
 } from 'lucide-react';
+import { AppConfig } from '@/lib/config';
 
 interface EventDetail {
   id: string;
@@ -694,7 +696,7 @@ Please generate complete, robust, type-safe TypeScript / JavaScript code connect
       <header className="border-b border-border-normal bg-bg-surface/40 backdrop-blur-md sticky top-0 z-20 print:hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/cyberx-logo.webp" alt="CyberX" className="h-7 w-auto object-contain" />
+            <img src={AppConfig.logoUrl} alt={AppConfig.name} className="h-7 w-auto object-contain" />
             <span className="text-text-muted font-mono text-xs hidden sm:inline">|</span>
             <span className="text-[10px] text-text-muted font-mono tracking-widest hidden sm:inline uppercase">PUBLIC EVENT PORTAL</span>
           </div>

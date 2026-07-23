@@ -1,10 +1,12 @@
 'use client';
 
+import { AppConfig } from '@/lib/config';
+
 export default function OfflinePage() {
   return (
     <html lang="en" className="h-full">
       <head>
-        <title>Offline | CyberX</title>
+        <title>Offline | {AppConfig.name}</title>
         <meta name="description" content="You are currently offline." />
       </head>
       <body
@@ -23,8 +25,8 @@ export default function OfflinePage() {
       >
         {/* Logo */}
         <img
-          src="/cyberx-logo.webp"
-          alt="CyberX"
+          src={AppConfig.logoUrl}
+          alt={AppConfig.name}
           style={{
             height: '72px',
             width: 'auto',

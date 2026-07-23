@@ -41,17 +41,18 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: AppConfig.name,
-    startupImage: '/icon-512.png',
+    startupImage: AppConfig.iconUrl,
   },
   icons: {
     icon: [
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: AppConfig.faviconUrl },
+      { url: AppConfig.iconUrl, sizes: '192x192', type: 'image/png' },
+      { url: AppConfig.iconUrl, sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-icon-180.png', sizes: '180x180', type: 'image/png' },
+      { url: AppConfig.iconUrl, sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/icon-192.png',
+    shortcut: AppConfig.faviconUrl,
   },
   formatDetection: {
     telephone: false,
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
     siteName: AppConfig.name,
     title: AppConfig.name,
     description: AppConfig.description,
-    images: [{ url: '/icon-512.png' }],
+    images: [{ url: AppConfig.iconUrl }],
   },
 };
 
@@ -82,8 +83,8 @@ export default function RootLayout({
     >
       <head>
         {/* Canonical icon references */}
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180.png" />
+        <link rel="icon" href={AppConfig.faviconUrl} />
+        <link rel="apple-touch-icon" href={AppConfig.iconUrl} />
 
         {/* Splash-screen / standalone theming */}
         <meta name="mobile-web-app-capable" content="yes" />
@@ -93,7 +94,7 @@ export default function RootLayout({
 
         {/* MS Tile (Edge PWA on Windows) */}
         <meta name="msapplication-TileColor" content="#080808" />
-        <meta name="msapplication-TileImage" content="/icon-192.png" />
+        <meta name="msapplication-TileImage" content={AppConfig.iconUrl} />
         <meta name="msapplication-navbutton-color" content={AppConfig.themeColor} />
         <style
           suppressHydrationWarning

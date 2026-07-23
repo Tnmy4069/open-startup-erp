@@ -1109,6 +1109,15 @@ export function DashboardShell() {
               </div>
             </div>
 
+            {/* TOP RIGHT LOGO */}
+            <div className="hidden md:flex items-center pl-3 border-l border-border-normal/50">
+              <img
+                src={AppConfig.logoUrl}
+                alt={`${AppConfig.name} Logo`}
+                className="h-8 max-w-[140px] w-auto object-contain"
+              />
+            </div>
+
           </div>
         </header>
 

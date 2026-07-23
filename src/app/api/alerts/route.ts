@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import webpush from 'web-push';
+import { AppConfig } from '@/lib/config';
 
 // Initialize web-push details
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
@@ -89,8 +90,8 @@ export async function POST(request: Request) {
       const payload = JSON.stringify({
         title,
         body,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        icon: AppConfig.iconUrl,
+        badge: AppConfig.iconUrl,
         data: {
           url: url || '/dashboard',
         },
@@ -171,8 +172,8 @@ export async function POST(request: Request) {
       const payload = JSON.stringify({
         title: `System: ${type || 'Alert'}`,
         body: message,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        icon: AppConfig.iconUrl,
+        badge: AppConfig.iconUrl,
         data: { url: '/dashboard' },
       });
 

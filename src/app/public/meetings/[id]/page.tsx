@@ -6,6 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Calendar, User, ExternalLink, AlertTriangle, Loader, CheckCircle, BookOpen } from 'lucide-react';
 
+import { AppConfig } from '@/lib/config';
+
 interface MeetingNote {
   id: string;
   date: string;
@@ -63,7 +65,7 @@ export default function PublicMeetingView() {
       <header className="border-b border-border-normal bg-bg-surface/30 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/cyberx-logo.webp" alt="CyberX" className="h-7 w-auto object-contain" />
+            <img src={AppConfig.logoUrl} alt={AppConfig.name} className="h-7 w-auto object-contain" />
             <span className="text-text-muted font-mono text-xs hidden sm:inline">|</span>
             <span className="text-[10px] text-text-muted font-mono tracking-widest hidden sm:inline">PUBLIC ARCHIVE</span>
           </div>
