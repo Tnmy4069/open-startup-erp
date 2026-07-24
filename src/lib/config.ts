@@ -20,11 +20,11 @@ export const AppConfig = {
     installTitle: process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_TITLE || `Install ${process.env.NEXT_PUBLIC_APP_NAME || 'Apthex'}`,
     installDesc: process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_DESC || 'Add to Home Screen for the best experience',
     icons: {
-      icon192: process.env.NEXT_PUBLIC_PWA_ICON_192 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/darkicon.ico',
-      icon512: process.env.NEXT_PUBLIC_PWA_ICON_512 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/darkicon.ico',
-      maskable192: process.env.NEXT_PUBLIC_PWA_ICON_MASKABLE_192 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/darkicon.ico',
-      maskable512: process.env.NEXT_PUBLIC_PWA_ICON_MASKABLE_512 || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/darkicon.ico',
-      appleTouch: process.env.NEXT_PUBLIC_PWA_APPLE_TOUCH_ICON || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || '/darkicon.ico',
+      icon192: process.env.NEXT_PUBLIC_PWA_ICON_192 || '/icon-192.png',
+      icon512: process.env.NEXT_PUBLIC_PWA_ICON_512 || '/icon-512.png',
+      maskable192: process.env.NEXT_PUBLIC_PWA_ICON_MASKABLE_192 || '/icon-maskable-192.png',
+      maskable512: process.env.NEXT_PUBLIC_PWA_ICON_MASKABLE_512 || '/icon-maskable-512.png',
+      appleTouch: process.env.NEXT_PUBLIC_PWA_APPLE_TOUCH_ICON || '/apple-icon-180.png',
     },
   },
 };

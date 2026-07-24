@@ -282,91 +282,135 @@ export function DashboardHome({
         <>
           {/* KPI GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Financial Ledger"
+            >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider">NET BALANCE</span>
-                <span className="p-1.5 bg-primary/10 text-primary rounded-lg"><Scale className="w-4 h-4" /></span>
+                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider group-hover:text-primary transition-colors">NET BALANCE</span>
+                <span className="p-1.5 bg-primary/10 text-primary rounded-lg group-hover:bg-primary group-hover:text-black transition-colors"><Scale className="w-4 h-4" /></span>
               </div>
               <div className="mt-3">
                 <h2 className="text-xl font-bold text-text-heading font-display tracking-tight">
                   {formatCurrency(kpi.netBalance)}
                 </h2>
-                <p className="text-[9px] text-text-muted font-mono mt-0.5">{"// Total Assets Liquidity"}</p>
+                <p className="text-[9px] text-text-muted font-mono mt-0.5 flex items-center justify-between">
+                  <span>{"// Total Assets Liquidity"}</span>
+                  <ChevronRight className="w-3 h-3 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </p>
               </div>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success transition-all duration-200">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Revenue in Financial Ledger"
+            >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider">TOTAL REVENUE</span>
-                <span className="p-1.5 bg-cyber-success/10 text-cyber-success rounded-lg"><TrendingUp className="w-4 h-4" /></span>
+                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider group-hover:text-cyber-success transition-colors">TOTAL REVENUE</span>
+                <span className="p-1.5 bg-cyber-success/10 text-cyber-success rounded-lg group-hover:bg-cyber-success group-hover:text-black transition-colors"><TrendingUp className="w-4 h-4" /></span>
               </div>
               <div className="mt-3">
                 <h2 className="text-xl font-bold text-text-heading font-display tracking-tight">
                   {formatCurrency(kpi.totalIncome)}
                 </h2>
-                <p className="text-[9px] text-text-muted font-mono mt-0.5">{"// Earnings Completed"}</p>
+                <p className="text-[9px] text-text-muted font-mono mt-0.5 flex items-center justify-between">
+                  <span>{"// Earnings Completed"}</span>
+                  <ChevronRight className="w-3 h-3 text-text-muted group-hover:text-cyber-success group-hover:translate-x-0.5 transition-all" />
+                </p>
               </div>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger transition-all duration-200">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Expenses in Financial Ledger"
+            >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider">TOTAL EXPENSES</span>
-                <span className="p-1.5 bg-cyber-danger/10 text-cyber-danger rounded-lg"><TrendingDown className="w-4 h-4" /></span>
+                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider group-hover:text-cyber-danger transition-colors">TOTAL EXPENSES</span>
+                <span className="p-1.5 bg-cyber-danger/10 text-cyber-danger rounded-lg group-hover:bg-cyber-danger group-hover:text-white transition-colors"><TrendingDown className="w-4 h-4" /></span>
               </div>
               <div className="mt-3">
                 <h2 className="text-xl font-bold text-text-heading font-display tracking-tight">
                   {formatCurrency(kpi.totalExpenses)}
                 </h2>
-                <p className="text-[9px] text-text-muted font-mono mt-0.5">{"// Cash Payouts Completed"}</p>
+                <p className="text-[9px] text-text-muted font-mono mt-0.5 flex items-center justify-between">
+                  <span>{"// Cash Payouts Completed"}</span>
+                  <ChevronRight className="w-3 h-3 text-text-muted group-hover:text-cyber-danger group-hover:translate-x-0.5 transition-all" />
+                </p>
               </div>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-warning transition-all duration-200">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-warning hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Pending Transactions"
+            >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider">PENDING OUTSTANDINGS</span>
-                <span className="p-1.5 bg-cyber-warning/10 text-cyber-warning rounded-lg"><Clock className="w-4 h-4" /></span>
+                <span className="text-[10px] font-bold text-text-muted font-mono tracking-wider group-hover:text-cyber-warning transition-colors">PENDING OUTSTANDINGS</span>
+                <span className="p-1.5 bg-cyber-warning/10 text-cyber-warning rounded-lg group-hover:bg-cyber-warning group-hover:text-black transition-colors"><Clock className="w-4 h-4" /></span>
               </div>
               <div className="mt-3">
                 <h2 className="text-xl font-bold text-text-heading font-display tracking-tight">
                   {formatCurrency(kpi.pendingExpenses + kpi.pendingIncome)}
                 </h2>
-                <p className="text-[9px] text-text-muted font-mono mt-0.5">{"// Dues & Unapproved Invoices"}</p>
+                <p className="text-[9px] text-text-muted font-mono mt-0.5 flex items-center justify-between">
+                  <span>{"// Dues & Unapproved Invoices"}</span>
+                  <ChevronRight className="w-3 h-3 text-text-muted group-hover:text-cyber-warning group-hover:translate-x-0.5 transition-all" />
+                </p>
               </div>
             </div>
           </div>
 
           {/* Operations Overview cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('members')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Community Members"
+            >
               <div className="space-y-1">
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Community Members</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Community Members</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display">{kpi.memberCount}</h3>
               </div>
-              <Users className="w-6 h-6 text-primary/40" />
+              <Users className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('events')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Upcoming Events"
+            >
               <div className="space-y-1">
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Upcoming Events</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Upcoming Events</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display">{kpi.eventCount}</h3>
               </div>
-              <Calendar className="w-6 h-6 text-primary/40" />
+              <Calendar className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('assets')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view System Assets"
+            >
               <div className="space-y-1">
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">System Assets</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">System Assets</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display">{kpi.assetCount}</h3>
               </div>
-              <Wrench className="w-6 h-6 text-primary/40" />
+              <Wrench className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('tasks')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Operational Tasks"
+            >
               <div className="space-y-1">
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Operational Tasks</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Operational Tasks</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display">{kpi.taskCount}</h3>
               </div>
-              <ClipboardList className="w-6 h-6 text-primary/40" />
+              <ClipboardList className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors" />
             </div>
           </div>
 
@@ -439,8 +483,15 @@ export function DashboardHome({
 
           {/* BOTTOM TABLES AND TERMINAL */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 lg:col-span-2">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// Reminders & Pending Cash Inflows"}</span>
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 lg:col-span-2 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to view Reminders & Inflows in Ledger"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{"// Reminders & Pending Cash Inflows"}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="divide-y divide-border-normal/40">
                 {reminders.length === 0 ? (
                   <div className="text-center py-8 text-xs text-text-muted font-mono">
@@ -467,8 +518,15 @@ export function DashboardHome({
               </div>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex flex-col h-full space-y-4">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// Secure Audit Log"}</span>
+            <div
+              onClick={() => onSelectTab('logs')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex flex-col h-full space-y-4 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to open Activity Logs"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{"// Secure Audit Log"}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="bg-bg-primary rounded-lg border border-border-normal p-4 font-mono text-[9px] flex-1 space-y-3 overflow-y-auto max-h-56">
                 {recentLogs.map((log) => (
                   <div key={log.id} className="space-y-0.5">
@@ -496,72 +554,104 @@ export function DashboardHome({
 
           {/* FOUNDER KPI STRIP */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 flex justify-between items-start">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm flex justify-between items-start"
+              title="Click to view Financial Ledger"
+            >
               <div>
-                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider">NET BALANCE</span>
+                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider group-hover:text-primary transition-colors">NET BALANCE</span>
                 <h3 className={`text-xl font-bold font-display mt-1 ${kpi.netBalance >= 0 ? 'text-cyber-success' : 'text-cyber-danger'}`}>
                   {formatCurrency(kpi.netBalance)}
                 </h3>
                 <span className="text-[9px] font-mono text-text-muted">Treasury Overview</span>
               </div>
-              <span className="p-1.5 bg-primary/10 text-primary rounded-lg"><Scale className="w-4 h-4" /></span>
+              <span className="p-1.5 bg-primary/10 text-primary rounded-lg group-hover:bg-primary group-hover:text-black transition-colors"><Scale className="w-4 h-4" /></span>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 flex justify-between items-start">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-success hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm flex justify-between items-start"
+              title="Click to view Income in Financial Ledger"
+            >
               <div>
-                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider">TOTAL INCOME</span>
+                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider group-hover:text-cyber-success transition-colors">TOTAL INCOME</span>
                 <h3 className="text-xl font-bold font-display mt-1 text-cyber-success">{formatCurrency(kpi.totalIncome)}</h3>
                 <span className="text-[9px] font-mono text-text-muted">All-time received</span>
               </div>
-              <span className="p-1.5 bg-cyber-success/10 text-cyber-success rounded-lg"><TrendingUp className="w-4 h-4" /></span>
+              <span className="p-1.5 bg-cyber-success/10 text-cyber-success rounded-lg group-hover:bg-cyber-success group-hover:text-black transition-colors"><TrendingUp className="w-4 h-4" /></span>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 flex justify-between items-start">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-cyber-danger hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm flex justify-between items-start"
+              title="Click to view Expenses in Financial Ledger"
+            >
               <div>
-                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider">TOTAL EXPENSES</span>
+                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider group-hover:text-cyber-danger transition-colors">TOTAL EXPENSES</span>
                 <h3 className="text-xl font-bold font-display mt-1 text-cyber-danger">{formatCurrency(kpi.totalExpenses)}</h3>
                 <span className="text-[9px] font-mono text-text-muted">All-time spent</span>
               </div>
-              <span className="p-1.5 bg-cyber-danger/10 text-cyber-danger rounded-lg"><TrendingDown className="w-4 h-4" /></span>
+              <span className="p-1.5 bg-cyber-danger/10 text-cyber-danger rounded-lg group-hover:bg-cyber-danger group-hover:text-white transition-colors"><TrendingDown className="w-4 h-4" /></span>
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-primary transition-all duration-200 flex justify-between items-start">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 hover:border-amber-400 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm flex justify-between items-start"
+              title="Click to view Pending Approvals in Financial Ledger"
+            >
               <div>
-                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider">PENDING APPROVALS</span>
+                <span className="text-[9px] font-bold text-text-muted font-mono tracking-wider group-hover:text-amber-400 transition-colors">PENDING APPROVALS</span>
                 <h3 className="text-xl font-bold font-display mt-1 text-amber-400">{kpi.pendingCount}</h3>
                 <span className="text-[9px] font-mono text-text-muted">Awaiting action</span>
               </div>
-              <span className="p-1.5 bg-amber-400/10 text-amber-400 rounded-lg"><Clock className="w-4 h-4" /></span>
+              <span className="p-1.5 bg-amber-400/10 text-amber-400 rounded-lg group-hover:bg-amber-400 group-hover:text-black transition-colors"><Clock className="w-4 h-4" /></span>
             </div>
           </div>
 
           {/* OPERATIONS KPI ROW */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4">
-              <span className="p-2 bg-primary/10 rounded-lg text-primary"><Users className="w-5 h-5" /></span>
+            <div
+              onClick={() => onSelectTab('members')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4 hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Members"
+            >
+              <span className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-black transition-colors"><Users className="w-5 h-5" /></span>
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Members</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-primary transition-colors">Members</span>
                 <h4 className="text-lg font-bold text-text-heading font-display">{kpi.memberCount}</h4>
               </div>
             </div>
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4">
-              <span className="p-2 bg-cyber-info/10 rounded-lg text-cyber-info"><Calendar className="w-5 h-5" /></span>
+            <div
+              onClick={() => onSelectTab('events')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4 hover:border-cyber-info hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Events"
+            >
+              <span className="p-2 bg-cyber-info/10 rounded-lg text-cyber-info group-hover:bg-cyber-info group-hover:text-black transition-colors"><Calendar className="w-5 h-5" /></span>
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Events</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-cyber-info transition-colors">Events</span>
                 <h4 className="text-lg font-bold text-text-heading font-display">{kpi.eventCount}</h4>
               </div>
             </div>
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4">
-              <span className="p-2 bg-cyber-success/10 rounded-lg text-cyber-success"><CheckSquare className="w-5 h-5" /></span>
+            <div
+              onClick={() => onSelectTab('tasks')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4 hover:border-cyber-success hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Tasks"
+            >
+              <span className="p-2 bg-cyber-success/10 rounded-lg text-cyber-success group-hover:bg-cyber-success group-hover:text-black transition-colors"><CheckSquare className="w-5 h-5" /></span>
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Tasks</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-cyber-success transition-colors">Tasks</span>
                 <h4 className="text-lg font-bold text-text-heading font-display">{kpi.taskCount}</h4>
               </div>
             </div>
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4">
-              <span className="p-2 bg-amber-400/10 rounded-lg text-amber-400"><Wrench className="w-5 h-5" /></span>
+            <div
+              onClick={() => onSelectTab('assets')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-4 hover:border-amber-400 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view System Assets"
+            >
+              <span className="p-2 bg-amber-400/10 rounded-lg text-amber-400 group-hover:bg-amber-400 group-hover:text-black transition-colors"><Wrench className="w-5 h-5" /></span>
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Assets</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-amber-400 transition-colors">Assets</span>
                 <h4 className="text-lg font-bold text-text-heading font-display">{kpi.assetCount}</h4>
               </div>
             </div>
@@ -626,8 +716,15 @@ export function DashboardHome({
             </div>
 
             {/* Upcoming Payment Reminders */}
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{'// Upcoming Payments'}</span>
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to view Ledger"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{'// Upcoming Payments'}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="space-y-2.5 overflow-y-auto max-h-52">
                 {reminders.length === 0 ? (
                   <p className="text-text-muted font-mono text-[11px]">// No pending payment reminders.</p>
@@ -648,8 +745,15 @@ export function DashboardHome({
             </div>
 
             {/* Secure Audit Trail */}
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{'// Activity Audit Trail'}</span>
+            <div
+              onClick={() => onSelectTab('logs')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to open Activity Logs"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{'// Activity Audit Trail'}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="bg-bg-primary rounded-lg border border-border-normal p-3 font-mono text-[9px] space-y-2.5 overflow-y-auto max-h-52">
                 {recentLogs.map((log) => (
                   <div key={log.id} className="space-y-0.5">
@@ -671,26 +775,38 @@ export function DashboardHome({
 
           {/* COMPLETED TRANSACTIONS HEALTH ROW */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-cyber-success hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Completed Transactions in Ledger"
+            >
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Completed Transactions</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-cyber-success transition-colors">Completed Transactions</span>
                 <h4 className="text-2xl font-bold text-cyber-success font-display mt-1">{kpi.completedCount}</h4>
               </div>
-              <span className="p-2 bg-cyber-success/10 rounded-lg text-cyber-success"><CheckCircle className="w-6 h-6" /></span>
+              <span className="p-2 bg-cyber-success/10 rounded-lg text-cyber-success group-hover:bg-cyber-success group-hover:text-black transition-colors"><CheckCircle className="w-6 h-6" /></span>
             </div>
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Monthly Income in Ledger"
+            >
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Monthly Income</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-primary transition-colors">Monthly Income</span>
                 <h4 className="text-2xl font-bold text-primary font-display mt-1">{formatCurrency(kpi.monthlyIncome)}</h4>
               </div>
-              <span className="p-2 bg-primary/10 rounded-lg text-primary"><TrendingUp className="w-6 h-6" /></span>
+              <span className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-black transition-colors"><TrendingUp className="w-6 h-6" /></span>
             </div>
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={onSelectLedger}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-cyber-danger hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Monthly Expenses in Ledger"
+            >
               <div>
-                <span className="text-[9px] font-mono text-text-muted uppercase font-bold">Monthly Expenses</span>
+                <span className="text-[9px] font-mono text-text-muted uppercase font-bold group-hover:text-cyber-danger transition-colors">Monthly Expenses</span>
                 <h4 className="text-2xl font-bold text-cyber-danger font-display mt-1">{formatCurrency(kpi.monthlyExpenses)}</h4>
               </div>
-              <span className="p-2 bg-cyber-danger/10 rounded-lg text-cyber-danger"><TrendingDown className="w-6 h-6" /></span>
+              <span className="p-2 bg-cyber-danger/10 rounded-lg text-cyber-danger group-hover:bg-cyber-danger group-hover:text-white transition-colors"><TrendingDown className="w-6 h-6" /></span>
             </div>
           </div>
 
@@ -701,36 +817,55 @@ export function DashboardHome({
       {role === 'Committee Member' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('tasks')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Tasks Assigned to Me"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Tasks Assigned to Me</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Tasks Assigned to Me</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{myTasks.length}</h3>
               </div>
-              <CheckSquare className="w-8 h-8 text-primary/30" />
+              <CheckSquare className="w-8 h-8 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('assets')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Checked-out Devices"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Checked-out Devices</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Checked-out Devices</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{myAssets.length}</h3>
               </div>
-              <Wrench className="w-8 h-8 text-primary/30" />
+              <Wrench className="w-8 h-8 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('events')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Registered Events"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Registered Events</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Registered Events</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{myEvents.length}</h3>
               </div>
-              <Calendar className="w-8 h-8 text-primary/30" />
+              <Calendar className="w-8 h-8 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* My Active Tasks List */}
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// My Assigned Active Tasks"}</span>
+            <div
+              onClick={() => onSelectTab('tasks')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to manage Tasks"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{"// My Assigned Active Tasks"}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1 text-xs">
                 {myTasks.length === 0 ? (
                   <p className="text-text-muted font-mono text-[11px]">// No active tasks assigned to your profile.</p>
@@ -755,8 +890,15 @@ export function DashboardHome({
             </div>
 
             {/* My Checked-out Assets */}
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// Equipment & Assets Issued to Me"}</span>
+            <div
+              onClick={() => onSelectTab('assets')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to view Assets"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{"// Equipment & Assets Issued to Me"}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1 text-xs">
                 {myAssets.length === 0 ? (
                   <p className="text-text-muted font-mono text-[11px]">// No active equipment issued to you.</p>
@@ -777,8 +919,15 @@ export function DashboardHome({
             </div>
 
             {/* My Registered Events */}
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 lg:col-span-2">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// My Registered Upcoming Events"}</span>
+            <div
+              onClick={() => onSelectTab('events')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 lg:col-span-2 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to view Events"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{"// My Registered Upcoming Events"}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-1 text-xs">
                 {myEvents.length === 0 ? (
                   <p className="text-text-muted font-mono text-[11px] lg:col-span-2">// You haven&apos;t registered for any events yet.</p>
@@ -809,36 +958,52 @@ export function DashboardHome({
       {(isReadOnly || isFallback) && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('members')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Community Members"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Community Members</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Community Members</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{kpi.memberCount}</h3>
               </div>
-              <Users className="w-7 h-7 text-primary/30" />
+              <Users className="w-7 h-7 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('events')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Active Events"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Active Events</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Active Events</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{kpi.eventCount}</h3>
               </div>
-              <Calendar className="w-7 h-7 text-primary/30" />
+              <Calendar className="w-7 h-7 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('assets')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Hardware Inventory"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Hardware Inventory</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Hardware Inventory</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{kpi.assetCount}</h3>
               </div>
-              <Wrench className="w-7 h-7 text-primary/30" />
+              <Wrench className="w-7 h-7 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
 
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between">
+            <div
+              onClick={() => onSelectTab('tasks')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 flex items-center justify-between hover:border-primary hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group shadow-sm"
+              title="Click to view Public Task Board"
+            >
               <div>
-                <span className="text-[9px] text-text-muted font-mono font-bold uppercase">Public Task Board</span>
+                <span className="text-[9px] text-text-muted font-mono font-bold uppercase group-hover:text-primary transition-colors">Public Task Board</span>
                 <h3 className="text-2xl font-bold text-text-heading font-display mt-1">{kpi.taskCount}</h3>
               </div>
-              <ClipboardList className="w-7 h-7 text-primary/30" />
+              <ClipboardList className="w-7 h-7 text-primary/30 group-hover:text-primary transition-colors" />
             </div>
           </div>
 
@@ -848,35 +1013,51 @@ export function DashboardHome({
             <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4">
               <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// Knowledge Base & Documentation"}</span>
               <div className="space-y-3 font-sans text-xs">
-                <div className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer">
+                <div
+                  onClick={() => onSelectTab('documents')}
+                  className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer group"
+                >
                   <div>
-                    <h4 className="font-semibold text-text-heading">Community Brand Assets</h4>
+                    <h4 className="font-semibold text-text-heading group-hover:text-primary transition-colors">Community Brand Assets</h4>
                     <p className="text-[10px] text-text-muted mt-0.5">Download official logos, fonts and media guidelines.</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted" />
+                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </div>
 
-                <div className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer">
+                <div
+                  onClick={() => onSelectTab('documents')}
+                  className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer group"
+                >
                   <div>
-                    <h4 className="font-semibold text-text-heading">Sponsorship Pitch Decks</h4>
+                    <h4 className="font-semibold text-text-heading group-hover:text-primary transition-colors">Sponsorship Pitch Decks</h4>
                     <p className="text-[10px] text-text-muted mt-0.5">Latest outreach documents approved by Co-Founder.</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted" />
+                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </div>
 
-                <div className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer">
+                <div
+                  onClick={() => onSelectTab('documents')}
+                  className="p-3 bg-bg-primary rounded-lg border border-border-normal/40 flex justify-between items-center hover:border-primary transition-colors cursor-pointer group"
+                >
                   <div>
-                    <h4 className="font-semibold text-text-heading">Hardware Borrowing Manual</h4>
+                    <h4 className="font-semibold text-text-heading group-hover:text-primary transition-colors">Hardware Borrowing Manual</h4>
                     <p className="text-[10px] text-text-muted mt-0.5">Standard guidelines for borrowing tripods and projectors.</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted" />
+                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
             </div>
 
             {/* Audit Log for public visibility */}
-            <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4">
-              <span className="text-xs font-semibold text-text-heading font-display tracking-wider">{"// System Activity Logs"}</span>
+            <div
+              onClick={() => onSelectTab('logs')}
+              className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-4 cursor-pointer hover:border-primary transition-colors group shadow-sm"
+              title="Click to view Activity Logs"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-heading font-display tracking-wider group-hover:text-primary transition-colors">{"// System Activity Logs"}</span>
+                <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
               <div className="bg-bg-primary rounded-lg border border-border-normal p-4 font-mono text-[9px] space-y-3 overflow-y-auto max-h-56">
                 {recentLogs.map((log) => (
                   <div key={log.id} className="space-y-0.5">
