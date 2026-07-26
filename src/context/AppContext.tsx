@@ -101,20 +101,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const activeFavicon = data.faviconUrl || data.iconUrl;
           const activeAppleIcon = data.iconUrl || data.faviconUrl;
 
-          const links: NodeListOf<HTMLLinkElement> = document.querySelectorAll("link[rel*='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']");
-          if (links.length > 0) {
-            links.forEach((link) => {
-              if (link.rel.includes('apple')) {
-                if (activeAppleIcon) link.href = activeAppleIcon;
-              } else {
-                if (activeFavicon) link.href = activeFavicon;
-              }
-            });
-          } else if (activeFavicon) {
-            const newFaviconLink = document.createElement('link');
-            newFaviconLink.rel = 'icon';
-            newFaviconLink.href = activeFavicon;
-            document.head.appendChild(newFaviconLink);
+          if (activeFavicon) {
+            let faviconLink = document.querySelector<HTMLLinkElement>("link[rel*='icon']");
+            if (faviconLink) {
+              faviconLink.href = activeFavicon;
+            } else {
+              faviconLink = document.createElement('link');
+              faviconLink.rel = 'icon';
+              faviconLink.href = activeFavicon;
+              document.head.appendChild(faviconLink);
+            }
+          }
+
+          if (activeAppleIcon) {
+            let appleLink = document.querySelector<HTMLLinkElement>("link[rel='apple-touch-icon']");
+            if (appleLink) {
+              appleLink.href = activeAppleIcon;
+            } else {
+              appleLink = document.createElement('link');
+              appleLink.rel = 'apple-touch-icon';
+              appleLink.href = activeAppleIcon;
+              document.head.appendChild(appleLink);
+            }
           }
         }
         if (data.communityName) setCommunityName(data.communityName);

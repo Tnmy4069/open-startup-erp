@@ -109,10 +109,6 @@ export default function RootLayout({
       } as React.CSSProperties}
     >
       <head>
-        {/* Canonical icon references */}
-        <link rel="icon" href={AppConfig.faviconUrl} />
-        <link rel="apple-touch-icon" href={AppConfig.pwa.icons.appleTouch} />
-
         {/* Splash-screen / standalone theming */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
