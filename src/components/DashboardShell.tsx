@@ -66,7 +66,9 @@ export function DashboardShell() {
     memberRegistered,
     setMemberRegistered,
     logoUrl,
+    isTabAllowed,
   } = useApp();
+
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -219,31 +221,16 @@ export function DashboardShell() {
     });
   }, [currentTab]);
 
-  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch('/api/settings/permissions')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.permissions) {
-          const rolePerms = data.permissions[role] || data.permissions['Read Only'] || [];
-          setAllowedTabs(role === 'Super Admin' ? VALID_TABS : rolePerms);
-        }
-      })
-      .catch(() => {});
-  }, [role]);
-
-  // Guard tab access: if current tab is disabled for user's role, redirect to dashboard
   useEffect(() => {
     if (
       role !== 'Super Admin' &&
-      allowedTabs.length > 0 &&
       currentTab !== 'dashboard' &&
-      !allowedTabs.includes(currentTab)
+      !isTabAllowed(currentTab)
     ) {
       router.push('/dashboard');
     }
-  }, [currentTab, allowedTabs, role, router]);
+  }, [currentTab, isTabAllowed, role, router]);
+
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -792,8 +779,9 @@ export function DashboardShell() {
             { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-4 h-4" />, kbd: 'L' },
             { tab: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" />, kbd: 'S' },
           ]
-            .filter((item) => role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes(item.tab))
+            .filter((item) => isTabAllowed(item.tab))
             .map((item) => {
+
               const isActive = currentTab === item.tab;
               return (
                 <button
@@ -1270,8 +1258,9 @@ export function DashboardShell() {
                 { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5" /> },
                 { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
               ]
-                .filter((item) => role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes(item.tab))
+                .filter((item) => isTabAllowed(item.tab))
                 .map((item) => (
+
 
                 <button
                   key={item.tab}

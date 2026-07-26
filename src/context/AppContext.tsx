@@ -28,6 +28,14 @@ interface AppReminder {
   status: 'Active' | 'Resolved';
 }
 
+export const DEFAULT_MODULE_PERMISSIONS: Record<string, string[]> = {
+  'Super Admin': ['dashboard', 'meetings', 'tasks', 'events', 'members', 'assets', 'documents', 'messages', 'ledger', 'people', 'organizations', 'reports', 'users', 'logs', 'settings'],
+  'Co-Founder': ['dashboard', 'meetings', 'tasks', 'events', 'members', 'assets', 'documents', 'messages', 'ledger', 'people', 'organizations', 'reports', 'logs', 'settings'],
+  'Founder': ['dashboard', 'meetings', 'tasks', 'events', 'members', 'assets', 'documents', 'messages', 'ledger', 'people', 'organizations', 'reports', 'logs'],
+  'Committee Member': ['dashboard', 'meetings', 'tasks', 'events', 'members', 'assets', 'documents', 'messages', 'ledger'],
+  'Read Only': ['dashboard', 'meetings', 'tasks', 'events', 'members', 'documents', 'messages'],
+};
+
 interface AppContextType {
   user: AuthUser | null;
   role: UserRole;
@@ -56,6 +64,10 @@ interface AppContextType {
   envIconUrl: string;
   envFaviconUrl: string;
   fetchSettings: () => Promise<void>;
+  // Module Permissions & Tab Visibility
+  allowedTabs: string[];
+  isTabAllowed: (tabId: string) => boolean;
+  refreshPermissions: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -84,8 +96,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [envIconUrl, setEnvIconUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_ICON_URL || '/icon-192.png');
   const [envFaviconUrl, setEnvFaviconUrl] = useState<string>(process.env.NEXT_PUBLIC_FAVICON_URL || '/favicon.ico');
 
-  // Derive role from user — default to Read Only if somehow no user
+  // Derive role from user — default to Read Only if no user loaded yet
   const role: UserRole = (user?.role as UserRole) ?? 'Read Only';
+
+  // Synchronously initialize allowedTabs from localStorage cache or default role matrix
+  const [allowedTabs, setAllowedTabs] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('cyberx_allowed_tabs');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch {}
+      }
+    }
+    return DEFAULT_MODULE_PERMISSIONS['Read Only'];
+  });
+
+  const fetchPermissions = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings/permissions');
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.permissions) {
+          const rolePerms = data.permissions[role] || DEFAULT_MODULE_PERMISSIONS[role] || DEFAULT_MODULE_PERMISSIONS['Read Only'];
+          const finalTabs = role === 'Super Admin' ? DEFAULT_MODULE_PERMISSIONS['Super Admin'] : rolePerms;
+          setAllowedTabs(finalTabs);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('cyberx_allowed_tabs', JSON.stringify(finalTabs));
+          }
+        }
+      }
+    } catch {
+      // Quiet fallback
+    }
+  }, [role]);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [role, fetchPermissions]);
+
+  // Keep allowedTabs immediately updated when user role changes
+  useEffect(() => {
+    const defaultTabs = role === 'Super Admin'
+      ? DEFAULT_MODULE_PERMISSIONS['Super Admin']
+      : (DEFAULT_MODULE_PERMISSIONS[role] || DEFAULT_MODULE_PERMISSIONS['Read Only']);
+    
+    setAllowedTabs((prev) => {
+      if (role === 'Super Admin') return defaultTabs;
+      return prev.length === 0 ? defaultTabs : prev;
+    });
+  }, [role]);
+
+  const isTabAllowed = useCallback((tabId: string) => {
+    if (role === 'Super Admin') return true;
+    return allowedTabs.includes(tabId);
+  }, [role, allowedTabs]);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -135,7 +201,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (data.envIconUrl) setEnvIconUrl(data.envIconUrl);
         if (data.envFaviconUrl) setEnvFaviconUrl(data.envFaviconUrl);
       }
-    } catch (e) {
+    } catch {
       // Quiet fallback for branding settings
     }
   }, []);
@@ -168,7 +234,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setNotifications(data.notifications || []);
         setReminders(data.reminders || []);
       }
-    } catch (e) {
+    } catch {
       // Quiet fallback if polling fails or server reloads
     }
   }, []);
@@ -202,8 +268,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (refreshTrigger > 0) {
       fetchSettings();
+      fetchPermissions();
     }
-  }, [refreshTrigger, fetchSettings]);
+  }, [refreshTrigger, fetchSettings, fetchPermissions]);
 
   const setTheme = (newTheme: 'light' | 'dark') => {
     setThemeState(newTheme);
@@ -234,6 +301,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('cyberx_allowed_tabs');
+    }
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     setMemberRegistered(true);
@@ -269,13 +339,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         envIconUrl,
         envFaviconUrl,
         fetchSettings,
+        allowedTabs,
+        isTabAllowed,
+        refreshPermissions: fetchPermissions,
       }}
     >
       {children}
     </AppContext.Provider>
   );
 }
- 
+
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

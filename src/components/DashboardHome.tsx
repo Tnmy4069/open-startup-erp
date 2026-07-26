@@ -114,25 +114,12 @@ export function DashboardHome({
   onSelectTab: (tab: string) => void;
   onNewTransaction?: () => void;
 }) {
-  const { refreshTrigger, theme, role, user: sessionUser } = useApp();
+  const { refreshTrigger, theme, role, user: sessionUser, isTabAllowed } = useApp();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
   const [typedWelcome, setTypedWelcome] = useState('');
 
-
-  useEffect(() => {
-    fetch('/api/settings/permissions')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((resData) => {
-        if (resData?.permissions) {
-          const rolePerms = resData.permissions[role] || resData.permissions['Read Only'] || [];
-          setAllowedTabs(role === 'Super Admin' ? ['dashboard', 'meetings', 'tasks', 'events', 'members', 'assets', 'documents', 'messages', 'ledger', 'people', 'organizations', 'reports', 'users', 'logs', 'settings'] : rolePerms);
-        }
-      })
-      .catch(() => {});
-  }, [role]);
 
   useEffect(() => {
     const fullText = `ACCESS AUTHORIZED for role: ${role || 'MEMBER'}. CONNECTION ESTABLISHED.`;
@@ -241,7 +228,7 @@ export function DashboardHome({
             { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5 text-primary" /> },
             { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5 text-primary" /> },
           ]
-            .filter((app) => role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes(app.tab))
+            .filter((app) => isTabAllowed(app.tab))
             .map((app) => (
               <button
                 key={app.tab}
@@ -260,7 +247,7 @@ export function DashboardHome({
         <div className="pt-3 border-t border-border-normal">
           <span className="text-[9px] font-mono text-text-muted tracking-wider block mb-2">QUICK ACTIONS</span>
           <div className="flex gap-2">
-            {(role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes('messages')) && (
+            {isTabAllowed('messages') && (
               <button
                 onClick={() => onSelectTab('messages')}
                 className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-primary hover:bg-opacity-95 text-black font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-sm"
@@ -270,7 +257,7 @@ export function DashboardHome({
               </button>
             )}
 
-            {(role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes('tasks')) && (
+            {isTabAllowed('tasks') && (
               <button
                 onClick={() => onSelectTab('tasks')}
                 className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading font-semibold text-xs active:scale-95 transition-all cursor-pointer"
@@ -281,6 +268,7 @@ export function DashboardHome({
             )}
           </div>
         </div>
+
 
       </div>
 
