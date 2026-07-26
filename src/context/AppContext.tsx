@@ -128,7 +128,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (data.envFaviconUrl) setEnvFaviconUrl(data.envFaviconUrl);
       }
     } catch (e) {
-      console.error('Failed to load branding settings:', e);
+      // Quiet fallback for branding settings
     }
   }, []);
 
@@ -161,7 +161,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setReminders(data.reminders || []);
       }
     } catch (e) {
-      console.error('Failed to load notifications:', e);
+      // Quiet fallback if polling fails or server reloads
     }
   }, []);
 

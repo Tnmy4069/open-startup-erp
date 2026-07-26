@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Award, Download, Printer, Share2, X, Check, ShieldCheck } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { AppConfig } from '@/lib/config';
 import { useApp } from '@/context/AppContext';
 
@@ -54,70 +55,150 @@ export function CertificateModal({ isOpen, onClose, data, logoUrl }: Certificate
   const signatory2Name = data.signatory2Name || 'Abhishek Pawar';
   const signatory2Title = data.signatory2Title || 'Co Founder & Lead';
 
-  // Handle PNG Image Download using Canvas
+  // Direct Canvas Exporter Fallback if toPng fails
+  const generateDirectCanvasPNG = async () => {
+    try {
+      const canvas = document.createElement('canvas');
+      const width = 1000;
+      const height = 700;
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) return;
+      ctx.scale(2, 2);
+
+      // Background
+      ctx.fillStyle = '#070709';
+      ctx.fillRect(0, 0, width, height);
+
+      // Gold top border
+      ctx.fillStyle = '#FFD54A';
+      ctx.fillRect(0, 0, width, 6);
+
+      // Header text
+      ctx.fillStyle = '#8e8e93';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText('VERIFIED COMMUNITY ACHIEVEMENT CREDENTIAL', 40, 45);
+
+      // Recipient info
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('Proudly awarded to', 40, 150);
+
+      ctx.fillStyle = '#FFD54A';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText(candidateName, 40, 195);
+
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('for successfully completing the', 40, 235);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(eventTitle, 40, 270);
+
+      ctx.fillStyle = '#a1a1aa';
+      ctx.font = '11px sans-serif';
+      ctx.fillText(`This certificate is awarded to recognize the participant's participation in the knowledge session on "${data.descriptionTopic || eventTitle}".`, 40, 310);
+
+      // Signatures lines
+      ctx.strokeStyle = '#4b5563';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(40, 600);
+      ctx.lineTo(200, 600);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(240, 600);
+      ctx.lineTo(400, 600);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(signatory1Name, 40, 592);
+      ctx.fillText(signatory2Name, 240, 592);
+
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px monospace';
+      ctx.fillText(signatory1Title, 40, 615);
+      ctx.fillText(signatory2Title, 240, 615);
+
+      // Certificate details
+      ctx.fillStyle = '#a1a1aa';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`Certificate No: ${certNo}`, 960, 600);
+      ctx.fillText(`Date Earned: ${eventDate}`, 960, 618);
+
+      const pngUrl = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pngUrl;
+      downloadLink.download = `CyberX_Certificate_${candidateName.replace(/[^a-zA-Z0-9]/g, '_')}_${certNo}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    } catch (err) {
+      alert('Unable to generate PNG image.');
+    }
+  };
+
+  // Handle PNG Image Download
   const handleDownloadPNG = async () => {
     if (!certRef.current || downloading) return;
     setDownloading(true);
 
     try {
-      // Dynamic import of html2canvas if available, or SVG fallback
       const element = certRef.current;
-      
-      // Use SVG foreignObject or native canvas draw
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const width = 1200;
-      const height = 850;
-      canvas.width = width;
-      canvas.height = height;
 
-      if (ctx) {
-        // High Quality Canvas Rendering
-        const svgString = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-            <foreignObject width="100%" height="100%">
-              <div xmlns="http://www.w3.org/1999/xhtml">
-                ${element.outerHTML}
-              </div>
-            </foreignObject>
-          </svg>
-        `;
+      // Inline convert loaded img elements to base64 Data URLs to avoid fetch failures
+      const images = element.querySelectorAll('img');
+      const originalSrcs: { img: HTMLImageElement; originalSrc: string }[] = [];
 
-        // Create blob URL and draw to canvas
-        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-        const URL = window.URL || window.webkitURL || window;
-        const blobURL = URL.createObjectURL(blob);
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0, width, height);
-          URL.revokeObjectURL(blobURL);
-
-          const pngUrl = canvas.toDataURL('image/png');
-          const downloadLink = document.createElement('a');
-          downloadLink.href = pngUrl;
-          downloadLink.download = `CyberX_Certificate_${candidateName.replace(/[^a-zA-Z0-9]/g, '_')}_${certNo}.png`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          setDownloading(false);
-        };
-
-        img.onerror = () => {
-          // Fallback to print method if canvas render fails
-          window.print();
-          setDownloading(false);
-        };
-
-        img.src = blobURL;
-      } else {
-        window.print();
-        setDownloading(false);
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i] as HTMLImageElement;
+        const originalSrc = img.src;
+        if (img.complete && img.naturalWidth > 0) {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL('image/png');
+              originalSrcs.push({ img, originalSrc });
+              img.src = dataUrl;
+            }
+          } catch (err) {
+            // Keep original src if cross-origin
+          }
+        }
       }
+
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        pixelRatio: 2,
+        cacheBust: false,
+        backgroundColor: '#070709',
+      });
+
+      // Restore original img srcs
+      for (const item of originalSrcs) {
+        item.img.src = item.originalSrc;
+      }
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = dataUrl;
+      downloadLink.download = `CyberX_Certificate_${candidateName.replace(/[^a-zA-Z0-9]/g, '_')}_${certNo}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     } catch (e) {
-      console.error('Failed to download PNG:', e);
-      window.print();
+      console.error('Failed to download PNG via toPng:', e);
+      await generateDirectCanvasPNG();
+    } finally {
       setDownloading(false);
     }
   };
@@ -313,24 +394,51 @@ export function CertificateModal({ isOpen, onClose, data, logoUrl }: Certificate
 
       </div>
 
-      {/* Print Specific CSS */}
+      {/* Print / Export PDF Specific CSS */}
       <style jsx global>{`
         @media print {
+          @page {
+            size: A4 landscape;
+            margin: 0;
+          }
+
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 297mm !important;
+            height: 210mm !important;
+            background-color: #070709 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            overflow: hidden !important;
+          }
+
           body * {
-            visibility: hidden;
+            visibility: hidden !important;
           }
+
           #cyberx-certificate-card, #cyberx-certificate-card * {
-            visibility: visible;
+            visibility: visible !important;
           }
+
           #cyberx-certificate-card {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            height: 100vh;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 297mm !important;
+            height: 210mm !important;
+            max-width: none !important;
+            max-height: none !important;
             border: none !important;
             margin: 0 !important;
+            padding: 10mm 12mm !important;
             box-shadow: none !important;
+            box-sizing: border-box !important;
+            background-color: #070709 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
