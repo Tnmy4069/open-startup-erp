@@ -462,13 +462,14 @@ export function MessagesPanel() {
 
     return (
       <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-3 group relative`}>
-        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 space-y-1 relative ${
+        <div className={`max-w-[86%] sm:max-w-[75%] rounded-2xl px-3.5 sm:px-4 py-2.5 space-y-1 relative ${
           isDeletedEveryone
             ? 'bg-bg-elevated/40 border border-border-normal/40 text-text-muted italic'
             : isMe
             ? 'bg-primary/20 border border-primary/30 text-text-heading'
             : 'bg-bg-elevated border border-border-normal text-text-body'
         }`}>
+
           {/* Options button (three dots / hover action) */}
           {!isDeletedEveryone && (
             <button
@@ -652,12 +653,12 @@ export function MessagesPanel() {
   // ── RENDER ──────────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="flex h-[calc(100vh-160px)] min-h-[500px] bg-bg-primary rounded-2xl border border-border-normal overflow-hidden">
+    <div className="flex h-[calc(100vh-130px)] md:h-[calc(100vh-160px)] min-h-[460px] bg-bg-primary rounded-xl sm:rounded-2xl border border-border-normal overflow-hidden shadow-sm">
 
       {/* ──────────────── LEFT: CONVERSATION LIST ──────────────── */}
       <div className={`w-full md:w-80 lg:w-96 shrink-0 border-r border-border-normal flex flex-col bg-bg-surface ${activeConvo ? 'hidden md:flex' : 'flex'}`}>
         {/* Header */}
-        <div className="px-4 py-4 border-b border-border-normal/60 space-y-3">
+        <div className="px-3.5 sm:px-4 py-3.5 sm:py-4 border-b border-border-normal/60 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-primary" />
@@ -713,7 +714,7 @@ export function MessagesPanel() {
               <button
                 key={c.id}
                 onClick={() => { setActiveConvo(c); setMsgLoading(true); setTimeout(() => setMsgLoading(false), 300); }}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-150 cursor-pointer border-b border-border-normal/30 ${
+                className={`w-full flex items-center gap-3 px-3.5 sm:px-4 py-3.5 text-left transition-all duration-150 cursor-pointer border-b border-border-normal/30 ${
                   activeConvo?.id === c.id ? 'bg-primary/10 border-l-2 border-l-primary' : 'hover:bg-bg-elevated'
                 }`}
               >
@@ -744,7 +745,7 @@ export function MessagesPanel() {
       </div>
 
       {/* ──────────────── RIGHT: CHAT VIEW ──────────────── */}
-      <div className={`flex-1 flex flex-col ${!activeConvo ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col h-full bg-bg-primary ${!activeConvo ? 'hidden md:flex' : 'flex'}`}>
         {!activeConvo ? (
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6 space-y-4">
@@ -757,37 +758,37 @@ export function MessagesPanel() {
         ) : (
           <>
             {/* Chat header */}
-            <div className="px-4 py-3 border-b border-border-normal/60 bg-bg-surface/50 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
+            <div className="px-3 sm:px-4 py-3 border-b border-border-normal/60 bg-bg-surface/50 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 {/* Back button (mobile) */}
-                <button onClick={() => setActiveConvo(null)} className="md:hidden p-1.5 rounded-lg hover:bg-bg-elevated text-text-muted cursor-pointer">
+                <button onClick={() => setActiveConvo(null)} className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-bg-elevated text-primary cursor-pointer active:scale-95 transition-all">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${
+                <div className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${
                   activeConvo.isGroup ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-bg-elevated text-text-heading border border-border-normal'
                 }`}>
                   {activeConvo.isGroup ? <Users className="w-4 h-4" /> : getInitials(activeConvo.memberNames?.[0] || '?')}
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-text-heading">{convoDisplayName(activeConvo)}</h3>
-                  <p className="text-[10px] text-text-muted font-mono">
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-text-heading truncate">{convoDisplayName(activeConvo)}</h3>
+                  <p className="text-[10px] text-text-muted font-mono truncate">
                     {activeConvo.isGroup ? `${activeConvo.memberIds.length} members` : 'Direct Message'}
                   </p>
                 </div>
               </div>
 
               {/* Header Controls: Refresh & Options */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={handleRefresh}
-                  className="p-2 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer"
                   title="Refresh chat messages"
                 >
                   <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
                 </button>
                 <button
                   onClick={() => setShowGroupSettings(!showGroupSettings)}
-                  className="p-2 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </button>
@@ -809,7 +810,7 @@ export function MessagesPanel() {
             )}
 
             {/* Messages area */}
-            <div className="flex-1 overflow-y-auto px-4 py-4" onClick={() => setActiveMsgMenuId(null)}>
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4" onClick={() => setActiveMsgMenuId(null)}>
               {msgLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <span className="text-xs text-text-muted font-mono animate-pulse">Loading messages...</span>
@@ -828,13 +829,13 @@ export function MessagesPanel() {
             </div>
 
             {/* Input bar */}
-            <div className="px-4 py-3 border-t border-border-normal/60 bg-bg-surface/30 shrink-0">
-              <div className="flex items-center gap-2">
+            <div className="px-2.5 sm:px-4 py-2.5 sm:py-3 border-t border-border-normal/60 bg-bg-surface/30 shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* File attachment */}
                 <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2.5 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer shrink-0"
                   title="Attach file"
                 >
                   <Paperclip className="w-4 h-4" />
@@ -843,7 +844,7 @@ export function MessagesPanel() {
                 {/* Location */}
                 <button
                   onClick={handleShareLocation}
-                  className="p-2.5 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-heading transition-colors cursor-pointer shrink-0"
                   title="Share location"
                 >
                   <MapPin className="w-4 h-4" />
@@ -856,14 +857,14 @@ export function MessagesPanel() {
                   value={msgInput}
                   onChange={(e) => setMsgInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  className="flex-1 h-10 px-4 text-sm bg-bg-primary border border-border-normal rounded-xl text-text-heading focus:outline-none focus:border-primary transition-colors"
+                  className="flex-1 h-10 px-3 sm:px-4 text-xs sm:text-sm bg-bg-primary border border-border-normal rounded-xl text-text-heading focus:outline-none focus:border-primary transition-colors min-w-0"
                 />
 
                 {/* Send */}
                 <button
                   onClick={handleSend}
                   disabled={!msgInput.trim() || sending}
-                  className="p-2.5 rounded-xl bg-primary text-black hover:bg-opacity-90 transition-all cursor-pointer disabled:opacity-40"
+                  className="p-2.5 rounded-xl bg-primary text-black hover:bg-opacity-90 transition-all cursor-pointer disabled:opacity-40 shrink-0"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -872,6 +873,7 @@ export function MessagesPanel() {
           </>
         )}
       </div>
+
 
       {/* ──────────────── NEW CONVERSATION MODAL ──────────────── */}
       {showNewModal && (
