@@ -99,19 +99,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Derive role from user — default to Read Only if no user loaded yet
   const role: UserRole = (user?.role as UserRole) ?? 'Read Only';
 
-  // Synchronously initialize allowedTabs from localStorage cache or default role matrix
-  const [allowedTabs, setAllowedTabs] = useState<string[]>(() => {
+  const [mounted, setMounted] = useState(false);
+
+  // Initialize allowedTabs deterministically to prevent Next.js SSR hydration mismatches
+  const [allowedTabs, setAllowedTabs] = useState<string[]>(
+    DEFAULT_MODULE_PERMISSIONS['Read Only']
+  );
+
+  useEffect(() => {
+    setMounted(true);
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('cyberx_allowed_tabs');
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setAllowedTabs(parsed);
+          }
         } catch {}
       }
     }
-    return DEFAULT_MODULE_PERMISSIONS['Read Only'];
-  });
+  }, []);
 
   const fetchPermissions = useCallback(async () => {
     try {
@@ -150,8 +158,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const isTabAllowed = useCallback((tabId: string) => {
     if (role === 'Super Admin') return true;
+    if (!mounted) {
+      // During SSR & initial hydration, evaluate against default role matrix for 100% server/client HTML match
+      const defaultRolePerms = DEFAULT_MODULE_PERMISSIONS[role] || DEFAULT_MODULE_PERMISSIONS['Read Only'];
+      return defaultRolePerms.includes(tabId);
+    }
     return allowedTabs.includes(tabId);
-  }, [role, allowedTabs]);
+  }, [role, allowedTabs, mounted]);
+
 
   const fetchSettings = useCallback(async () => {
     try {
