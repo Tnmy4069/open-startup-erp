@@ -34,22 +34,25 @@ import {
   QrCode,
   MessageSquare
 } from 'lucide-react';
-import { DashboardHome } from './DashboardHome';
-import { LedgerTable } from './LedgerTable';
-import { OrganizationsList } from './OrganizationsList';
-import { PeopleList } from './PeopleList';
-import { ReportsPanel } from './ReportsPanel';
-import { AuditLogsList } from './AuditLogsList';
-import { SettingsPanel } from './SettingsPanel';
-import { UsersPanel } from './UsersPanel';
-import { MeetingsPanel } from './MeetingsPanel';
-import { MembersPanel } from './MembersPanel';
-import { EventsPanel } from './EventsPanel';
-import { AssetsPanel } from './AssetsPanel';
-import { TasksPanel } from './TasksPanel';
-import { DocumentsPanel } from './DocumentsPanel';
-import { AnnouncementsPanel } from './AnnouncementsPanel';
-import { MessagesPanel } from './MessagesPanel';
+import dynamic from 'next/dynamic';
+
+const DashboardHome = dynamic(() => import('./DashboardHome').then((m) => m.DashboardHome));
+const LedgerTable = dynamic(() => import('./LedgerTable').then((m) => m.LedgerTable));
+const OrganizationsList = dynamic(() => import('./OrganizationsList').then((m) => m.OrganizationsList));
+const PeopleList = dynamic(() => import('./PeopleList').then((m) => m.PeopleList));
+const ReportsPanel = dynamic(() => import('./ReportsPanel').then((m) => m.ReportsPanel));
+const AuditLogsList = dynamic(() => import('./AuditLogsList').then((m) => m.AuditLogsList));
+const SettingsPanel = dynamic(() => import('./SettingsPanel').then((m) => m.SettingsPanel));
+const UsersPanel = dynamic(() => import('./UsersPanel').then((m) => m.UsersPanel));
+const MeetingsPanel = dynamic(() => import('./MeetingsPanel').then((m) => m.MeetingsPanel));
+const MembersPanel = dynamic(() => import('./MembersPanel').then((m) => m.MembersPanel));
+const EventsPanel = dynamic(() => import('./EventsPanel').then((m) => m.EventsPanel));
+const AssetsPanel = dynamic(() => import('./AssetsPanel').then((m) => m.AssetsPanel));
+const TasksPanel = dynamic(() => import('./TasksPanel').then((m) => m.TasksPanel));
+const DocumentsPanel = dynamic(() => import('./DocumentsPanel').then((m) => m.DocumentsPanel));
+const AnnouncementsPanel = dynamic(() => import('./AnnouncementsPanel').then((m) => m.AnnouncementsPanel));
+const MessagesPanel = dynamic(() => import('./MessagesPanel').then((m) => m.MessagesPanel));
+
 
 import { useParams, useRouter } from 'next/navigation';
 import { AppConfig } from '@/lib/config';
@@ -203,12 +206,38 @@ export function DashboardShell() {
     'tasks', 'documents', 'announcements', 'messages'
   ];
 
-  const currentTab = VALID_TABS.includes(resolvedTab)
-    ? (resolvedTab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements' | 'messages')
-    : 'dashboard';
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    return VALID_TABS.includes(resolvedTab) ? resolvedTab : 'dashboard';
+  });
+
+  // Sync state if URL changes externally
+  useEffect(() => {
+    if (VALID_TABS.includes(resolvedTab) && resolvedTab !== activeTab) {
+      setActiveTab(resolvedTab);
+    }
+  }, [resolvedTab]);
+
+  // Handle browser back/forward buttons instantly
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = typeof window !== 'undefined' ? window.location.pathname.replace(/^\//, '') : '';
+      if (VALID_TABS.includes(path)) {
+        setActiveTab(path);
+      } else if (path === '') {
+        setActiveTab('dashboard');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const currentTab = VALID_TABS.includes(activeTab) ? activeTab : 'dashboard';
 
   const setCurrentTab = (tab: string) => {
-    router.push(`/${tab}`);
+    setActiveTab(tab);
+    if (typeof window !== 'undefined' && window.location.pathname !== `/${tab}`) {
+      window.history.pushState(null, '', `/${tab}`);
+    }
   };
 
   const [mountedTabs, setMountedTabs] = useState<Set<string>>(new Set([currentTab]));
@@ -227,9 +256,9 @@ export function DashboardShell() {
       currentTab !== 'dashboard' &&
       !isTabAllowed(currentTab)
     ) {
-      router.push('/dashboard');
+      setCurrentTab('dashboard');
     }
-  }, [currentTab, isTabAllowed, role, router]);
+  }, [currentTab, isTabAllowed, role]);
 
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);

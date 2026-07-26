@@ -270,21 +270,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!authLoading && user) {
       fetchAlerts();
       
-      // Poll for new notifications every 15 seconds
+      // Poll for new notifications quietly every 30 seconds
       const intervalId = setInterval(() => {
         fetchAlerts();
-      }, 15000);
+      }, 30000);
 
       return () => clearInterval(intervalId);
     }
-  }, [authLoading, user, refreshTrigger, fetchAlerts]);
+  }, [authLoading, user, fetchAlerts]);
 
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      fetchSettings();
-      fetchPermissions();
-    }
-  }, [refreshTrigger, fetchSettings, fetchPermissions]);
 
   const setTheme = (newTheme: 'light' | 'dark') => {
     setThemeState(newTheme);

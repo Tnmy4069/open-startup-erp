@@ -136,7 +136,10 @@ export function MembersPanel({ globalSearch }: { globalSearch: string }) {
 
   const fetchMembers = async () => {
     try {
-      setLoading(true);
+      setMembers((prev) => {
+        if (prev.length === 0) setLoading(true);
+        return prev;
+      });
       const activeSearch = globalSearch || localSearch;
       const params = new URLSearchParams({
         search: activeSearch,

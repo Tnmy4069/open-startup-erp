@@ -4,8 +4,18 @@ import { guardSettings } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
+let settingsCache: { data: any; timestamp: number } | null = null;
+const CACHE_TTL_MS = 60000; // 1 minute in-memory cache
+
 export async function GET() {
   try {
+    const now = Date.now();
+    if (settingsCache && now - settingsCache.timestamp < CACHE_TTL_MS) {
+      return NextResponse.json(settingsCache.data, {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+      });
+    }
+
     let setting: any = await prisma.setting.findUnique({
       where: { id: 'global_config' },
     });
@@ -33,7 +43,7 @@ export async function GET() {
 
     const settingObj = setting.toObject ? setting.toObject() : { ...setting };
 
-    return NextResponse.json({
+    const responsePayload = {
       ...settingObj,
       dbLogoUrl: settingObj.logoUrl || null,
       dbIconUrl: settingObj.iconUrl || null,
@@ -44,6 +54,12 @@ export async function GET() {
       envLogoUrl: defaultLogoUrl,
       envIconUrl: defaultIconUrl,
       envFaviconUrl: defaultFaviconUrl,
+    };
+
+    settingsCache = { data: responsePayload, timestamp: Date.now() };
+
+    return NextResponse.json(responsePayload, {
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
     });
   } catch (error) {
     const err = error as Error;
@@ -128,7 +144,7 @@ export async function PUT(request: NextRequest) {
 
     const updatedObj = updated.toObject ? updated.toObject() : { ...updated };
 
-    return NextResponse.json({
+    const updatedPayload = {
       ...updatedObj,
       dbLogoUrl: updatedObj.logoUrl || null,
       dbIconUrl: updatedObj.iconUrl || null,
@@ -139,7 +155,11 @@ export async function PUT(request: NextRequest) {
       envLogoUrl: defaultLogoUrl,
       envIconUrl: defaultIconUrl,
       envFaviconUrl: defaultFaviconUrl,
-    });
+    };
+
+    settingsCache = { data: updatedPayload, timestamp: Date.now() };
+
+    return NextResponse.json(updatedPayload);
   } catch (error) {
     const err = error as Error;
     return NextResponse.json({ error: err.message }, { status: 500 });

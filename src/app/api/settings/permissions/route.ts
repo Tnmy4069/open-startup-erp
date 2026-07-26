@@ -13,6 +13,9 @@ export const DEFAULT_MODULE_PERMISSIONS: Record<string, string[]> = {
   'Read Only': ['dashboard', 'meetings', 'tasks', 'events', 'members', 'documents', 'messages'],
 };
 
+let permissionsCache: { data: any; timestamp: number } | null = null;
+const PERMS_CACHE_TTL_MS = 60000;
+
 export async function GET() {
   const session = await getSession();
   if (!session) {
@@ -20,6 +23,13 @@ export async function GET() {
   }
 
   try {
+    const now = Date.now();
+    if (permissionsCache && now - permissionsCache.timestamp < PERMS_CACHE_TTL_MS) {
+      return NextResponse.json(permissionsCache.data, {
+        headers: { 'Cache-Control': 'private, max-age=60' }
+      });
+    }
+
     const setting = await prisma.setting.findUnique({
       where: { id: 'global_config' },
     });
@@ -33,7 +43,12 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ permissions, defaultPermissions: DEFAULT_MODULE_PERMISSIONS });
+    const payload = { permissions, defaultPermissions: DEFAULT_MODULE_PERMISSIONS };
+    permissionsCache = { data: payload, timestamp: Date.now() };
+
+    return NextResponse.json(payload, {
+      headers: { 'Cache-Control': 'private, max-age=60' }
+    });
   } catch (error) {
     const err = error as Error;
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -72,6 +87,11 @@ export async function PUT(request: NextRequest) {
         details: 'Updated role sidebar module permissions matrix.',
       },
     });
+
+    permissionsCache = {
+      data: { permissions, defaultPermissions: DEFAULT_MODULE_PERMISSIONS },
+      timestamp: Date.now()
+    };
 
     return NextResponse.json({
       success: true,

@@ -30,6 +30,10 @@ model Transaction {
   bankDetails     String?  // JSON string or text for custom bank details
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([date])
 }
 
 model Organization {
@@ -63,6 +67,8 @@ model ActivityLog {
   user      String
   role      String
   details   String
+
+  @@index([timestamp])
 }
 
 model Reminder {
@@ -81,6 +87,8 @@ model Notification {
   timestamp DateTime @default(now())
   status    String   // Unread | Read
   type      String   // Payment completed | Payment pending | New transaction | Approval required
+
+  @@index([status])
 }
 
 model Setting {
@@ -102,7 +110,6 @@ model Setting {
   modulePermissions String? // JSON string: { [role]: [tab1, tab2, ...] }
 }
 
-
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   username  String   @unique
@@ -123,6 +130,8 @@ model MeetingNote {
   isPublic  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([date])
 }
 
 model Member {
@@ -161,6 +170,9 @@ model Member {
   assetsHeld       Asset[]
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+
+  @@index([status])
+  @@index([role])
 }
 
 model MemberActivity {
@@ -169,6 +181,8 @@ model MemberActivity {
   member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   action    String
   date      DateTime @default(now())
+
+  @@index([memberId])
 }
 
 model Event {
@@ -197,6 +211,9 @@ model Event {
   registrations        EventRegistration[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
+
+  @@index([status])
+  @@index([startDate])
 }
 
 model EventRegistration {
@@ -213,6 +230,9 @@ model EventRegistration {
   feedback  String?
   rating    Int?
   createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@index([memberId])
 }
 
 model Asset {
@@ -234,6 +254,9 @@ model Asset {
   maintenances AssetMaintenance[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+
+  @@index([status])
+  @@index([category])
 }
 
 model AssetHistory {
@@ -244,6 +267,8 @@ model AssetHistory {
   holder   String?  // Name of holder at that time
   date     DateTime @default(now())
   notes    String?
+
+  @@index([assetId])
 }
 
 model AssetMaintenance {
@@ -256,6 +281,8 @@ model AssetMaintenance {
   issue      String
   resolution String?
   status     String    // Pending | Completed
+
+  @@index([assetId])
 }
 
 model Task {
@@ -278,6 +305,9 @@ model Task {
   recurringPattern String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+
+  @@index([status])
+  @@index([priority])
 }
 
 model TaskComment {
@@ -287,6 +317,8 @@ model TaskComment {
   author    String
   text      String
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model TaskChecklistItem {
@@ -295,6 +327,8 @@ model TaskChecklistItem {
   task        Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
   title       String
   isCompleted Boolean @default(false)
+
+  @@index([taskId])
 }
 
 model TaskActivity {
@@ -304,6 +338,8 @@ model TaskActivity {
   user      String
   change    String
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model DocFolder {
@@ -314,6 +350,8 @@ model DocFolder {
   subfolders DocFolder[] @relation("FolderHierarchy")
   files     DocFile[]
   createdAt DateTime  @default(now())
+
+  @@index([parentId])
 }
 
 model DocFile {
@@ -333,6 +371,9 @@ model DocFile {
   versions   DocVersion[]
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+
+  @@index([folderId])
+  @@index([isPinned])
 }
 
 model DocVersion {
@@ -343,6 +384,8 @@ model DocVersion {
   content   String
   updatedBy String
   createdAt DateTime @default(now())
+
+  @@index([fileId])
 }
 
 model PushSubscription {
@@ -367,6 +410,8 @@ model Conversation {
   createdBy   String                 // User ID who created the conversation
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([updatedAt])
 }
 
 model Message {
@@ -386,6 +431,6 @@ model Message {
   isDeleted      Boolean      @default(false)
   deletedFor     String[]              // User IDs who hid this message for themselves
   createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
 }
-
-

@@ -59,7 +59,10 @@ export function LedgerTable({
   
   // Data State
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
   // Global statistics state
@@ -161,10 +164,13 @@ export function LedgerTable({
 
   const fetchTransactions = useCallback(async () => {
     try {
-      setLoading(true);
+      setTransactions((prev) => {
+        if (prev.length === 0) setLoading(true);
+        return prev;
+      });
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
+        page: page.toString(),
+        limit: limit.toString(),
         sortBy,
         sortOrder,
         search: globalSearch,
@@ -184,7 +190,8 @@ export function LedgerTable({
       if (res.ok) {
         const data = await res.json();
         setTransactions(data.transactions || []);
-        setPagination(data.pagination);
+        setTotal(data.pagination?.total || 0);
+        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (e) {
       console.error(e);
@@ -192,8 +199,8 @@ export function LedgerTable({
       setLoading(false);
     }
   }, [
-    pagination.page,
-    pagination.limit,
+    page,
+    limit,
     sortBy,
     sortOrder,
     globalSearch,
@@ -260,7 +267,7 @@ export function LedgerTable({
       setSortBy(field);
       setSortOrder('asc');
     }
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPage(1);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,7 +294,7 @@ export function LedgerTable({
     setFilterDateTo('');
     setFilterAmountMin('');
     setFilterAmountMax('');
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPage(1);
   };
 
   // Save Current Filter Config
@@ -325,7 +332,7 @@ export function LedgerTable({
     setFilterDateTo(filters.filterDateTo || '');
     setFilterAmountMin(filters.filterAmountMin || '');
     setFilterAmountMax(filters.filterAmountMax || '');
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPage(1);
   };
 
   const deleteSavedFilter = (name: string, e: React.MouseEvent) => {
@@ -1281,20 +1288,16 @@ export function LedgerTable({
         <div className="p-4 border-t border-border-normal bg-bg-elevated/20 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[10px] text-text-muted">
           <div className="flex items-center gap-4 flex-wrap">
             <div>
-              Showing <span className="font-semibold text-text-heading">{transactions.length}</span> of <span className="font-semibold text-text-heading">{pagination.total}</span> entries
+              Showing <span className="font-semibold text-text-heading">{transactions.length}</span> of <span className="font-semibold text-text-heading">{total}</span> entries
             </div>
 
             <div className="flex items-center gap-1.5 border-l border-border-normal/40 pl-4">
               <span>Show</span>
               <select
-                value={pagination.limit}
+                value={limit}
                 onChange={(e) => {
-                  const newLimit = parseInt(e.target.value);
-                  setPagination((prev) => ({
-                    ...prev,
-                    limit: newLimit,
-                    page: 1
-                  }));
+                  setLimit(parseInt(e.target.value));
+                  setPage(1);
                 }}
                 className="bg-bg-surface border border-border-normal rounded px-1.5 py-0.5 text-text-heading focus:outline-none focus:border-primary text-[10px] font-mono cursor-pointer"
               >
@@ -1308,8 +1311,8 @@ export function LedgerTable({
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setPagination((prev) => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-              disabled={pagination.page === 1}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page === 1}
               className="flex items-center justify-center p-2 rounded border border-border-normal bg-bg-surface hover:bg-bg-elevated disabled:opacity-40 disabled:cursor-not-allowed text-text-heading transition-colors"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -1317,14 +1320,14 @@ export function LedgerTable({
             
             <div className="flex items-center gap-1">
               <span>Page</span>
-              <span className="font-semibold text-text-heading">{pagination.page}</span>
+              <span className="font-semibold text-text-heading">{page}</span>
               <span>of</span>
-              <span className="font-semibold text-text-heading">{pagination.totalPages}</span>
+              <span className="font-semibold text-text-heading">{totalPages}</span>
             </div>
 
             <button
-              onClick={() => setPagination((prev) => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
-              disabled={pagination.page === pagination.totalPages}
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={page === totalPages}
               className="flex items-center justify-center p-2 rounded border border-border-normal bg-bg-surface hover:bg-bg-elevated disabled:opacity-40 disabled:cursor-not-allowed text-text-heading transition-colors"
             >
               <ChevronRight className="w-3.5 h-3.5" />

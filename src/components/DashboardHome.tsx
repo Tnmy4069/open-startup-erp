@@ -103,23 +103,8 @@ interface DashboardData {
   }>;
 }
 
-export function DashboardHome({
-  globalSearch,
-  onSelectLedger,
-  onSelectTab,
-  onNewTransaction
-}: {
-  globalSearch: string;
-  onSelectLedger: () => void;
-  onSelectTab: (tab: string) => void;
-  onNewTransaction?: () => void;
-}) {
-  const { refreshTrigger, theme, role, user: sessionUser, isTabAllowed } = useApp();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
+function TerminalBanner({ role }: { role: string }) {
   const [typedWelcome, setTypedWelcome] = useState('');
-
 
   useEffect(() => {
     const fullText = `ACCESS AUTHORIZED for role: ${role || 'MEMBER'}. CONNECTION ESTABLISHED.`;
@@ -134,10 +119,37 @@ export function DashboardHome({
     return () => clearInterval(interval);
   }, [role]);
 
+  return (
+    <div className="bg-bg-secondary border border-border-normal rounded-xl p-4 font-mono text-[10px] text-text-heading flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyber-success animate-ping shrink-0" />
+        <span className="text-cyber-success font-bold font-mono">$ {typedWelcome}</span>
+        <span className="inline-block w-1.5 h-3 bg-primary animate-pulse ml-0.5" />
+      </div>
+      <span className="text-text-muted hidden md:inline font-mono">ROLE: {role ? role.toUpperCase() : 'GUEST'}</span>
+    </div>
+  );
+}
+
+export function DashboardHome({
+  globalSearch,
+  onSelectLedger,
+  onSelectTab,
+  onNewTransaction
+}: {
+  globalSearch?: string;
+  onSelectLedger: () => void;
+  onSelectTab: (tab: string) => void;
+  onNewTransaction?: () => void;
+}) {
+  const { refreshTrigger, theme, role, user: sessionUser, isTabAllowed } = useApp();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      if (!data) setLoading(true);
       const res = await fetch('/api/dashboard/stats');
       if (res.ok) {
         const stats = await res.json();
@@ -175,14 +187,7 @@ export function DashboardHome({
     <div className="space-y-6">
       
       {/* TERMINAL STATUS BAR */}
-      <div className="bg-bg-secondary border border-border-normal rounded-xl p-4 font-mono text-[10px] text-text-heading flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyber-success animate-ping shrink-0" />
-          <span className="text-cyber-success font-bold font-mono">$ {typedWelcome}</span>
-          <span className="inline-block w-1.5 h-3 bg-primary animate-pulse ml-0.5" />
-        </div>
-        <span className="text-text-muted hidden md:inline font-mono">ROLE: {role ? role.toUpperCase() : 'GUEST'}</span>
-      </div>
+      <TerminalBanner role={role} />
 
       {/* GLOBAL SEARCH HIGHLIGHT REDIRECT */}
       {globalSearch && (
