@@ -96,6 +96,9 @@ model Setting {
   categories       String  @default("Campus Session,Workshop,Sponsorship,Merchandise,Travel,Food,Equipment,Software,Marketing,Reimbursement,Miscellaneous")
   paymentMethods   String  @default("Cash,UPI,Bank,Card,Cheque")
   enableEventPass  Boolean @default(true)
+  logoUrl          String?
+  iconUrl          String?
+  faviconUrl       String?
 }
 
 model User {

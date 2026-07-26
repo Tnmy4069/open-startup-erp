@@ -44,6 +44,18 @@ interface AppContextType {
   setMemberRegistered: (registered: boolean) => void;
   logout: () => Promise<void>;
   authLoading: boolean;
+  // Branding & Configuration
+  logoUrl: string;
+  iconUrl: string;
+  faviconUrl: string;
+  communityName: string;
+  dbLogoUrl: string | null;
+  dbIconUrl: string | null;
+  dbFaviconUrl: string | null;
+  envLogoUrl: string;
+  envIconUrl: string;
+  envFaviconUrl: string;
+  fetchSettings: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -58,8 +70,67 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [memberRegistered, setMemberRegistered] = useState<boolean>(true);
 
+  // Branding states with default fallbacks
+  const [logoUrl, setLogoUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_LOGO_URL || '/cyberx-logo.webp');
+  const [iconUrl, setIconUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_ICON_URL || '/icon-192.png');
+  const [faviconUrl, setFaviconUrl] = useState<string>(process.env.NEXT_PUBLIC_FAVICON_URL || '/favicon.ico');
+  const [communityName, setCommunityName] = useState<string>(process.env.NEXT_PUBLIC_APP_NAME || 'CyberX');
+
+  const [dbLogoUrl, setDbLogoUrl] = useState<string | null>(null);
+  const [dbIconUrl, setDbIconUrl] = useState<string | null>(null);
+  const [dbFaviconUrl, setDbFaviconUrl] = useState<string | null>(null);
+
+  const [envLogoUrl, setEnvLogoUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_LOGO_URL || '/cyberx-logo.webp');
+  const [envIconUrl, setEnvIconUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_ICON_URL || '/icon-192.png');
+  const [envFaviconUrl, setEnvFaviconUrl] = useState<string>(process.env.NEXT_PUBLIC_FAVICON_URL || '/favicon.ico');
+
   // Derive role from user — default to Read Only if somehow no user
   const role: UserRole = (user?.role as UserRole) ?? 'Read Only';
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.logoUrl) setLogoUrl(data.logoUrl);
+        if (data.iconUrl) setIconUrl(data.iconUrl);
+        if (data.faviconUrl) setFaviconUrl(data.faviconUrl);
+
+        // Dynamically update browser head icon & favicon links in DOM
+        if (typeof window !== 'undefined') {
+          const activeFavicon = data.faviconUrl || data.iconUrl;
+          const activeAppleIcon = data.iconUrl || data.faviconUrl;
+
+          const links: NodeListOf<HTMLLinkElement> = document.querySelectorAll("link[rel*='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']");
+          if (links.length > 0) {
+            links.forEach((link) => {
+              if (link.rel.includes('apple')) {
+                if (activeAppleIcon) link.href = activeAppleIcon;
+              } else {
+                if (activeFavicon) link.href = activeFavicon;
+              }
+            });
+          } else if (activeFavicon) {
+            const newFaviconLink = document.createElement('link');
+            newFaviconLink.rel = 'icon';
+            newFaviconLink.href = activeFavicon;
+            document.head.appendChild(newFaviconLink);
+          }
+        }
+        if (data.communityName) setCommunityName(data.communityName);
+
+        setDbLogoUrl(data.dbLogoUrl ?? null);
+        setDbIconUrl(data.dbIconUrl ?? null);
+        setDbFaviconUrl(data.dbFaviconUrl ?? null);
+
+        if (data.envLogoUrl) setEnvLogoUrl(data.envLogoUrl);
+        if (data.envIconUrl) setEnvIconUrl(data.envIconUrl);
+        if (data.envFaviconUrl) setEnvFaviconUrl(data.envFaviconUrl);
+      }
+    } catch (e) {
+      console.error('Failed to load branding settings:', e);
+    }
+  }, []);
 
   // Load current session from /api/auth/me
   const fetchMe = useCallback(async () => {
@@ -96,6 +167,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchMe();
+    fetchSettings();
 
     const savedTheme = localStorage.getItem('cyberx_theme') as 'light' | 'dark';
     if (savedTheme) {
@@ -104,7 +176,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.add('dark');
     }
-  }, [fetchMe]);
+  }, [fetchMe, fetchSettings]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -118,6 +190,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return () => clearInterval(intervalId);
     }
   }, [authLoading, user, refreshTrigger, fetchAlerts]);
+
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      fetchSettings();
+    }
+  }, [refreshTrigger, fetchSettings]);
 
   const setTheme = (newTheme: 'light' | 'dark') => {
     setThemeState(newTheme);
@@ -172,13 +250,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         authLoading,
         memberRegistered,
         setMemberRegistered,
+        logoUrl,
+        iconUrl,
+        faviconUrl,
+        communityName,
+        dbLogoUrl,
+        dbIconUrl,
+        dbFaviconUrl,
+        envLogoUrl,
+        envIconUrl,
+        envFaviconUrl,
+        fetchSettings,
       }}
     >
       {children}
     </AppContext.Provider>
   );
 }
-
+ 
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

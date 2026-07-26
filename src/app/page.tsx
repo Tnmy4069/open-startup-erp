@@ -23,7 +23,19 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>(AppConfig.logoUrl);
   const usernameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data && data.logoUrl) {
+          setLogoUrl(data.logoUrl);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Boot sequence typewriter
   useEffect(() => {
@@ -88,7 +100,7 @@ export default function HomePage() {
 
         {/* Brand */}
         <div className="text-center space-y-2 flex flex-col items-center justify-center">
-          <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-16 w-auto object-contain mb-2" />
+          <img src={logoUrl || AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-16 w-auto object-contain mb-2" />
           <p className="text-[10px] text-text-muted tracking-[0.3em]">FINANCIAL OPERATIONS SYSTEM</p>
         </div>
 

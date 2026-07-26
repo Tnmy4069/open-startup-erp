@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { AppConfig } from '@/lib/config';
-import { Settings, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download, Ticket, ShieldAlert } from 'lucide-react';
+import { Settings, CreditCard, Tags, Save, KeyRound, Eye, EyeOff, CheckCircle, X, Bell, BellOff, LogOut, Download, Ticket, ShieldAlert, Image as ImageIcon, Upload, RotateCcw } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -16,7 +16,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 
 export function SettingsPanel() {
-  const { role, refreshTrigger, triggerNotification, logout } = useApp();
+  const { role, refreshTrigger, triggerNotification, logout, refreshData, logoUrl: currentLogoUrl, iconUrl: currentIconUrl, faviconUrl: currentFaviconUrl, dbLogoUrl, dbIconUrl, dbFaviconUrl, envLogoUrl, envIconUrl, envFaviconUrl, fetchSettings: refreshContextSettings } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +33,13 @@ export function SettingsPanel() {
   const [paymentMethods, setPaymentMethods] = useState('');
   const [enableEventPass, setEnableEventPass] = useState(true);
 
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'banking' | 'ledger' | 'password' | 'notifications' | 'app-session' | 'event-pass'>('general');
+  // Branding inputs (empty string = fallback to .env)
+  const [logoUrlInput, setLogoUrlInput] = useState('');
+  const [iconUrlInput, setIconUrlInput] = useState('');
+  const [faviconUrlInput, setFaviconUrlInput] = useState('');
+  const [uploadingType, setUploadingType] = useState<'logo' | 'icon' | 'favicon' | null>(null);
+
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'branding' | 'banking' | 'ledger' | 'password' | 'notifications' | 'app-session' | 'event-pass'>('general');
 
   // PWA & Session states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -266,11 +272,52 @@ export function SettingsPanel() {
         setCategories(data.categories || '');
         setPaymentMethods(data.paymentMethods || '');
         setEnableEventPass(data.enableEventPass ?? true);
+
+        // Fill branding states (db values if present)
+        setLogoUrlInput(data.dbLogoUrl || '');
+        setIconUrlInput(data.dbIconUrl || '');
+        setFaviconUrlInput(data.dbFaviconUrl || '');
       }
     } catch (e) {
       console.error('Failed to load settings:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageFileUpload = async (file: File, type: 'logo' | 'icon' | 'favicon') => {
+    if (role !== 'Super Admin' && role !== 'Co-Founder') {
+      alert('Access Denied. Only Super Admin or Co-Founder can upload branding images.');
+      return;
+    }
+
+    setUploadingType(type);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      const res = await fetch('/api/settings/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to upload image.');
+        return;
+      }
+
+      if (type === 'logo') setLogoUrlInput(data.fileUrl);
+      if (type === 'icon') setIconUrlInput(data.fileUrl);
+      if (type === 'favicon') setFaviconUrlInput(data.fileUrl);
+
+      triggerNotification(`New ${type} uploaded. Click 'Save Settings' to apply globally.`, 'Image Uploaded');
+    } catch (err: any) {
+      console.error(err);
+      alert('Error uploading file: ' + err.message);
+    } finally {
+      setUploadingType(null);
     }
   };
 
@@ -322,17 +369,26 @@ export function SettingsPanel() {
           financialYear,
           categories,
           paymentMethods,
+          logoUrl: logoUrlInput,
+          iconUrl: iconUrlInput,
+          faviconUrl: faviconUrlInput,
           user: 'SimulationUser',
           role
         })
       });
 
       if (res.ok) {
-        triggerNotification('Global system configuration updated successfully.', 'Updated');
-        fetchSettings();
+        triggerNotification('Global system configuration & branding updated successfully.', 'Updated');
+        await fetchSettings();
+        await refreshContextSettings();
+        refreshData();
+      } else {
+        const errData = await res.json();
+        alert('Failed to save settings: ' + (errData.error || 'Unknown error'));
       }
     } catch (e) {
       console.error(e);
+      alert('Error saving settings');
     } finally {
       setSubmitting(false);
     }
@@ -403,6 +459,15 @@ export function SettingsPanel() {
           >
             <Settings className="w-4 h-4 shrink-0" />
             <span>Community Settings</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('branding')}
+            className={`whitespace-nowrap md:w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors ${activeSubTab === 'branding' ? 'bg-primary text-black' : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
+          >
+            <ImageIcon className="w-4 h-4 shrink-0" />
+            <span>Branding &amp; Logo</span>
           </button>
 
           <button
@@ -521,6 +586,287 @@ export function SettingsPanel() {
                   >
                     <Save className="w-4 h-4" />
                     <span>{submitting ? 'Saving...' : 'Save Settings'}</span>
+                  </button>
+                </div>
+              )}
+            </form>
+          )}
+
+          {/* BRANDING & LOGO SECTION */}
+          {activeSubTab === 'branding' && (
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xs font-semibold text-text-heading font-display tracking-wider border-b border-border-normal/40 pb-1.5 flex items-center justify-between">
+                    <span>{"// Application Logo & Brand Assets"}</span>
+                    <span className="text-[10px] text-text-muted font-mono normal-case font-normal">
+                      Super Admin overrides — falls back to .env if empty
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-text-muted mt-2">
+                    Super Admins can update the system logo and icons here. If a field is left empty or reset, the application will automatically fetch and use the default configuration specified in the <code className="text-primary font-mono font-semibold px-1 py-0.5 bg-bg-elevated rounded">.env</code> file.
+                  </p>
+                </div>
+
+                {/* 1. BRAND LOGO */}
+                <div className="p-4 bg-bg-elevated/30 border border-border-normal rounded-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-primary" />
+                      <h4 className="text-xs font-bold text-text-heading">Application Logo</h4>
+                    </div>
+                    {logoUrlInput ? (
+                      <span className="px-2 py-0.5 bg-primary/10 border border-primary/30 text-primary text-[10px] font-mono font-semibold rounded-full">
+                        Super Admin Custom Logo
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-bg-primary border border-border-normal text-text-muted text-[10px] font-mono rounded-full">
+                        Fallback to .env ({envLogoUrl})
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Preview box */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-black/40 border border-border-normal/60 rounded-lg">
+                    <div className="w-48 h-16 flex items-center justify-center bg-black/60 border border-border-normal/40 rounded p-2 overflow-hidden">
+                      <img
+                        src={logoUrlInput || envLogoUrl || '/cyberx-logo.webp'}
+                        alt="Logo Preview"
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left space-y-1">
+                      <p className="text-xs font-semibold text-text-heading">Current Active Logo</p>
+                      <p className="text-[10px] text-text-muted font-mono break-all">
+                        {logoUrlInput ? logoUrlInput : `[.env] ${envLogoUrl}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Inputs & Actions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-2 flex flex-col gap-1.5">
+                      <label className="text-[10px] font-mono text-text-muted font-semibold uppercase">Logo Image URL</label>
+                      <input
+                        type="text"
+                        disabled={isReadOnlyUser}
+                        value={logoUrlInput}
+                        onChange={(e) => setLogoUrlInput(e.target.value)}
+                        placeholder={`Leave empty to fallback to .env (${envLogoUrl})`}
+                        className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading text-xs focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                      <label className={`flex-1 h-10 px-3 border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${uploadingType === 'logo' ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Upload className="w-3.5 h-3.5 text-primary" />
+                        <span>{uploadingType === 'logo' ? 'Uploading...' : 'Upload File'}</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                          disabled={isReadOnlyUser || uploadingType === 'logo'}
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageFileUpload(file, 'logo');
+                          }}
+                        />
+                      </label>
+
+                      {logoUrlInput && (
+                        <button
+                          type="button"
+                          onClick={() => setLogoUrlInput('')}
+                          className="h-10 px-3 border border-cyber-danger/30 text-cyber-danger hover:bg-cyber-danger/10 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                          title="Reset to .env default"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Reset</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. APP ICON */}
+                <div className="p-4 bg-bg-elevated/30 border border-border-normal rounded-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-primary" />
+                      <h4 className="text-xs font-bold text-text-heading">App Icon (PWA & Desktop)</h4>
+                    </div>
+                    {iconUrlInput ? (
+                      <span className="px-2 py-0.5 bg-primary/10 border border-primary/30 text-primary text-[10px] font-mono font-semibold rounded-full">
+                        Super Admin Custom Icon
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-bg-primary border border-border-normal text-text-muted text-[10px] font-mono rounded-full">
+                        Fallback to .env ({envIconUrl})
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Preview box */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-black/40 border border-border-normal/60 rounded-lg">
+                    <div className="w-16 h-16 flex items-center justify-center bg-black/60 border border-border-normal/40 rounded p-1 overflow-hidden">
+                      <img
+                        src={iconUrlInput || envIconUrl || '/icon-192.png'}
+                        alt="Icon Preview"
+                        className="w-12 h-12 object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left space-y-1">
+                      <p className="text-xs font-semibold text-text-heading">Active App Icon (192x192 / 512x512)</p>
+                      <p className="text-[10px] text-text-muted font-mono break-all">
+                        {iconUrlInput ? iconUrlInput : `[.env] ${envIconUrl}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Inputs & Actions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-2 flex flex-col gap-1.5">
+                      <label className="text-[10px] font-mono text-text-muted font-semibold uppercase">App Icon URL</label>
+                      <input
+                        type="text"
+                        disabled={isReadOnlyUser}
+                        value={iconUrlInput}
+                        onChange={(e) => setIconUrlInput(e.target.value)}
+                        placeholder={`Leave empty to fallback to .env (${envIconUrl})`}
+                        className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading text-xs focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                      <label className={`flex-1 h-10 px-3 border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${uploadingType === 'icon' ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Upload className="w-3.5 h-3.5 text-primary" />
+                        <span>{uploadingType === 'icon' ? 'Uploading...' : 'Upload File'}</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon"
+                          disabled={isReadOnlyUser || uploadingType === 'icon'}
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageFileUpload(file, 'icon');
+                          }}
+                        />
+                      </label>
+
+                      {iconUrlInput && (
+                        <button
+                          type="button"
+                          onClick={() => setIconUrlInput('')}
+                          className="h-10 px-3 border border-cyber-danger/30 text-cyber-danger hover:bg-cyber-danger/10 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                          title="Reset to .env default"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Reset</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. FAVICON */}
+                <div className="p-4 bg-bg-elevated/30 border border-border-normal rounded-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-primary" />
+                      <h4 className="text-xs font-bold text-text-heading">Browser Favicon</h4>
+                    </div>
+                    {faviconUrlInput ? (
+                      <span className="px-2 py-0.5 bg-primary/10 border border-primary/30 text-primary text-[10px] font-mono font-semibold rounded-full">
+                        Super Admin Custom Favicon
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-bg-primary border border-border-normal text-text-muted text-[10px] font-mono rounded-full">
+                        Fallback to .env ({envFaviconUrl})
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Preview box */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-black/40 border border-border-normal/60 rounded-lg">
+                    <div className="w-12 h-12 flex items-center justify-center bg-black/60 border border-border-normal/40 rounded p-1 overflow-hidden">
+                      <img
+                        src={faviconUrlInput || envFaviconUrl || '/favicon.ico'}
+                        alt="Favicon Preview"
+                        className="w-8 h-8 object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left space-y-1">
+                      <p className="text-xs font-semibold text-text-heading">Browser Tab Icon (.ico / .png / .svg)</p>
+                      <p className="text-[10px] text-text-muted font-mono break-all">
+                        {faviconUrlInput ? faviconUrlInput : `[.env] ${envFaviconUrl}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Inputs & Actions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-2 flex flex-col gap-1.5">
+                      <label className="text-[10px] font-mono text-text-muted font-semibold uppercase">Favicon URL</label>
+                      <input
+                        type="text"
+                        disabled={isReadOnlyUser}
+                        value={faviconUrlInput}
+                        onChange={(e) => setFaviconUrlInput(e.target.value)}
+                        placeholder={`Leave empty to fallback to .env (${envFaviconUrl})`}
+                        className="h-10 px-3 bg-bg-primary border border-border-normal rounded-lg text-text-heading text-xs focus:border-primary focus:outline-none disabled:opacity-50 font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                      <label className={`flex-1 h-10 px-3 border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${uploadingType === 'favicon' ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Upload className="w-3.5 h-3.5 text-primary" />
+                        <span>{uploadingType === 'favicon' ? 'Uploading...' : 'Upload File'}</span>
+                        <input
+                          type="file"
+                          accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml"
+                          disabled={isReadOnlyUser || uploadingType === 'favicon'}
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageFileUpload(file, 'favicon');
+                          }}
+                        />
+                      </label>
+
+                      {faviconUrlInput && (
+                        <button
+                          type="button"
+                          onClick={() => setFaviconUrlInput('')}
+                          className="h-10 px-3 border border-cyber-danger/30 text-cyber-danger hover:bg-cyber-danger/10 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                          title="Reset to .env default"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Reset</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {!isReadOnlyUser && (
+                <div className="flex justify-end pt-4 border-t border-border-normal/40">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="h-11 px-6 bg-primary hover:bg-opacity-95 text-black rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{submitting ? 'Saving...' : 'Save Branding Settings'}</span>
                   </button>
                 </div>
               )}

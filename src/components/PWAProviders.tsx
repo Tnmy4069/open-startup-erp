@@ -4,8 +4,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { ServiceWorkerRegistration } from './ServiceWorkerRegistration';
 import { AppConfig } from '@/lib/config';
+import { useApp } from '@/context/AppContext';
 
 export function PWAProviders() {
+  const { logoUrl } = useApp();
   const [updateRegistration, setUpdateRegistration] =
     useState<ServiceWorkerRegistration | null>(null);
   const [showUpdateToast, setShowUpdateToast] = useState(false);
@@ -193,7 +195,7 @@ export function PWAProviders() {
           {/* Logo + Text */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
             <img
-              src={AppConfig.logoUrl}
+              src={logoUrl || AppConfig.logoUrl}
               alt={AppConfig.name}
               style={{ width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0, objectFit: 'contain' }}
             />

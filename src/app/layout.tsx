@@ -27,44 +27,71 @@ export const viewport: Viewport = {
   ],
 };
 
-export const metadata: Metadata = {
-  title: {
-    default: AppConfig.name,
-    template: `%s | ${AppConfig.name}`,
-  },
-  description: AppConfig.description,
-  applicationName: AppConfig.name,
-  authors: [{ name: `${AppConfig.name} Team` }],
-  keywords: [AppConfig.prefix, 'community', 'finance', 'ledger', 'members', 'events', 'security'],
-  manifest: '/manifest.webmanifest',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: AppConfig.pwa.shortName,
-    startupImage: AppConfig.pwa.icons.icon512,
-  },
-  icons: {
-    icon: [
-      { url: AppConfig.faviconUrl },
-      { url: AppConfig.pwa.icons.icon192, sizes: '192x192', type: 'image/png' },
-      { url: AppConfig.pwa.icons.icon512, sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [
-      { url: AppConfig.pwa.icons.appleTouch, sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: AppConfig.faviconUrl,
-  },
-  formatDetection: {
-    telephone: false,
-  },
-  openGraph: {
-    type: 'website',
-    siteName: AppConfig.name,
-    title: AppConfig.name,
+import { prisma } from '@/lib/db';
+
+export async function generateMetadata(): Promise<Metadata> {
+  let dbSetting: any = null;
+  try {
+    dbSetting = await prisma.setting.findUnique({ where: { id: 'global_config' } });
+  } catch (e) {
+    // Ignore DB errors
+  }
+
+  const appName = (dbSetting?.communityName && dbSetting.communityName.trim() !== '')
+    ? dbSetting.communityName.trim()
+    : AppConfig.name;
+
+  const faviconUrl = (dbSetting?.faviconUrl && dbSetting.faviconUrl.trim() !== '')
+    ? dbSetting.faviconUrl.trim()
+    : AppConfig.faviconUrl;
+
+  const iconUrl = (dbSetting?.iconUrl && dbSetting.iconUrl.trim() !== '')
+    ? dbSetting.iconUrl.trim()
+    : AppConfig.pwa.icons.icon192;
+
+  const logoUrl = (dbSetting?.logoUrl && dbSetting.logoUrl.trim() !== '')
+    ? dbSetting.logoUrl.trim()
+    : AppConfig.logoUrl;
+
+  return {
+    title: {
+      default: appName,
+      template: `%s | ${appName}`,
+    },
     description: AppConfig.description,
-    images: [{ url: AppConfig.pwa.icons.icon512 }],
-  },
-};
+    applicationName: appName,
+    authors: [{ name: `${appName} Team` }],
+    keywords: [AppConfig.prefix, 'community', 'finance', 'ledger', 'members', 'events', 'security'],
+    manifest: '/manifest.webmanifest',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: appName,
+      startupImage: iconUrl,
+    },
+    icons: {
+      icon: [
+        { url: faviconUrl },
+        { url: iconUrl, sizes: '192x192', type: 'image/png' },
+        { url: iconUrl, sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [
+        { url: iconUrl, sizes: '180x180', type: 'image/png' },
+      ],
+      shortcut: faviconUrl,
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    openGraph: {
+      type: 'website',
+      siteName: appName,
+      title: appName,
+      description: AppConfig.description,
+      images: [{ url: logoUrl || iconUrl }],
+    },
+  };
+}
 
 export default function RootLayout({
   children,

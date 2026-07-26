@@ -63,6 +63,7 @@ export function DashboardShell() {
     logout,
     memberRegistered,
     setMemberRegistered,
+    logoUrl,
   } = useApp();
 
   const [mounted, setMounted] = useState(false);
@@ -738,7 +739,7 @@ export function DashboardShell() {
 
         {/* LOGO AREA — always dark bg so logo pops in both themes */}
         <div className="h-[72px] flex items-center justify-center px-4 border-b border-border-normal" style={{ background: '#0d0d0d' }}>
-          <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-11 max-w-[200px] w-auto object-contain" style={{ filter: `drop-shadow(0 0 10px ${AppConfig.themeColor}60)` }} />
+          <img src={logoUrl || AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-11 max-w-[200px] w-auto object-contain" style={{ filter: `drop-shadow(0 0 10px ${AppConfig.themeColor}60)` }} />
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -993,7 +994,7 @@ export function DashboardShell() {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <img src={AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-8 w-auto object-contain" />
+            <img src={logoUrl || AppConfig.logoUrl} alt={`${AppConfig.name} Logo`} className="h-8 w-auto object-contain" />
           </div>
 
           {/* ACTIONS & SIMULATOR CONTROL */}
