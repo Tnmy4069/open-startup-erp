@@ -352,3 +352,38 @@ model PushSubscription {
   createdAt DateTime @default(now())
 }
 
+model Conversation {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String?                // Group name (null for DMs)
+  isGroup     Boolean   @default(false)
+  avatar      String?                // Group avatar URL
+  memberIds   String[]               // Array of User IDs (participants)
+  adminIds    String[]               // Group admin User IDs
+  messages    Message[]
+  lastMessage String?                // Preview text of last message
+  lastAt      DateTime?              // Timestamp of last message
+  createdBy   String                 // User ID who created the conversation
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String       @db.ObjectId
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String                // User ID of sender
+  senderName     String                // Display name
+  type           String       @default("text") // "text" | "file" | "image" | "location"
+  content        String                // Text content or file URL or "lat,lng" for location
+  fileName       String?               // Original filename for file messages
+  fileSize       Int?                  // File size in bytes
+  mimeType       String?               // MIME type for files
+  readBy         String[]              // Array of User IDs who have read it
+  isEdited       Boolean      @default(false)
+  editedAt       DateTime?
+  isDeleted      Boolean      @default(false)
+  deletedFor     String[]              // User IDs who hid this message for themselves
+  createdAt      DateTime     @default(now())
+}
+
+

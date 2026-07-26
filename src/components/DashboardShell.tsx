@@ -31,7 +31,8 @@ import {
   Wrench,
   FileText,
   Megaphone,
-  QrCode
+  QrCode,
+  MessageSquare
 } from 'lucide-react';
 import { DashboardHome } from './DashboardHome';
 import { LedgerTable } from './LedgerTable';
@@ -48,6 +49,7 @@ import { AssetsPanel } from './AssetsPanel';
 import { TasksPanel } from './TasksPanel';
 import { DocumentsPanel } from './DocumentsPanel';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
+import { MessagesPanel } from './MessagesPanel';
 
 import { useParams, useRouter } from 'next/navigation';
 import { AppConfig } from '@/lib/config';
@@ -196,11 +198,11 @@ export function DashboardShell() {
   const VALID_TABS = [
     'dashboard', 'ledger', 'organizations', 'people', 'reports', 'logs',
     'settings', 'users', 'meetings', 'members', 'events', 'assets',
-    'tasks', 'documents', 'announcements'
+    'tasks', 'documents', 'announcements', 'messages'
   ];
 
   const currentTab = VALID_TABS.includes(resolvedTab)
-    ? (resolvedTab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements')
+    ? (resolvedTab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements' | 'messages')
     : 'dashboard';
 
   const setCurrentTab = (tab: string) => {
@@ -411,8 +413,11 @@ export function DashboardShell() {
         } else if (dest === 'users' && role === 'Super Admin') {
           setCurrentTab('users');
           output = 'Navigating to user access control...';
+        } else if (dest === 'messages' || dest === 'chat') {
+          setCurrentTab('messages');
+          output = 'Navigating to messages...';
         } else {
-          output = 'Invalid tab. Options: dash, ledger, orgs, people, reports, logs, settings, users';
+          output = 'Invalid tab. Options: dash, ledger, orgs, people, reports, logs, settings, users, messages';
         }
         break;
       }
@@ -848,6 +853,21 @@ export function DashboardShell() {
             <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'documents' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>U</kbd>
           </button>
 
+          {/* Messages */}
+          <button
+            onClick={() => setCurrentTab('messages')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${currentTab === 'messages'
+                ? 'bg-primary text-black font-bold'
+                : 'text-text-body hover:bg-bg-elevated hover:text-text-heading'
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-4 h-4" />
+              <span>Messages</span>
+            </div>
+            <kbd className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${currentTab === 'messages' ? 'bg-black/10 text-black' : 'bg-bg-primary text-text-muted border border-border-normal'}`}>C</kbd>
+          </button>
+
           {/* Ledger */}
           <button
             onClick={() => setCurrentTab('ledger')}
@@ -1269,6 +1289,12 @@ export function DashboardShell() {
               </div>
             )}
 
+            {mountedTabs.has('messages') && (
+              <div className={currentTab === 'messages' ? 'block' : 'hidden'}>
+                <MessagesPanel />
+              </div>
+            )}
+
           </div>
         </main>
       </div>
@@ -1390,6 +1416,7 @@ export function DashboardShell() {
                 { tab: 'members', label: 'Members', icon: <User className="w-5 h-5" /> },
                 { tab: 'assets', label: 'Assets', icon: <Wrench className="w-5 h-5" /> },
                 { tab: 'documents', label: 'Documents', icon: <FileText className="w-5 h-5" /> },
+                { tab: 'messages', label: 'Messages', icon: <MessageSquare className="w-5 h-5" /> },
                 { tab: 'ledger', label: 'Ledger', icon: <ReceiptText className="w-5 h-5" /> },
                 { tab: 'people', label: 'People', icon: <Users className="w-5 h-5" /> },
                 { tab: 'organizations', label: 'Organizations', icon: <Building2 className="w-5 h-5" /> },
@@ -1401,7 +1428,7 @@ export function DashboardShell() {
                 <button
                   key={item.tab}
                   onClick={() => {
-                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements');
+                    setCurrentTab(item.tab as 'dashboard' | 'ledger' | 'organizations' | 'people' | 'reports' | 'logs' | 'settings' | 'users' | 'meetings' | 'members' | 'events' | 'assets' | 'tasks' | 'documents' | 'announcements' | 'messages');
                     setShowMobileSidebar(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${currentTab === item.tab

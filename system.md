@@ -208,17 +208,26 @@ Below is the complete, exhaustive list of all 15 Sidebar Navigation Modules and 
   - "New Message" button → opens member picker modal
   - Conversation cards: Avatar, Name, Last message preview, Timestamp, Unread count
 - **Right Pane — Active Chat View**:
-  - Chat header: Conversation name, member count (groups), avatar
-  - Message bubbles with sender name, timestamp, and read receipts (✓ sent, ✓✓ read)
+  - Chat header: Conversation name, member count (groups), avatar, **Refresh Button** (with spin animation)
+  - Message bubbles with sender name, timestamp, read receipts (✓ sent, ✓✓ read), and hover options menu
   - Message types:
     - **Text Messages**: Rich text with whitespace preservation and link detection
     - **File Attachments**: Download card with filename, file size, MIME type, and download button
     - **Image Messages**: Inline image preview with click-to-expand in new tab
     - **Location Sharing**: Coordinates card with OpenStreetMap link preview
+- **Message Editing & Deletion**:
+  - **Edit Sent Messages**: Senders can edit their text messages; edited messages display `(edited)` tag
+  - **Delete for Me**: Removes message locally for current user
+  - **Delete for Everyone**: (Sender/Admin only) Replaces message content with *"This message was deleted"*
+- **Push Notifications & Real-Time Sync**:
+  - **Browser Push Notifications**: Native Web Push / Desktop Notification triggered when a new message arrives from another member
+  - **Database Notifications**: Creates `Notification` records on incoming messages
+  - **Fast Real-Time Polling**: 2-second message refresh interval + automatic re-sync on window focus/tab restore
+  - **Manual Refresh Button**: Dedicated refresh icon in chat header to force instant sync
 - **New Conversation Modal**:
   - Toggle between "Direct Message" (1-on-1) and "Group Chat" modes
   - Group Name input (for group chats)
-  - Member search & multi-select picker
+  - Member search & multi-select picker (combines `User` accounts, `Member` directory, and `Super Admin`)
   - Selected member chips with remove action
 - **Group Management Sub-Section**:
   - Leave Group action
@@ -228,8 +237,8 @@ Below is the complete, exhaustive list of all 15 Sidebar Navigation Modules and 
   - 📎 File Attachment button → file upload via existing upload API
   - 📍 Location button → browser Geolocation API sharing
   - Send button
-- **Real-Time Polling**: Messages auto-refresh every 4 seconds, conversation list every 8 seconds.
 - **DM Deduplication**: Prevents creating duplicate DM conversations between the same two users.
+
 
 ---
 
