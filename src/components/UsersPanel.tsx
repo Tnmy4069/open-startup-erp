@@ -4,8 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from '@/context/AppContext';
 import {
   Plus, Trash2, Edit2, X, Eye, EyeOff, CheckCircle, AlertCircle, Loader,
-  Send, Bell, BellOff, ToggleLeft, ToggleRight, Users, WifiOff
+  Send, Bell, BellOff, ToggleLeft, ToggleRight, Users, WifiOff,
+  Shield, Lock, RotateCcw, Check, LayoutGrid, Sliders
 } from 'lucide-react';
+import { AppConfig } from '@/lib/config';
 
 interface DBUser {
   id: string;
@@ -18,7 +20,13 @@ interface DBUser {
 }
 
 const ROLE_OPTIONS: UserRole[] = [
-  // 'Super Admin',
+  'Co-Founder',
+  'Founder',
+  'Committee Member',
+  'Read Only',
+];
+
+const TARGET_ROLES: UserRole[] = [
   'Co-Founder',
   'Founder',
   'Committee Member',
@@ -33,15 +41,38 @@ const ROLE_COLOR: Record<string, string> = {
   'Read Only': 'bg-text-muted/10 text-text-muted border-border-normal',
 };
 
-import { AppConfig } from '@/lib/config';
+const ALL_MODULES = [
+  { id: 'dashboard', label: '📊 Dashboard', desc: 'KPI Overview & Quick Actions' },
+  { id: 'meetings', label: '📝 Meetings', desc: 'Notes & Agenda' },
+  { id: 'tasks', label: '📋 Tasks', desc: 'Kanban Task Board' },
+  { id: 'events', label: '📅 Events', desc: 'Events & RSVP Passes' },
+  { id: 'members', label: '👥 Members', desc: 'Team Directory' },
+  { id: 'assets', label: '🛠️ Assets', desc: 'Hardware & Assets' },
+  { id: 'documents', label: '📄 Documents', desc: 'Files & Wiki' },
+  { id: 'messages', label: '💬 Messages', desc: 'Team Chat & File Sharing' },
+  { id: 'ledger', label: '💰 Ledger', desc: 'Financial Accounting' },
+  { id: 'people', label: '👤 People', desc: 'External Stakeholders' },
+  { id: 'organizations', label: '🏢 Organizations', desc: 'Partners & Sponsors' },
+  { id: 'reports', label: '📊 Reports', desc: 'Financial Statements' },
+  { id: 'users', label: '🛡️ Users', desc: 'User Access Control' },
+  { id: 'logs', label: '📜 Activity Log', desc: 'System Audit Trail' },
+  { id: 'settings', label: '⚙️ Settings', desc: 'System Configuration' },
+];
 
 export function UsersPanel() {
+  const [panelTab, setPanelTab] = useState<'users' | 'permissions' | 'broadcast'>('users');
   const [users, setUsers] = useState<DBUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState<DBUser | null>(null);
   const [notification, setNotification] = useState<{ msg: string; ok: boolean } | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Module Permissions State
+  const [permissionsMatrix, setPermissionsMatrix] = useState<Record<string, string[]>>({});
+  const [defaultPermissions, setDefaultPermissions] = useState<Record<string, string[]>>({});
+  const [permLoading, setPermLoading] = useState(false);
+  const [savingPerms, setSavingPerms] = useState(false);
 
   // Add / Edit form state
   const [formUsername, setFormUsername] = useState('');
@@ -61,6 +92,71 @@ export function UsersPanel() {
   const notify = (msg: string, ok: boolean) => {
     setNotification({ msg, ok });
     setTimeout(() => setNotification(null), 3500);
+  };
+
+  // ── Fetch Permissions ───────────────────────────────────────────────────
+  const fetchPermissions = useCallback(async () => {
+    setPermLoading(true);
+    try {
+      const res = await fetch('/api/settings/permissions');
+      if (res.ok) {
+        const data = await res.json();
+        setPermissionsMatrix(data.permissions || {});
+        setDefaultPermissions(data.defaultPermissions || {});
+      }
+    } catch {
+      // Quiet
+    } finally {
+      setPermLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [fetchPermissions]);
+
+  // ── Save Permissions Matrix ─────────────────────────────────────────────
+  const handleSavePermissions = async () => {
+    setSavingPerms(true);
+    try {
+      const res = await fetch('/api/settings/permissions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions: permissionsMatrix }),
+      });
+      if (res.ok) {
+        notify('Role sidebar module permissions saved successfully!', true);
+      } else {
+        const data = await res.json();
+        notify(data.error || 'Failed to save permissions.', false);
+      }
+    } catch {
+      notify('Network error saving permissions.', false);
+    } finally {
+      setSavingPerms(false);
+    }
+  };
+
+  // ── Toggle Single Permission ────────────────────────────────────────────
+  const togglePermission = (role: string, moduleId: string) => {
+    setPermissionsMatrix((prev) => {
+      const currentList = prev[role] || [];
+      const hasModule = currentList.includes(moduleId);
+      const updatedList = hasModule
+        ? currentList.filter((m) => m !== moduleId)
+        : [...currentList, moduleId];
+      return { ...prev, [role]: updatedList };
+    });
+  };
+
+  // ── Toggle All Modules for Role ──────────────────────────────────────────
+  const toggleAllForRole = (role: string) => {
+    setPermissionsMatrix((prev) => {
+      const currentList = prev[role] || [];
+      const allModuleIds = ALL_MODULES.map((m) => m.id);
+      const hasAll = allModuleIds.every((id) => currentList.includes(id));
+      return { ...prev, [role]: hasAll ? ['dashboard'] : allModuleIds };
+    });
   };
 
   const handleBroadcastSubmit = async (e: React.FormEvent) => {
@@ -207,282 +303,428 @@ export function UsersPanel() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-text-heading font-display tracking-wide">
-            {'// User Access Control'}
+          <h2 className="text-xl font-bold text-text-heading font-display tracking-wide flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            {'// User & Module Access Control'}
           </h2>
           <p className="text-[10px] text-text-muted font-mono mt-0.5">
-            Super Admin &mdash; manage system users, roles, and access status
+            Super Admin &mdash; manage accounts, roles, push alerts, and sidebar module visibility
           </p>
         </div>
+        {panelTab === 'users' && (
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-semibold text-xs transition-all duration-150 shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Add User
+          </button>
+        )}
+      </div>
+
+      {/* Navigation Sub-Tabs */}
+      <div className="flex gap-2 border-b border-border-normal pb-3">
         <button
-          onClick={openAdd}
-          className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-semibold text-xs transition-all duration-150 shrink-0"
+          onClick={() => setPanelTab('users')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            panelTab === 'users'
+              ? 'bg-primary text-black'
+              : 'bg-bg-surface text-text-muted border border-border-normal hover:border-primary'
+          }`}
         >
-          <Plus className="w-4 h-4" />
-          Add User
+          <Users className="w-4 h-4" /> User Accounts ({users.length})
+        </button>
+        <button
+          onClick={() => setPanelTab('permissions')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            panelTab === 'permissions'
+              ? 'bg-primary text-black'
+              : 'bg-bg-surface text-text-muted border border-border-normal hover:border-primary'
+          }`}
+        >
+          <Sliders className="w-4 h-4" /> Role & Sidebar Module Access
+        </button>
+        <button
+          onClick={() => setPanelTab('broadcast')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            panelTab === 'broadcast'
+              ? 'bg-primary text-black'
+              : 'bg-bg-surface text-text-muted border border-border-normal hover:border-primary'
+          }`}
+        >
+          <Send className="w-4 h-4" /> Broadcast Push Alerts
         </button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Users className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] font-mono text-text-muted tracking-wider">TOTAL USERS</p>
-            <p className="text-xl font-bold text-text-heading font-display">{users.length}</p>
-          </div>
-        </div>
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-cyber-success/10 flex items-center justify-center shrink-0">
-            <ToggleRight className="w-4 h-4 text-cyber-success" />
-          </div>
-          <div>
-            <p className="text-[10px] font-mono text-text-muted tracking-wider">ACTIVE</p>
-            <p className="text-xl font-bold text-cyber-success font-display">{activeCount}</p>
-          </div>
-        </div>
-        <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-cyber-danger/10 flex items-center justify-center shrink-0">
-            <ToggleLeft className="w-4 h-4 text-cyber-danger" />
-          </div>
-          <div>
-            <p className="text-[10px] font-mono text-text-muted tracking-wider">INACTIVE</p>
-            <p className="text-xl font-bold text-cyber-danger font-display">{inactiveCount}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Toast */}
+      {/* Toast Notification */}
       {notification && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-[11px] font-mono animate-in fade-in duration-150 ${notification.ok
-          ? 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
-          : 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
-          }`}>
-          {notification.ok
-            ? <CheckCircle className="w-4 h-4 shrink-0" />
-            : <AlertCircle className="w-4 h-4 shrink-0" />}
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-[11px] font-mono animate-in fade-in duration-150 ${
+          notification.ok
+            ? 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
+            : 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
+        }`}>
+          {notification.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
           {notification.msg}
         </div>
       )}
 
-      {/* Users Table */}
-      <div className="bg-bg-surface border border-border-normal rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs font-sans">
-            <thead>
-              <tr className="border-b border-border-normal bg-bg-elevated/40 text-text-muted font-mono text-[10px]">
-                <th className="py-3.5 px-4">USERNAME</th>
-                <th className="py-3.5 px-4">ROLE</th>
-                <th className="py-3.5 px-4">STATUS</th>
-                <th className="py-3.5 px-4">PUSH NOTIFS</th>
-                <th className="py-3.5 px-4 hidden sm:table-cell">CREATED</th>
-                <th className="py-3.5 px-4 text-center w-28">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-normal text-text-body">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-10 text-center text-text-muted font-mono animate-pulse">
-                    <Loader className="w-4 h-4 animate-spin inline mr-2" />
-                    {'// Loading user registry...'}
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-10 text-center text-text-muted font-mono">
-                    {'// No sub-role users found. Add one above.'}
-                  </td>
-                </tr>
-              ) : (
-                users.map((u) => (
-                  <tr
-                    key={u.id}
-                    className={`hover:bg-bg-elevated/20 transition-colors ${!u.isActive ? 'opacity-60' : ''}`}
-                  >
-                    {/* Username */}
-                    <td className="py-3 px-4 font-mono font-semibold text-text-heading">
-                      <div className="flex items-center gap-2">
-                        {u.username}
-                        {!u.isActive && (
-                          <span className="text-[8px] font-mono bg-cyber-danger/10 text-cyber-danger border border-cyber-danger/20 px-1.5 py-0.5 rounded-full">
-                            DISABLED
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Role */}
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold font-mono border ${ROLE_COLOR[u.role] || 'bg-bg-elevated text-text-muted'}`}>
-                        {u.role}
-                      </span>
-                    </td>
-
-                    {/* Active Status Toggle */}
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleToggleActive(u)}
-                        disabled={togglingId === u.id}
-                        title={u.isActive ? 'Click to deactivate' : 'Click to activate'}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold border transition-all cursor-pointer ${u.isActive
-                          ? 'bg-cyber-success/10 text-cyber-success border-cyber-success/25 hover:bg-cyber-success/20'
-                          : 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/25 hover:bg-cyber-danger/20'
-                          }`}
-                      >
-                        {togglingId === u.id ? (
-                          <Loader className="w-3 h-3 animate-spin" />
-                        ) : u.isActive ? (
-                          <ToggleRight className="w-3.5 h-3.5" />
-                        ) : (
-                          <ToggleLeft className="w-3.5 h-3.5" />
-                        )}
-                        {u.isActive ? 'Active' : 'Inactive'}
-                      </button>
-                    </td>
-
-                    {/* Push Subscription */}
-                    <td className="py-3 px-4">
-                      {u.hasSubscription ? (
-                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-cyber-info">
-                          <Bell className="w-3.5 h-3.5" />
-                          <span>Subscribed</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted">
-                          <BellOff className="w-3.5 h-3.5" />
-                          <span>No device</span>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Created */}
-                    <td className="py-3 px-4 text-text-muted hidden sm:table-cell">
-                      {new Date(u.createdAt).toLocaleDateString()}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => openEdit(u)}
-                          className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
-                          title="Edit User"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(u)}
-                          className="p-1.5 rounded bg-bg-elevated hover:bg-cyber-danger/15 text-text-muted hover:text-cyber-danger transition-colors"
-                          title="Delete User"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer legend */}
-        {!loading && users.length > 0 && (
-          <div className="px-4 py-2.5 border-t border-border-normal bg-bg-elevated/20 flex flex-wrap items-center gap-4 text-[10px] font-mono text-text-muted">
-            <span className="flex items-center gap-1.5">
-              <Bell className="w-3 h-3 text-cyber-info" />
-              {subscribedCount} of {users.length} users have push notifications enabled
-            </span>
-            <span className="flex items-center gap-1.5">
-              <WifiOff className="w-3 h-3" />
-              {users.length - subscribedCount} without device subscription
-            </span>
+      {/* ──────────────── TAB 1: USER ACCOUNTS ──────────────── */}
+      {panelTab === 'users' && (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-mono text-text-muted tracking-wider">TOTAL USERS</p>
+                <p className="text-xl font-bold text-text-heading font-display">{users.length}</p>
+              </div>
+            </div>
+            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-cyber-success/10 flex items-center justify-center shrink-0">
+                <ToggleRight className="w-4 h-4 text-cyber-success" />
+              </div>
+              <div>
+                <p className="text-[10px] font-mono text-text-muted tracking-wider">ACTIVE</p>
+                <p className="text-xl font-bold text-cyber-success font-display">{activeCount}</p>
+              </div>
+            </div>
+            <div className="bg-bg-surface border border-border-normal rounded-xl p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-cyber-danger/10 flex items-center justify-center shrink-0">
+                <ToggleLeft className="w-4 h-4 text-cyber-danger" />
+              </div>
+              <div>
+                <p className="text-[10px] font-mono text-text-muted tracking-wider">INACTIVE</p>
+                <p className="text-xl font-bold text-cyber-danger font-display">{inactiveCount}</p>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Broadcast Push Notification */}
-      <div className="bg-bg-surface border border-border-normal rounded-xl p-6 mt-6">
-        <h3 className="text-sm font-display font-bold text-text-heading mb-4 flex items-center gap-2">
-          <Send className="w-4 h-4 text-primary" />
-          {'// Broadcast Push Notification'}
-        </h3>
-        <p className="text-xs text-text-muted mb-4 font-sans">
-          Send a push alert directly to all active browser sessions and home screen installations of {AppConfig.name}.
-          <span className="ml-2 font-mono text-cyber-info">{subscribedCount} subscribed device{subscribedCount !== 1 ? 's' : ''} will receive this.</span>
-        </p>
+          {/* Users Table */}
+          <div className="bg-bg-surface border border-border-normal rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs font-sans">
+                <thead>
+                  <tr className="border-b border-border-normal bg-bg-elevated/40 text-text-muted font-mono text-[10px]">
+                    <th className="py-3.5 px-4">USERNAME</th>
+                    <th className="py-3.5 px-4">ROLE</th>
+                    <th className="py-3.5 px-4">STATUS</th>
+                    <th className="py-3.5 px-4">PUSH NOTIFS</th>
+                    <th className="py-3.5 px-4 hidden sm:table-cell">CREATED</th>
+                    <th className="py-3.5 px-4 text-center w-28">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-normal text-text-body">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-text-muted font-mono animate-pulse">
+                        <Loader className="w-4 h-4 animate-spin inline mr-2" />
+                        {'// Loading user registry...'}
+                      </td>
+                    </tr>
+                  ) : users.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-text-muted font-mono">
+                        {'// No sub-role users found. Add one above.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((u) => (
+                      <tr
+                        key={u.id}
+                        className={`hover:bg-bg-elevated/20 transition-colors ${!u.isActive ? 'opacity-60' : ''}`}
+                      >
+                        {/* Username */}
+                        <td className="py-3 px-4 font-mono font-semibold text-text-heading">
+                          <div className="flex items-center gap-2">
+                            {u.username}
+                            {!u.isActive && (
+                              <span className="text-[8px] font-mono bg-cyber-danger/10 text-cyber-danger border border-cyber-danger/20 px-1.5 py-0.5 rounded-full">
+                                DISABLED
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
-        <form onSubmit={handleBroadcastSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Role */}
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold font-mono border ${ROLE_COLOR[u.role] || 'bg-bg-elevated text-text-muted'}`}>
+                            {u.role}
+                          </span>
+                        </td>
+
+                        {/* Active Status Toggle */}
+                        <td className="py-3 px-4">
+                          <button
+                            onClick={() => handleToggleActive(u)}
+                            disabled={togglingId === u.id}
+                            title={u.isActive ? 'Click to deactivate' : 'Click to activate'}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold border transition-all cursor-pointer ${u.isActive
+                              ? 'bg-cyber-success/10 text-cyber-success border-cyber-success/25 hover:bg-cyber-success/20'
+                              : 'bg-cyber-danger/10 text-cyber-danger border-cyber-danger/25 hover:bg-cyber-danger/20'
+                              }`}
+                          >
+                            {togglingId === u.id ? (
+                              <Loader className="w-3 h-3 animate-spin" />
+                            ) : u.isActive ? (
+                              <ToggleRight className="w-3.5 h-3.5" />
+                            ) : (
+                              <ToggleLeft className="w-3.5 h-3.5" />
+                            )}
+                            {u.isActive ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
+
+                        {/* Push Subscription */}
+                        <td className="py-3 px-4">
+                          {u.hasSubscription ? (
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-cyber-info">
+                              <Bell className="w-3.5 h-3.5" />
+                              <span>Subscribed</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted">
+                              <BellOff className="w-3.5 h-3.5" />
+                              <span>No device</span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Created */}
+                        <td className="py-3 px-4 text-text-muted hidden sm:table-cell">
+                          {new Date(u.createdAt).toLocaleDateString()}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => openEdit(u)}
+                              className="p-1.5 rounded bg-bg-elevated hover:bg-bg-primary text-text-muted hover:text-text-heading transition-colors"
+                              title="Edit User"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(u)}
+                              className="p-1.5 rounded bg-bg-elevated hover:bg-cyber-danger/15 text-text-muted hover:text-cyber-danger transition-colors"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer legend */}
+            {!loading && users.length > 0 && (
+              <div className="px-4 py-2.5 border-t border-border-normal bg-bg-elevated/20 flex flex-wrap items-center gap-4 text-[10px] font-mono text-text-muted">
+                <span className="flex items-center gap-1.5">
+                  <Bell className="w-3 h-3 text-cyber-info" />
+                  {subscribedCount} of {users.length} users have push notifications enabled
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <WifiOff className="w-3 h-3" />
+                  {users.length - subscribedCount} without device subscription
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ──────────────── TAB 2: ROLE & MODULE ACCESS MATRIX ──────────────── */}
+      {panelTab === 'permissions' && (
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-6 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-normal/60 pb-4">
+            <div>
+              <h3 className="text-base font-bold text-text-heading font-display flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-primary" />
+                {'// Role Sidebar Module Permissions Matrix'}
+              </h3>
+              <p className="text-xs text-text-muted mt-1">
+                Toggle ON/OFF which sidebar modules and features are accessible for each user role in the system.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setPermissionsMatrix(defaultPermissions)}
+                className="px-3 py-2 rounded-xl bg-bg-elevated text-text-muted hover:text-text-heading text-xs font-mono font-bold border border-border-normal transition-colors cursor-pointer flex items-center gap-1.5"
+                title="Reset matrix to default settings"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Reset Default
+              </button>
+              <button
+                onClick={handleSavePermissions}
+                disabled={savingPerms}
+                className="px-4 py-2 rounded-xl bg-primary text-black text-xs font-mono font-bold hover:bg-opacity-90 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              >
+                {savingPerms ? <Loader className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                Save Permissions
+              </button>
+            </div>
+          </div>
+
+          {/* Matrix Table */}
+          {permLoading ? (
+            <div className="py-12 text-center text-xs text-text-muted font-mono animate-pulse">
+              Loading role permissions matrix...
+            </div>
+          ) : (
+            <div className="overflow-x-auto border border-border-normal rounded-xl">
+              <table className="w-full text-left border-collapse text-xs font-sans">
+                <thead>
+                  <tr className="border-b border-border-normal bg-bg-elevated text-text-muted font-mono text-[10px] uppercase">
+                    <th className="py-3 px-4 min-w-[200px]">Sidebar Module</th>
+                    <th className="py-3 px-4 text-center text-cyber-danger bg-cyber-danger/5">Super Admin</th>
+                    {TARGET_ROLES.map((r) => (
+                      <th key={r} className="py-3 px-4 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>{r}</span>
+                          <button
+                            onClick={() => toggleAllForRole(r)}
+                            className="text-[9px] text-primary hover:underline font-mono normal-case cursor-pointer"
+                          >
+                            Toggle All
+                          </button>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-normal/60 text-text-body">
+                  {ALL_MODULES.map((mod) => (
+                    <tr key={mod.id} className="hover:bg-bg-elevated/30 transition-colors">
+                      {/* Module Info */}
+                      <td className="py-3 px-4 font-mono">
+                        <span className="font-bold text-text-heading block">{mod.label}</span>
+                        <span className="text-[10px] text-text-muted font-sans">{mod.desc}</span>
+                      </td>
+
+                      {/* Super Admin Always ON */}
+                      <td className="py-3 px-4 text-center bg-cyber-danger/5">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyber-danger/10 text-cyber-danger text-[10px] font-mono font-bold rounded-full">
+                          <Lock className="w-3 h-3" /> ALL ON
+                        </span>
+                      </td>
+
+                      {/* Target Roles Toggles */}
+                      {TARGET_ROLES.map((r) => {
+                        const allowed = (permissionsMatrix[r] || []).includes(mod.id);
+                        return (
+                          <td key={r} className="py-3 px-4 text-center">
+                            <button
+                              onClick={() => togglePermission(r, mod.id)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold transition-all cursor-pointer border ${
+                                allowed
+                                  ? 'bg-cyber-success/15 text-cyber-success border-cyber-success/30 hover:bg-cyber-success/25'
+                                  : 'bg-bg-primary text-text-muted border-border-normal hover:border-cyber-danger/40 hover:text-cyber-danger'
+                              }`}
+                            >
+                              {allowed ? <ToggleRight className="w-4 h-4 text-cyber-success" /> : <ToggleLeft className="w-4 h-4 text-text-muted" />}
+                              {allowed ? 'ENABLED' : 'OFF'}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ──────────────── TAB 3: BROADCAST PUSH NOTIFICATIONS ──────────────── */}
+      {panelTab === 'broadcast' && (
+        <div className="bg-bg-surface border border-border-normal rounded-xl p-6">
+          <h3 className="text-sm font-display font-bold text-text-heading mb-4 flex items-center gap-2">
+            <Send className="w-4 h-4 text-primary" />
+            {'// Broadcast Push Notification'}
+          </h3>
+          <p className="text-xs text-text-muted mb-4 font-sans">
+            Send a push alert directly to all active browser sessions and home screen installations of {AppConfig.name}.
+            <span className="ml-2 font-mono text-cyber-info">{subscribedCount} subscribed device{subscribedCount !== 1 ? 's' : ''} will receive this.</span>
+          </p>
+
+          <form onSubmit={handleBroadcastSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-mono text-text-muted tracking-wider">NOTIFICATION TITLE</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Campus Session Scheduled"
+                  value={broadcastTitle}
+                  onChange={(e) => setBroadcastTitle(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all font-sans"
+                  required
+                  disabled={sendingBroadcast}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-mono text-text-muted tracking-wider">TARGET REDIRECT PATH / URL</label>
+                <input
+                  type="text"
+                  placeholder="e.g., /dashboard?tab=events"
+                  value={broadcastUrl}
+                  onChange={(e) => setBroadcastUrl(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all font-mono"
+                  disabled={sendingBroadcast}
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
-              <label className="text-[10px] font-mono text-text-muted tracking-wider">NOTIFICATION TITLE</label>
-              <input
-                type="text"
-                placeholder="e.g., Campus Session Scheduled"
-                value={broadcastTitle}
-                onChange={(e) => setBroadcastTitle(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all font-sans"
+              <label className="text-[10px] font-mono text-text-muted tracking-wider">ALERT MESSAGE / BODY</label>
+              <textarea
+                placeholder="Enter push alert message description..."
+                value={broadcastBody}
+                onChange={(e) => setBroadcastBody(e.target.value)}
+                className="w-full h-20 p-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all resize-none font-sans"
                 required
                 disabled={sendingBroadcast}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-mono text-text-muted tracking-wider">TARGET REDIRECT PATH / URL</label>
-              <input
-                type="text"
-                placeholder="e.g., /dashboard?tab=events"
-                value={broadcastUrl}
-                onChange={(e) => setBroadcastUrl(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all font-mono"
-                disabled={sendingBroadcast}
-              />
+
+            {broadcastStatus && (
+              <div className={`p-3 rounded-lg text-xs font-mono border ${broadcastStatus.startsWith('Error')
+                  ? 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
+                  : 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
+                }`}>
+                {broadcastStatus}
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={sendingBroadcast || !broadcastTitle || !broadcastBody}
+                className="px-5 h-10 rounded-lg bg-primary hover:bg-opacity-90 disabled:opacity-50 text-black font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
+              >
+                {sendingBroadcast ? (
+                  <>
+                    <Loader className="w-3.5 h-3.5 animate-spin" />
+                    <span>Broadcasting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send Broadcast Alert</span>
+                  </>
+                )}
+              </button>
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono text-text-muted tracking-wider">ALERT MESSAGE / BODY</label>
-            <textarea
-              placeholder="Enter push alert message description..."
-              value={broadcastBody}
-              onChange={(e) => setBroadcastBody(e.target.value)}
-              className="w-full h-20 p-3 rounded-lg border border-border-normal bg-bg-primary text-sm text-text-heading focus:outline-none focus:border-primary placeholder-text-muted transition-all resize-none font-sans"
-              required
-              disabled={sendingBroadcast}
-            />
-          </div>
-
-          {broadcastStatus && (
-            <div className={`p-3 rounded-lg text-xs font-mono border ${broadcastStatus.startsWith('Error')
-                ? 'bg-cyber-danger/10 border-cyber-danger/30 text-cyber-danger'
-                : 'bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
-              }`}>
-              {broadcastStatus}
-            </div>
-          )}
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={sendingBroadcast || !broadcastTitle || !broadcastBody}
-              className="px-5 h-10 rounded-lg bg-primary hover:bg-opacity-90 disabled:opacity-50 text-black font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
-            >
-              {sendingBroadcast ? (
-                <>
-                  <Loader className="w-3.5 h-3.5 animate-spin" />
-                  <span>Broadcasting...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Broadcast Alert</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       {showAddModal && (

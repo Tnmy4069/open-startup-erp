@@ -27,8 +27,13 @@ import {
   FileSpreadsheet,
   Plus,
   LogOut,
-  User
+  User,
+  MessageSquare,
+  Shield,
+  ScrollText,
+  Settings
 } from 'lucide-react';
+
 import {
   ResponsiveContainer,
   AreaChart,
@@ -113,8 +118,22 @@ export function DashboardHome({
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
   const [typedWelcome, setTypedWelcome] = useState('');
-  
+
+
+  useEffect(() => {
+    fetch('/api/settings/permissions')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((resData) => {
+        if (resData?.permissions) {
+          const rolePerms = resData.permissions[role] || resData.permissions['Read Only'] || [];
+          setAllowedTabs(role === 'Super Admin' ? ['dashboard', 'meetings', 'tasks', 'events', 'members', 'assets', 'documents', 'messages', 'ledger', 'people', 'organizations', 'reports', 'users', 'logs', 'settings'] : rolePerms);
+        }
+      })
+      .catch(() => {});
+  }, [role]);
+
   useEffect(() => {
     const fullText = `ACCESS AUTHORIZED for role: ${role || 'MEMBER'}. CONNECTION ESTABLISHED.`;
     let currentIdx = 0;
@@ -127,6 +146,7 @@ export function DashboardHome({
     }, 25);
     return () => clearInterval(interval);
   }, [role]);
+
 
   const fetchData = async () => {
     try {
@@ -212,46 +232,56 @@ export function DashboardHome({
             { tab: 'members', label: 'Members', icon: <User className="w-5 h-5 text-primary" /> },
             { tab: 'assets', label: 'Assets', icon: <Wrench className="w-5 h-5 text-primary" /> },
             { tab: 'documents', label: 'Documents', icon: <FileText className="w-5 h-5 text-primary" /> },
+            { tab: 'messages', label: 'Messages', icon: <MessageSquare className="w-5 h-5 text-primary" /> },
             { tab: 'ledger', label: 'Ledger', icon: <ReceiptText className="w-5 h-5 text-primary" /> },
             { tab: 'people', label: 'People', icon: <Users className="w-5 h-5 text-primary" /> },
             { tab: 'organizations', label: 'Orgs', icon: <Building2 className="w-5 h-5 text-primary" /> },
             { tab: 'reports', label: 'Reports', icon: <FileSpreadsheet className="w-5 h-5 text-primary" /> },
-          ].map((app) => (
-            <button
-              key={app.tab}
-              onClick={() => onSelectTab(app.tab)}
-              className="flex flex-col items-center justify-center p-3 rounded-lg border border-border-normal bg-bg-primary hover:border-primary transition-all duration-150 active:scale-95 cursor-pointer"
-            >
-              <div className="p-2 bg-primary/5 rounded-lg mb-1.5">{app.icon}</div>
-              <span className="text-[10px] text-text-heading font-medium tracking-tight truncate w-full">
-                {app.label}
-              </span>
-            </button>
-          ))}
+            { tab: 'users', label: 'Users', icon: <Shield className="w-5 h-5 text-primary" /> },
+            { tab: 'logs', label: 'Activity Log', icon: <ScrollText className="w-5 h-5 text-primary" /> },
+            { tab: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5 text-primary" /> },
+          ]
+            .filter((app) => role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes(app.tab))
+            .map((app) => (
+              <button
+                key={app.tab}
+                onClick={() => onSelectTab(app.tab)}
+                className="flex flex-col items-center justify-center p-3 rounded-lg border border-border-normal bg-bg-primary hover:border-primary transition-all duration-150 active:scale-95 cursor-pointer"
+              >
+                <div className="p-2 bg-primary/5 rounded-lg mb-1.5">{app.icon}</div>
+                <span className="text-[10px] text-text-heading font-medium tracking-tight truncate w-full">
+                  {app.label}
+                </span>
+              </button>
+            ))}
         </div>
 
         {/* Quick Actions Strip */}
         <div className="pt-3 border-t border-border-normal">
           <span className="text-[9px] font-mono text-text-muted tracking-wider block mb-2">QUICK ACTIONS</span>
           <div className="flex gap-2">
-            {onNewTransaction && (
+            {(role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes('messages')) && (
               <button
-                onClick={onNewTransaction}
+                onClick={() => onSelectTab('messages')}
                 className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-primary hover:bg-opacity-95 text-black font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>New Transaction</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>New Message</span>
               </button>
             )}
-            <button
-              onClick={() => onSelectTab('tasks')}
-              className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading font-semibold text-xs active:scale-95 transition-all cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-text-muted" />
-              <span>Create Task</span>
-            </button>
+
+            {(role === 'Super Admin' || allowedTabs.length === 0 || allowedTabs.includes('tasks')) && (
+              <button
+                onClick={() => onSelectTab('tasks')}
+                className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border border-border-normal bg-bg-primary hover:bg-bg-elevated text-text-heading font-semibold text-xs active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-text-muted" />
+                <span>Create Task</span>
+              </button>
+            )}
           </div>
         </div>
+
       </div>
 
       {/* -------------------- DYNAMIC DASHBOARD DATA -------------------- */}

@@ -99,7 +99,9 @@ model Setting {
   logoUrl          String?
   iconUrl          String?
   faviconUrl       String?
+  modulePermissions String? // JSON string: { [role]: [tab1, tab2, ...] }
 }
+
 
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
