@@ -451,6 +451,81 @@ export default function PublicEventPage() {
       errors: [
         { code: '404 Not Found', reason: 'Unrecognized or invalid QR string', solution: 'Verify ticket QR code string.' }
       ]
+    },
+    {
+      id: 'search-certificate',
+      title: 'Search Candidate Certificates API',
+      method: 'GET',
+      path: `/api/public/certificates?email=rahul.sharma@example.com`,
+      description: 'Search and retrieve verified event certificates for a candidate using their registered email address or name.',
+      sampleInput: `// Query Parameters\n?email=rahul.sharma@example.com\n// OR\n?q=Rahul`,
+      sampleResponse: JSON.stringify(
+        {
+          success: true,
+          count: 1,
+          certificates: [
+            {
+              id: '6699a2f10b2c1234567890ab',
+              certificateNo: 'CX-12345',
+              candidateName: 'Rahul Sharma',
+              candidateEmail: 'rahul.sharma@example.com',
+              eventTitle: event.title,
+              eventCategory: event.category || 'OSINT',
+              eventDate: '25th July, 2026',
+              descriptionTopic: event.title,
+              status: 'Attended',
+              logoUrl: `${currentOrigin}/cyberx-logo.webp`
+            }
+          ]
+        },
+        null,
+        2
+      ),
+      curl: `curl -X GET "${currentOrigin}/api/public/certificates?email=rahul.sharma@example.com"`,
+      errors: [
+        { code: '400 Bad Request', reason: 'Missing email or query parameter', solution: 'Pass email query parameter in URL.' }
+      ]
+    },
+    {
+      id: 'fetch-certificate',
+      title: 'Fetch Certificate by ID API',
+      method: 'GET',
+      path: `/api/public/certificates/CX-12345`,
+      description: 'Fetch complete metadata, candidate details, event information, and branding assets for a specific Certificate ID.',
+      sampleInput: `// Path Parameter\n/api/public/certificates/{certificateNo_or_registrationId}`,
+      sampleResponse: JSON.stringify(
+        {
+          success: true,
+          certificateNo: 'CX-12345',
+          candidateName: 'Rahul Sharma',
+          candidateEmail: 'rahul.sharma@example.com',
+          eventTitle: event.title,
+          eventCategory: event.category || 'OSINT',
+          eventDate: '25th July, 2026',
+          descriptionTopic: event.title,
+          status: 'Attended',
+          logoUrl: `${currentOrigin}/cyberx-logo.webp`
+        },
+        null,
+        2
+      ),
+      curl: `curl -X GET "${currentOrigin}/api/public/certificates/CX-12345"`,
+      errors: [
+        { code: '404 Not Found', reason: 'Certificate record not found in CyberX registry', solution: 'Ensure candidate is registered for event.' }
+      ]
+    },
+    {
+      id: 'download-certificate-png',
+      title: 'Download Certificate PNG Image API',
+      method: 'GET',
+      path: `/api/public/certificates/CX-12345/png?download=true`,
+      description: 'Generates and serves the real downloadable PNG image file directly (Content-Type: image/png). Can be used directly in <img> tags or downloaded via cURL / browser.',
+      sampleInput: `// Path & Query Parameters\n/api/public/certificates/{certificateNo}/png?download=true\n// OR\n/api/public/certificates/{certificateNo}?format=png`,
+      sampleResponse: `[BINARY PNG IMAGE BUFFER]\nContent-Type: image/png\nContent-Disposition: attachment; filename="CyberX_Certificate_CX-12345.png"`,
+      curl: `curl -O "${currentOrigin}/api/public/certificates/CX-12345/png?download=true"`,
+      errors: [
+        { code: '404 Not Found', reason: 'Certificate ID not found', solution: 'Verify target Certificate ID.' }
+      ]
     }
   ];
 
@@ -527,9 +602,71 @@ Check-In Scan API Specification:
 Script Requirements:
 1. Continuously prompt staff for QR code input (or read barcode/QR scanner input from stdin).
 2. Send POST request to ${currentOrigin}/api/events/scan.
-3. If response returns success: true, print "✅ CHECK-IN SUCCESSFUL: [Attendee Name]" in green text.
-4. If alreadyAttended is true, print "⚠️ ALREADY CHECKED IN!" in yellow text.
 5. If invalid QR code, print "❌ INVALID PASS CODE" in red text.`
+    },
+    {
+      id: 'certificate-portal',
+      title: 'Candidate Certificate Search & Download Component',
+      target: 'ChatGPT / Cursor / Copilot / Claude',
+      description: 'Generates a React component for candidates to search their registered email, view achievements, and download high-resolution PNG certificates.',
+      promptText: `Write a complete React / Next.js component (Tailwind CSS styled) for searching and downloading candidate event certificates for "${event.title}".
+
+API Specifications & Exact Response JSON Contracts:
+
+1. Search Certificates API Endpoint:
+   - Request: GET ${currentOrigin}/api/public/certificates?email=user@example.com
+   - Expected Success JSON Response (HTTP 200 OK):
+     {
+       "success": true,
+       "count": 1,
+       "certificates": [
+         {
+           "id": "6699a2f10b2c1234567890ab",
+           "certificateNo": "CX-12345",
+           "candidateName": "Rahul Sharma",
+           "candidateEmail": "user@example.com",
+           "eventTitle": "${event.title}",
+           "eventCategory": "${event.category}",
+           "eventDate": "25th July, 2026",
+           "descriptionTopic": "${event.title}",
+           "status": "Attended",
+           "logoUrl": "${currentOrigin}/cyberx-logo.webp"
+         }
+       ]
+     }
+
+2. Fetch Single Certificate Metadata API Endpoint:
+   - Request: GET ${currentOrigin}/api/public/certificates/CX-12345
+   - Expected Success JSON Response (HTTP 200 OK):
+     {
+       "success": true,
+       "certificateNo": "CX-12345",
+       "candidateName": "Rahul Sharma",
+       "candidateEmail": "user@example.com",
+       "eventTitle": "${event.title}",
+       "eventCategory": "${event.category}",
+       "eventDate": "25th July, 2026",
+       "descriptionTopic": "${event.title}",
+       "status": "Attended",
+       "logoUrl": "${currentOrigin}/cyberx-logo.webp"
+     }
+
+3. Download Real PNG Certificate Image API Endpoint:
+   - Request: GET ${currentOrigin}/api/public/certificates/CX-12345/png?download=true
+   - Request: GET ${currentOrigin}/api/public/certificates/CX-12345?format=png
+   - Response Headers:
+     Content-Type: image/png
+     Content-Disposition: attachment; filename="CyberX_Certificate_CX-12345.png"
+   - Response Body: Binary PNG Image File Buffer
+
+4. Public Certificate Portal Web Route:
+   - URL: ${currentOrigin}/public/certificates
+
+Component Requirements:
+1. Search form with email input field and submit button with a loading state.
+2. Render card results displaying candidate name, event title "${event.title}", date earned, and Certificate ID.
+3. Provide "View Certificate" modal button, "Download PNG" button linking directly to GET /api/public/certificates/{certificateNo}/png?download=true, and "Copy Shareable Link" button.
+4. If no certificates are found for the email, display a clear "No Certificates Found" message.`
     },
     {
       id: 'custom-system-prompt',
@@ -670,6 +807,43 @@ ENDPOINT 6: Venue Gate QR Code Scanner Check-In
     "message": "Check-in Successful! Marked Rahul Sharma as Attended.",
     "registration": { "name": "Rahul Sharma", "email": "rahul.sharma@example.com", "status": "Attended" }
   }
+
+----------------------------------------------------------------------
+ENDPOINT 7: Search & Fetch Candidate Certificates
+----------------------------------------------------------------------
+- Method & URL: GET ${currentOrigin}/api/public/certificates?email=rahul.sharma@example.com
+- Description: Searches and retrieves verified event certificates for a candidate by email address.
+- Query Parameters: ?email=user@example.com OR ?q=query
+- Expected Response (HTTP 200 OK):
+  {
+    "success": true,
+    "count": 1,
+    "certificates": [
+      {
+        "id": "6699a2f10b2c1234567890ab",
+        "certificateNo": "CX-12345",
+        "candidateName": "Rahul Sharma",
+        "candidateEmail": "rahul.sharma@example.com",
+        "eventTitle": "${event.title}",
+        "eventCategory": "${event.category}",
+        "eventDate": "25th July, 2026",
+        "descriptionTopic": "${event.title}",
+        "status": "Attended",
+        "logoUrl": "${currentOrigin}/cyberx-logo.webp"
+      }
+    ]
+  }
+
+----------------------------------------------------------------------
+ENDPOINT 8: Direct PNG Certificate Image File Stream / Download
+----------------------------------------------------------------------
+- Method & URL: GET ${currentOrigin}/api/public/certificates/CX-12345/png?download=true
+- Method & URL: GET ${currentOrigin}/api/public/certificates/CX-12345?format=png
+- Description: Serves the real downloadable PNG image file directly (Content-Type: image/png).
+- Response Headers:
+  Content-Type: image/png
+  Content-Disposition: attachment; filename="CyberX_Certificate_CX-12345.png"
+- Response Body: Binary PNG Image File Buffer
 
 ======================================================================
 3. INSTRUCTIONS FOR CODE GENERATION

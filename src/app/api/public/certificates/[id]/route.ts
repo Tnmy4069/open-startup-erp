@@ -15,6 +15,13 @@ export async function GET(
     }
 
     const cleanQuery = rawId.replace(/^CX-?/i, '').toLowerCase();
+    const format = request.nextUrl.searchParams.get('format');
+    const download = request.nextUrl.searchParams.get('download');
+    if (format === 'png' || download === 'true') {
+      const targetUrl = new URL(`/api/public/certificates/${encodeURIComponent(rawId)}/png`, request.url);
+      if (download === 'true') targetUrl.searchParams.set('download', 'true');
+      return NextResponse.redirect(targetUrl);
+    }
 
     // Fetch registered candidates from database
     let registrations: any[] = [];
