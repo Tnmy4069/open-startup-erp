@@ -38,6 +38,7 @@ import {
   UserX,
   Star
 } from 'lucide-react';
+import { CertificateModal, CertificateData } from './CertificateModal';
 
 interface EventRegistration {
   id: string;
@@ -106,6 +107,31 @@ export function EventsPanel() {
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [attendeesStats, setAttendeesStats] = useState<EventStats | null>(null);
   const [copiedQrId, setCopiedQrId] = useState<string | null>(null);
+
+  // Certificate Modal state
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [certModalData, setCertModalData] = useState<CertificateData | null>(null);
+
+  const handleOpenCertificate = (reg: EventRegistration, eventItem?: Event | null) => {
+    const activeEv = eventItem || selectedEvent;
+    const formattedDate = activeEv?.startDate 
+      ? new Date(activeEv.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) 
+      : new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    setCertModalData({
+      certificateNo: `CX-${reg.id.slice(-5).toUpperCase()}`,
+      candidateName: reg.name,
+      eventTitle: activeEv?.title || 'CyberX Event Workshop',
+      eventCategory: activeEv?.category || 'OSINT',
+      eventDate: formattedDate,
+      descriptionTopic: activeEv?.title || 'Cybersecurity & Digital Footprints',
+      signatory1Name: 'Saad Sarraj',
+      signatory1Title: 'OSINT Investigator',
+      signatory2Name: 'Abhishek Pawar',
+      signatory2Title: 'Co Founder & Lead',
+    });
+    setShowCertModal(true);
+  };
 
   // Forms
   const [showFormModal, setShowFormModal] = useState(false);
@@ -624,6 +650,19 @@ export function EventsPanel() {
                           <span>VIEW ATTENDEES</span>
                         </button>
 
+                        {/* CERTIFICATES BUTTON */}
+                        <button
+                          title="View Certificates for Registered Attendees"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenAttendeesDashboard(e);
+                          }}
+                          className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500 hover:text-black text-amber-400 rounded-lg text-[10px] font-bold font-mono transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          <Award className="w-3 h-3" />
+                          <span>CERTIFICATES</span>
+                        </button>
+
                         <button
                           title="Copy Public Event Link"
                           onClick={(event) => { event.stopPropagation(); handleCopyEventLink(e); }}
@@ -771,17 +810,28 @@ export function EventsPanel() {
                           {reg.phone && <span className="text-[9px] text-primary font-mono block truncate">{reg.phone}</span>}
                         </div>
                         
-                        <button
-                          disabled={role === 'Read Only'}
-                          onClick={() => handleToggleAttendanceStatus(reg, reg.status === 'Attended' ? 'Registered' : 'Attended')}
-                          className={`px-2 py-1 rounded text-[9px] font-mono font-bold border transition-colors ${
-                            reg.status === 'Attended'
-                              ? 'bg-cyber-success/15 border-cyber-success/30 text-cyber-success'
-                              : 'bg-bg-elevated border-border-normal text-text-body hover:bg-primary hover:text-black hover:border-primary'
-                          }`}
-                        >
-                          {reg.status.toUpperCase()}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenCertificate(reg, selectedEvent)}
+                            className="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-black rounded text-[9px] font-mono font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            title="View Candidate Certificate"
+                          >
+                            <Award className="w-3 h-3" />
+                            <span>CERTIFICATE</span>
+                          </button>
+                          
+                          <button
+                            disabled={role === 'Read Only'}
+                            onClick={() => handleToggleAttendanceStatus(reg, reg.status === 'Attended' ? 'Registered' : 'Attended')}
+                            className={`px-2 py-1 rounded text-[9px] font-mono font-bold border transition-colors ${
+                              reg.status === 'Attended'
+                                ? 'bg-cyber-success/15 border-cyber-success/30 text-cyber-success'
+                                : 'bg-bg-elevated border-border-normal text-text-body hover:bg-primary hover:text-black hover:border-primary'
+                            }`}
+                          >
+                            {reg.status.toUpperCase()}
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -1063,39 +1113,50 @@ export function EventsPanel() {
                               )}
                             </td>
                             <td className="p-3.5 text-right font-mono text-xs">
-                              {role !== 'Read Only' && (
-                                <div className="flex items-center justify-end gap-1.5">
-                                  <button
-                                    onClick={() => handleToggleAttendanceStatus(reg, 'Attended')}
-                                    disabled={reg.status === 'Attended'}
-                                    className={`px-2 py-1 rounded text-[9px] font-bold border transition-colors cursor-pointer ${
-                                      reg.status === 'Attended'
-                                        ? 'opacity-40 cursor-not-allowed bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
-                                        : 'bg-bg-elevated border-border-normal text-text-body hover:bg-cyber-success hover:text-black'
-                                    }`}
-                                  >
-                                    ATTENDED
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleAttendanceStatus(reg, 'Registered')}
-                                    disabled={reg.status === 'Registered'}
-                                    className={`px-2 py-1 rounded text-[9px] font-bold border transition-colors cursor-pointer ${
-                                      reg.status === 'Registered'
-                                        ? 'opacity-40 cursor-not-allowed bg-blue-500/10 border-blue-500/30 text-blue-400'
-                                        : 'bg-bg-elevated border-border-normal text-text-body hover:bg-blue-500 hover:text-white'
-                                    }`}
-                                  >
-                                    REGISTERED
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteRegistration(reg.id, reg.name)}
-                                    className="p-1 text-text-muted hover:text-cyber-danger rounded transition-colors cursor-pointer"
-                                    title="Delete RSVP Record"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              )}
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleOpenCertificate(reg, selectedEvent)}
+                                  className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-black rounded-lg text-[10px] font-mono font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                                  title="View Candidate Certificate"
+                                >
+                                  <Award className="w-3.5 h-3.5" />
+                                  <span>VIEW CERTIFICATE</span>
+                                </button>
+
+                                {role !== 'Read Only' && (
+                                  <>
+                                    <button
+                                      onClick={() => handleToggleAttendanceStatus(reg, 'Attended')}
+                                      disabled={reg.status === 'Attended'}
+                                      className={`px-2 py-1 rounded text-[9px] font-bold border transition-colors cursor-pointer ${
+                                        reg.status === 'Attended'
+                                          ? 'opacity-40 cursor-not-allowed bg-cyber-success/10 border-cyber-success/30 text-cyber-success'
+                                          : 'bg-bg-elevated border-border-normal text-text-body hover:bg-cyber-success hover:text-black'
+                                      }`}
+                                    >
+                                      ATTENDED
+                                    </button>
+                                    <button
+                                      onClick={() => handleToggleAttendanceStatus(reg, 'Registered')}
+                                      disabled={reg.status === 'Registered'}
+                                      className={`px-2 py-1 rounded text-[9px] font-bold border transition-colors cursor-pointer ${
+                                        reg.status === 'Registered'
+                                          ? 'opacity-40 cursor-not-allowed bg-blue-500/10 border-blue-500/30 text-blue-400'
+                                          : 'bg-bg-elevated border-border-normal text-text-body hover:bg-blue-500 hover:text-white'
+                                      }`}
+                                    >
+                                      REGISTERED
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteRegistration(reg.id, reg.name)}
+                                      className="p-1 text-text-muted hover:text-cyber-danger rounded transition-colors cursor-pointer"
+                                      title="Delete RSVP Record"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1160,28 +1221,39 @@ export function EventsPanel() {
                         </div>
 
                         {/* Card Actions Footer */}
-                        {role !== 'Read Only' && (
-                          <div className="pt-2 border-t border-border-normal/40 flex items-center justify-between gap-1.5 font-mono text-[9px]">
-                            <button
-                              onClick={() => handleToggleAttendanceStatus(reg, reg.status === 'Attended' ? 'Registered' : 'Attended')}
-                              className={`flex-1 py-1.5 rounded-lg font-bold border transition-colors cursor-pointer ${
-                                reg.status === 'Attended'
-                                  ? 'bg-cyber-success/15 border-cyber-success/40 text-cyber-success'
-                                  : 'bg-bg-elevated border-border-normal text-text-heading hover:bg-primary hover:text-black'
-                              }`}
-                            >
-                              {reg.status === 'Attended' ? 'ATTENDED ✅' : 'MARK ATTENDED'}
-                            </button>
+                        <div className="pt-2 border-t border-border-normal/40 flex flex-col gap-2 font-mono text-[9px]">
+                          <button
+                            onClick={() => handleOpenCertificate(reg, selectedEvent)}
+                            className="w-full py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-black rounded-lg font-mono font-bold text-[10px] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                            title="View Candidate Certificate"
+                          >
+                            <Award className="w-3.5 h-3.5" />
+                            <span>VIEW CERTIFICATE</span>
+                          </button>
 
-                            <button
-                              onClick={() => handleDeleteRegistration(reg.id, reg.name)}
-                              className="p-1.5 border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger rounded-lg transition-colors cursor-pointer"
-                              title="Delete RSVP Record"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
+                          {role !== 'Read Only' && (
+                            <div className="flex items-center justify-between gap-1.5">
+                              <button
+                                onClick={() => handleToggleAttendanceStatus(reg, reg.status === 'Attended' ? 'Registered' : 'Attended')}
+                                className={`flex-1 py-1.5 rounded-lg font-bold border transition-colors cursor-pointer ${
+                                  reg.status === 'Attended'
+                                    ? 'bg-cyber-success/15 border-cyber-success/40 text-cyber-success'
+                                    : 'bg-bg-elevated border-border-normal text-text-heading hover:bg-primary hover:text-black'
+                                }`}
+                              >
+                                {reg.status === 'Attended' ? 'ATTENDED ✅' : 'MARK ATTENDED'}
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteRegistration(reg.id, reg.name)}
+                                className="p-1.5 border border-border-normal hover:border-cyber-danger text-text-muted hover:text-cyber-danger rounded-lg transition-colors cursor-pointer"
+                                title="Delete RSVP Record"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
 
                       </div>
                     );
@@ -1592,6 +1664,15 @@ export function EventsPanel() {
             </div>
           </form>
         </div>
+      )}
+
+      {/* CERTIFICATE MODAL */}
+      {showCertModal && certModalData && (
+        <CertificateModal
+          isOpen={showCertModal}
+          onClose={() => setShowCertModal(false)}
+          data={certModalData}
+        />
       )}
 
     </div>

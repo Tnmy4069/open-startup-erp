@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ShieldCheck,
   PhoneCall,
+  Award,
   Code,
   Terminal,
   Globe,
@@ -953,6 +954,16 @@ Please generate complete, robust, type-safe TypeScript / JavaScript code connect
 
                 {/* Print & Action Buttons */}
                 <div className="space-y-2 print:hidden">
+                  <a
+                    href={`/public/certificates/${encodeURIComponent(passData.id || passData.qrCode)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>VIEW &amp; DOWNLOAD CERTIFICATE</span>
+                  </a>
+
                   <button
                     onClick={handlePrintPass}
                     className="w-full h-10 rounded-xl bg-primary hover:bg-opacity-95 text-black font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
