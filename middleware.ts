@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { decrypt } from '@/lib/session';
 
 // Paths that are always public (no session required)
-const PUBLIC_PATHS = ['/', '/api/auth/login'];
+const PUBLIC_PATHS = ['/', '/login', '/api/auth/login'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -32,8 +32,10 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/public/');
   const needsAuth = !isPublic;
 
+  const isLoginPage = pathname === '/' || pathname === '/login';
+
   // Authenticated user visiting the login page (/) → send to dashboard
-  if (isPublic && session) {
+  if (isLoginPage && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

@@ -21,7 +21,7 @@ export default function PublicCertificatesSearchPage() {
     if (context && context.logoUrl) {
       appLogo = context.logoUrl;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const activeLogo = appLogo || AppConfig.logoUrl || '/cyberx-logo.webp';
 
@@ -57,7 +57,7 @@ export default function PublicCertificatesSearchPage() {
 
   return (
     <div className="min-h-screen bg-[#070709] text-white flex flex-col font-sans selection:bg-primary selection:text-black">
-      
+
       {/* BACKGROUND DECORATIVE GLOW */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-primary/5 rounded-full filter blur-[120px] pointer-events-none -z-0" />
 
@@ -89,7 +89,7 @@ export default function PublicCertificatesSearchPage() {
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10 z-10">
-        
+
         {/* HERO HEADER */}
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-mono font-bold uppercase tracking-wider mb-1">
@@ -111,7 +111,7 @@ export default function PublicCertificatesSearchPage() {
             <input
               type="email"
               required
-              placeholder="Enter your registered email (e.g. candidate@example.com)"
+              placeholder="Enter your registered email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full h-14 pl-12 pr-36 bg-bg-surface border-2 border-border-normal hover:border-primary/50 focus:border-primary rounded-2xl text-sm text-text-heading focus:outline-none transition-all font-sans"
