@@ -11,8 +11,8 @@ self.addEventListener('push', function (event) {
     try {
       const data = event.data.json();
       const origin = self.location.origin;
-      const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : origin + '/icon-192.png';
-      const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : origin + '/icon-192.png';
+      const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : origin + '/cyberx-logo.webp';
+      const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : origin + '/cyberx-logo.webp';
 
       const options = {
         body: data.body,
@@ -30,8 +30,8 @@ self.addEventListener('push', function (event) {
       event.waitUntil(
         self.registration.showNotification('CyberX Alert', {
           body: event.data.text(),
-          icon: origin + '/icon-192.png',
-          badge: origin + '/icon-192.png'
+          icon: origin + '/cyberx-logo.webp',
+          badge: origin + '/cyberx-logo.webp'
         })
       );
     }

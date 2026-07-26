@@ -87,11 +87,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, sentCount: 0, message: 'No push subscriptions found.' });
       }
 
+      // Fetch dynamic DB settings for icon & favicon
+      const dbSetting = await prisma.setting.findUnique({ where: { id: 'global_config' } }).catch(() => null);
+      const activeIcon = (dbSetting?.faviconUrl && dbSetting.faviconUrl.trim() !== '')
+        ? dbSetting.faviconUrl.trim()
+        : (dbSetting?.iconUrl && dbSetting.iconUrl.trim() !== '')
+        ? dbSetting.iconUrl.trim()
+        : (dbSetting?.logoUrl && dbSetting.logoUrl.trim() !== '')
+        ? dbSetting.logoUrl.trim()
+        : (process.env.NEXT_PUBLIC_FAVICON_URL || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || AppConfig.faviconUrl || '/cyberx-logo.webp');
+
       const payload = JSON.stringify({
         title,
         body,
-        icon: AppConfig.iconUrl,
-        badge: AppConfig.iconUrl,
+        icon: activeIcon,
+        badge: activeIcon,
         data: {
           url: url || '/dashboard',
         },
@@ -169,11 +179,21 @@ export async function POST(request: Request) {
     // Also send as a push notification to all subscribed devices
     const subscriptions = await prisma.pushSubscription.findMany();
     if (subscriptions.length > 0) {
+      // Fetch dynamic DB settings for icon & favicon
+      const dbSetting = await prisma.setting.findUnique({ where: { id: 'global_config' } }).catch(() => null);
+      const activeIcon = (dbSetting?.faviconUrl && dbSetting.faviconUrl.trim() !== '')
+        ? dbSetting.faviconUrl.trim()
+        : (dbSetting?.iconUrl && dbSetting.iconUrl.trim() !== '')
+        ? dbSetting.iconUrl.trim()
+        : (dbSetting?.logoUrl && dbSetting.logoUrl.trim() !== '')
+        ? dbSetting.logoUrl.trim()
+        : (process.env.NEXT_PUBLIC_FAVICON_URL || process.env.NEXT_PUBLIC_APP_ICON_URL || process.env.NEXT_PUBLIC_APP_LOGO_URL || AppConfig.faviconUrl || '/cyberx-logo.webp');
+
       const payload = JSON.stringify({
         title: `System: ${type || 'Alert'}`,
         body: message,
-        icon: AppConfig.iconUrl,
-        badge: AppConfig.iconUrl,
+        icon: activeIcon,
+        badge: activeIcon,
         data: { url: '/dashboard' },
       });
 
