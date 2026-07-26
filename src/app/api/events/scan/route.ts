@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const cleanQr = qrCode.trim();
 
     // Find registration record by QR Code across all events
-    let registration = await prisma.eventRegistration.findFirst({
+    const registration = await prisma.eventRegistration.findFirst({
       where: { qrCode: cleanQr },
       include: {
         event: true,
