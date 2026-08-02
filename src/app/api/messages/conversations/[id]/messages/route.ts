@@ -104,37 +104,44 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     });
 
 
-    // Update conversation's lastMessage and lastAt
-    const preview =
-      type === 'file' ? `📎 ${fileName || 'File'}` :
-      type === 'image' ? '🖼️ Image' :
-      type === 'location' ? '📍 Location' :
-      content.length > 60 ? content.slice(0, 60) + '...' : content;
+    // Update conversation's lastMessage and lastAt (skip for call signals)
+    if (type !== 'call_signal') {
+      const preview =
+        type === 'file' ? `📎 ${fileName || 'File'}` :
+        type === 'image' ? '🖼️ Image' :
+        type === 'location' ? '📍 Location' :
+        content.length > 60 ? content.slice(0, 60) + '...' : content;
 
-    await prisma.conversation.update({
-      where: { id },
-      data: {
-        lastMessage: preview,
-        lastAt: new Date(),
-      },
-    });
-
-    // Create system notification entry
-    try {
-      await prisma.notification.create({
+      await prisma.conversation.update({
+        where: { id },
         data: {
-          message: `💬 ${session.username}: ${preview}`,
-          type: 'New Message',
-          status: 'Unread',
+          lastMessage: preview,
+          lastAt: new Date(),
         },
       });
-    } catch {
-      // Ignore notification creation failure
+
+      // Create system notification entry
+      try {
+        await prisma.notification.create({
+          data: {
+            message: `💬 ${session.username}: ${preview}`,
+            type: 'New Message',
+            status: 'Unread',
+          },
+        });
+      } catch {
+        // Ignore notification creation failure
+      }
     }
 
-    // Trigger Web Push Notifications to recipient subscriptions
-    if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    // Trigger Web Push Notifications to recipient subscriptions (skip for call signals)
+    if (type !== 'call_signal' && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
       try {
+        const pushPreview =
+          type === 'file' ? `\ud83d\udcce ${fileName || 'File'}` :
+          type === 'image' ? '\ud83d\uddbc\ufe0f Image' :
+          type === 'location' ? '\ud83d\udccd Location' :
+          content.length > 60 ? content.slice(0, 60) + '...' : content;
         const recipientIds = conversation.memberIds.filter((mid) => mid !== session.userId);
         const validObjectIds = recipientIds.filter((rid) => /^[0-9a-fA-F]{24}$/.test(rid));
         if (validObjectIds.length > 0) {
@@ -142,8 +149,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             where: { userId: { in: validObjectIds } },
           });
           const payload = JSON.stringify({
-            title: `💬 Message from ${session.username}`,
-            body: preview,
+            title: `\ud83d\udcac Message from ${session.username}`,
+            body: pushPreview,
             icon: '/cyberx-logo.png',
           });
           for (const sub of subscriptions) {
