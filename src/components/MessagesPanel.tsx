@@ -1092,7 +1092,7 @@ export function MessagesPanel() {
   // ── RENDER ──────────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="flex h-[calc(100vh-130px)] md:h-[calc(100vh-160px)] min-h-[460px] bg-bg-primary rounded-xl sm:rounded-2xl border border-border-normal overflow-hidden shadow-sm">
+    <div className="flex h-full bg-bg-primary border-t border-border-normal overflow-hidden">
 
       {/* ──────────────── LEFT: CONVERSATION LIST ──────────────── */}
       <div className={`w-full md:w-80 lg:w-96 shrink-0 border-r border-border-normal flex flex-col bg-bg-surface ${activeConvo ? 'hidden md:flex' : 'flex'}`}>

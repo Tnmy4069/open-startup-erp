@@ -1046,8 +1046,8 @@ export function DashboardShell() {
         )}
 
         {/* SUBPAGE CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto bg-bg-primary p-4 md:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <main className="flex-1 overflow-y-auto bg-bg-primary p-4 md:p-8" style={currentTab === 'messages' ? { padding: 0, overflow: 'hidden' } : {}}>
+          <div className="max-w-7xl mx-auto space-y-6" style={currentTab === 'messages' ? { maxWidth: 'none', margin: 0, height: '100%', display: 'flex', flexDirection: 'column' } : {}}>
 
             {mountedTabs.has('dashboard') && (
               <div className={currentTab === 'dashboard' ? 'block' : 'hidden'}>
@@ -1152,7 +1152,7 @@ export function DashboardShell() {
             )}
 
             {mountedTabs.has('messages') && (
-              <div className={currentTab === 'messages' ? 'block' : 'hidden'}>
+              <div className={currentTab === 'messages' ? 'block' : 'hidden'} style={{ flex: 1, minHeight: 0, height: '100%' }}>
                 <MessagesPanel />
               </div>
             )}
