@@ -22,7 +22,13 @@ import {
   Eye,
   Code2,
   Share2,
+  Bot,
+  Video,
+  Radio,
+  Copy,
+  Check,
 } from 'lucide-react';
+
 
 interface MeetingNote {
   id: string;
@@ -53,6 +59,17 @@ export function MeetingsPanel() {
   const [formError, setFormError] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
   const [formIsPublic, setFormIsPublic] = useState(false);
+  const [showFathomInfo, setShowFathomInfo] = useState(false);
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
+
+  const copyWebhookUrl = () => {
+    const url = `${window.location.origin}/api/webhooks/fathom`;
+    navigator.clipboard.writeText(url);
+    setCopiedWebhook(true);
+    setTimeout(() => setCopiedWebhook(false), 2500);
+    notify('Fathom webhook URL copied to clipboard!', true);
+  };
+
 
   const notify = (msg: string, ok: boolean) => {
     setNotification({ msg, ok });
@@ -177,14 +194,66 @@ export function MeetingsPanel() {
             Document meetings, agendas, decisions and action items with full Markdown support
           </p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-semibold text-xs transition-all duration-150 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          Log Meeting
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFathomInfo(!showFathomInfo)}
+            className="flex items-center gap-1.5 h-10 px-3.5 rounded-lg bg-bg-elevated border border-border-normal hover:border-primary/50 text-text-heading text-xs font-mono transition-all duration-150 shrink-0"
+            title="Fathom AI Integration Settings"
+          >
+            <Radio className="w-3.5 h-3.5 text-cyber-success animate-pulse" />
+            <span>Fathom Sync</span>
+          </button>
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-semibold text-xs transition-all duration-150 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Log Meeting
+          </button>
+        </div>
       </div>
+
+      {/* Fathom Info & Webhook Banner */}
+      {showFathomInfo && (
+        <div className="bg-bg-surface border border-primary/30 rounded-xl p-4 sm:p-5 space-y-3 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-primary" />
+              <h3 className="font-display font-bold text-text-heading text-sm">
+                Fathom AI Auto-Sync Integration
+              </h3>
+              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-cyber-success/20 text-cyber-success border border-cyber-success/30">
+                ACTIVE
+              </span>
+            </div>
+            <button
+              onClick={() => setShowFathomInfo(false)}
+              className="text-text-muted hover:text-text-heading p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-[11px] text-text-muted font-mono leading-relaxed">
+            Every meeting recorded by <b>Fathom AI Notetaker</b> automatically imports notes, AI summary, action items, and video links into this section.
+          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-bg-primary border border-border-normal rounded-lg text-xs font-mono">
+            <div className="flex items-center gap-2 overflow-hidden text-[11px]">
+              <span className="text-text-muted shrink-0">Webhook URL:</span>
+              <code className="text-primary truncate">
+                {typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/fathom` : '/api/webhooks/fathom'}
+              </code>
+            </div>
+            <button
+              onClick={copyWebhookUrl}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-md shrink-0 font-bold transition-colors text-[11px]"
+            >
+              {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedWebhook ? 'Copied!' : 'Copy Webhook URL'}
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Toast */}
       {notification && (
@@ -229,6 +298,12 @@ export function MeetingsPanel() {
                       <Calendar className="w-3.5 h-3.5" />
                       <span>{new Date(m.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     </div>
+                    {m.createdBy.toLowerCase().includes('fathom') && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30 shrink-0">
+                        <Bot className="w-3 h-3 text-purple-400" />
+                        FATHOM AI
+                      </span>
+                    )}
                     <h4 className="font-display font-bold text-text-heading text-sm sm:text-base truncate">
                       {m.agenda}
                     </h4>
@@ -331,14 +406,29 @@ export function MeetingsPanel() {
                           href={m.refLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-primary hover:underline font-semibold"
+                          className={`flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded transition-colors ${
+                            m.refLink.includes('fathom')
+                              ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                              : 'text-primary hover:underline'
+                          }`}
                         >
-                          <LinkIcon className="w-3.5 h-3.5" />
-                          Reference Link
-                          <ExternalLink className="w-3 h-3" />
+                          {m.refLink.includes('fathom') ? (
+                            <>
+                              <Video className="w-3.5 h-3.5 text-purple-400" />
+                              Watch Fathom Recording
+                              <ExternalLink className="w-3 h-3 text-purple-400" />
+                            </>
+                          ) : (
+                            <>
+                              <LinkIcon className="w-3.5 h-3.5" />
+                              Reference Link
+                              <ExternalLink className="w-3 h-3" />
+                            </>
+                          )}
                         </a>
                       )}
                     </div>
+
                   </div>
                 )}
               </div>
