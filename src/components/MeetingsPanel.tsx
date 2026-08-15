@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from 'recharts';
 import { useApp } from '@/context/AppContext';
 import { AppConfig } from '@/lib/config';
 import {
@@ -27,6 +31,13 @@ import {
   Radio,
   Copy,
   Check,
+  BarChart2,
+  TrendingUp,
+  TrendingDown,
+  ListChecks,
+  Users,
+  RefreshCw,
+  Minus,
 } from 'lucide-react';
 
 
@@ -40,6 +51,23 @@ interface MeetingNote {
   isPublic?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+interface MeetingAnalytics {
+  totalMeetings: number;
+  fathomMeetings: number;
+  manualMeetings: number;
+  publicMeetings: number;
+  thisMonthMeetings: number;
+  lastMonthMeetings: number;
+  meetingGrowth: number;
+  avgPerWeek: number;
+  actionItemsTotal: number;
+  actionItemsCompleted: number;
+  actionItemsPending: number;
+  actionItemsCompletionRate: number;
+  monthlyTrend: { month: string; total: number; fathom: number; manual: number }[];
+  topCreators: { name: string; count: number }[];
 }
 
 export function MeetingsPanel() {
@@ -61,6 +89,10 @@ export function MeetingsPanel() {
   const [formIsPublic, setFormIsPublic] = useState(false);
   const [showFathomInfo, setShowFathomInfo] = useState(false);
   const [copiedWebhook, setCopiedWebhook] = useState(false);
+  const [activeTab, setActiveTab] = useState<'notes' | 'analytics'>('notes');
+  const [analytics, setAnalytics] = useState<MeetingAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
 
   const copyWebhookUrl = () => {
     const url = `${window.location.origin}/api/webhooks/fathom`;
@@ -88,9 +120,26 @@ export function MeetingsPanel() {
     }
   }, []);
 
+  const fetchAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    try {
+      const res = await fetch('/api/meetings/analytics');
+      if (res.ok) setAnalytics(await res.json());
+    } catch {
+      notify('Failed to load analytics.', false);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMeetings();
   }, [fetchMeetings]);
+
+  useEffect(() => {
+    if (activeTab === 'analytics') fetchAnalytics();
+  }, [activeTab, fetchAnalytics]);
+
 
   const openAdd = () => {
     setFormDate(new Date().toISOString().substring(0, 10));
@@ -203,15 +252,47 @@ export function MeetingsPanel() {
             <Radio className="w-3.5 h-3.5 text-cyber-success animate-pulse" />
             <span>Fathom Sync</span>
           </button>
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-semibold text-xs transition-all duration-150 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            Log Meeting
-          </button>
+          {activeTab === 'notes' && (
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary hover:bg-opacity-90 text-black font-semibold text-xs transition-all duration-150 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              Log Meeting
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-1 p-1 bg-bg-elevated border border-border-normal rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab('notes')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-semibold transition-all duration-150 ${
+            activeTab === 'notes'
+              ? 'bg-primary text-black shadow-sm'
+              : 'text-text-muted hover:text-text-heading'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          Meeting Notes
+          <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/20">
+            {meetings.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-semibold transition-all duration-150 ${
+            activeTab === 'analytics'
+              ? 'bg-primary text-black shadow-sm'
+              : 'text-text-muted hover:text-text-heading'
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" />
+          Analytics
+        </button>
+      </div>
+
 
       {/* Fathom Info & Webhook Banner */}
       {showFathomInfo && (
@@ -269,7 +350,172 @@ export function MeetingsPanel() {
         </div>
       )}
 
-      {/* Notes list */}
+      {/* ── ANALYTICS TAB ─────────────────────────────────── */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {analyticsLoading || !analytics ? (
+            <div className="bg-bg-surface border border-border-normal rounded-xl p-12 text-center text-text-muted font-mono text-xs animate-pulse">
+              <Loader className="w-4 h-4 animate-spin inline mr-2 text-primary" />
+              {'// Crunching meeting data...'}
+            </div>
+          ) : (
+            <>
+              {/* Refresh button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={fetchAnalytics}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono text-text-muted hover:text-text-heading border border-border-normal hover:border-border-hover rounded-lg transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Refresh
+                </button>
+              </div>
+
+              {/* KPI Row 1 */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total Meetings', value: analytics.totalMeetings, icon: <BookOpen className="w-4 h-4" />, color: 'text-primary', bg: 'bg-primary/10' },
+                  { label: 'Fathom AI Logs', value: analytics.fathomMeetings, icon: <Bot className="w-4 h-4" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                  { label: 'This Month', value: analytics.thisMonthMeetings, icon: <Calendar className="w-4 h-4" />, color: 'text-cyber-success', bg: 'bg-cyber-success/10', sub: analytics.meetingGrowth > 0 ? `+${analytics.meetingGrowth}% vs last month` : analytics.meetingGrowth < 0 ? `${analytics.meetingGrowth}% vs last month` : 'Same as last month', subIcon: analytics.meetingGrowth > 0 ? <TrendingUp className="w-3 h-3" /> : analytics.meetingGrowth < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" /> },
+                  { label: 'Avg / Week', value: analytics.avgPerWeek, icon: <BarChart2 className="w-4 h-4" />, color: 'text-amber-400', bg: 'bg-amber-400/10', sub: 'Last 4 weeks' },
+                ].map(({ label, value, icon, color, bg, sub, subIcon }) => (
+                  <div key={label} className="bg-bg-surface border border-border-normal rounded-xl p-4 space-y-2">
+                    <div className={`w-8 h-8 rounded-lg ${bg} ${color} flex items-center justify-center`}>
+                      {icon}
+                    </div>
+                    <div>
+                      <p className={`text-2xl font-bold font-display ${color}`}>{value}</p>
+                      <p className="text-[10px] text-text-muted font-mono">{label}</p>
+                      {sub && (
+                        <p className="flex items-center gap-1 text-[9px] text-text-muted mt-0.5">
+                          {subIcon}{sub}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Charts Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                {/* Monthly Trend Bar Chart */}
+                <div className="lg:col-span-2 bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-bold text-text-heading text-sm flex items-center gap-2">
+                      <BarChart2 className="w-4 h-4 text-primary" />
+                      Monthly Meeting Trend
+                    </h3>
+                    <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-purple-500 inline-block"></span>Fathom AI</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-primary inline-block"></span>Manual</span>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={analytics.monthlyTrend} barSize={12} barGap={2}>
+                      <XAxis dataKey="month" tick={{ fontSize: 9, fill: '#6b7280', fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: '#6b7280', fontFamily: 'monospace' }} axisLine={false} tickLine={false} allowDecimals={false} width={20} />
+                      <Tooltip
+                        contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-normal)', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace' }}
+                        cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                      />
+                      <Bar dataKey="fathom" name="Fathom AI" stackId="a" fill="#a855f7" radius={[0,0,0,0]} />
+                      <Bar dataKey="manual" name="Manual" stackId="a" fill="var(--color-primary)" radius={[4,4,0,0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Action Items Donut */}
+                <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3">
+                  <h3 className="font-display font-bold text-text-heading text-sm flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-primary" />
+                    Action Items
+                  </h3>
+                  {analytics.actionItemsTotal > 0 ? (
+                    <>
+                      <ResponsiveContainer width="100%" height={140}>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Done', value: analytics.actionItemsCompleted },
+                              { name: 'Pending', value: analytics.actionItemsPending },
+                            ]}
+                            cx="50%" cy="50%" innerRadius={42} outerRadius={60}
+                            paddingAngle={3} dataKey="value"
+                          >
+                            <Cell fill="#22c55e" />
+                            <Cell fill="#ef4444" />
+                          </Pie>
+                          <Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-normal)', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="space-y-1.5 text-[11px] font-mono">
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyber-success inline-block"></span>Completed</span>
+                          <span className="text-cyber-success font-bold">{analytics.actionItemsCompleted}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyber-danger inline-block"></span>Pending</span>
+                          <span className="text-cyber-danger font-bold">{analytics.actionItemsPending}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-t border-border-normal/40 pt-1.5 mt-1">
+                          <span className="text-text-muted">Completion Rate</span>
+                          <span className={`font-bold ${analytics.actionItemsCompletionRate >= 70 ? 'text-cyber-success' : analytics.actionItemsCompletionRate >= 40 ? 'text-amber-400' : 'text-cyber-danger'}`}>
+                            {analytics.actionItemsCompletionRate}%
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center py-8 text-text-muted text-[11px] font-mono text-center">
+                      {'// No action items found in meeting notes yet'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Top Creators */}
+              <div className="bg-bg-surface border border-border-normal rounded-xl p-5 space-y-3">
+                <h3 className="font-display font-bold text-text-heading text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  Top Note Creators
+                </h3>
+                <div className="space-y-2">
+                  {analytics.topCreators.map((creator, idx) => {
+                    const maxCount = analytics.topCreators[0]?.count || 1;
+                    const pct = Math.round((creator.count / maxCount) * 100);
+                    const isFathom = creator.name.toLowerCase().includes('fathom');
+                    return (
+                      <div key={creator.name} className="flex items-center gap-3">
+                        <span className="text-[10px] font-mono text-text-muted w-4 shrink-0">#{idx + 1}</span>
+                        <div className="flex items-center gap-1.5 min-w-[120px] shrink-0">
+                          {isFathom && <Bot className="w-3 h-3 text-purple-400 shrink-0" />}
+                          <span className={`text-[11px] font-mono truncate ${isFathom ? 'text-purple-400' : 'text-text-heading'}`}>
+                            {creator.name}
+                          </span>
+                        </div>
+                        <div className="flex-1 h-1.5 bg-bg-elevated rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${isFathom ? 'bg-purple-500' : 'bg-primary'}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-mono text-text-muted shrink-0 w-8 text-right">
+                          {creator.count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── NOTES TAB ─────────────────────────────────────── */}
+      {activeTab === 'notes' && (
+      <>{/* Notes list */}
       {loading ? (
         <div className="bg-bg-surface border border-border-normal rounded-xl p-12 text-center text-text-muted font-mono text-xs animate-pulse">
           <Loader className="w-4 h-4 animate-spin inline mr-2 text-primary" />
@@ -284,6 +530,7 @@ export function MeetingsPanel() {
           {meetings.map((m) => {
             const isExpanded = expandedId === m.id;
             return (
+
               <div
                 key={m.id}
                 className="bg-bg-surface border border-border-normal hover:border-border-hover rounded-xl overflow-hidden transition-all duration-150"
@@ -434,10 +681,13 @@ export function MeetingsPanel() {
               </div>
             );
           })}
-        </div>
+      </div>
+      )}
+      </>
       )}
 
       {/* Add / Edit Modal */}
+
       {showAddModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-start justify-center p-4 pt-10 overflow-y-auto">
           <div className="bg-bg-surface border border-border-normal rounded-xl w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-150 mb-10">

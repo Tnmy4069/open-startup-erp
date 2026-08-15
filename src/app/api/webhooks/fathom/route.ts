@@ -162,12 +162,122 @@ export async function POST(request: Request) {
       });
     }
 
+    // ── F2: AUTO-CREATE TASKS FROM ACTION ITEMS ────────────────────────────
+    const rawForItems = rawPayload.meeting || rawPayload.data || rawPayload;
+    const actionItems = rawForItems.action_items || [];
+    let tasksCreated = 0;
+
+    if (actionItems.length > 0 && !existingMeeting) {
+      // Pre-load all members for fuzzy name matching
+      const allMembers = await prisma.member.findMany({
+        select: { id: true, name: true, email: true },
+      });
+
+      console.log(`[Fathom:${reqId}] Processing ${actionItems.length} action items → Tasks`);
+
+      for (const item of actionItems) {
+        const title = item.description || item.text;
+        if (!title) continue;
+
+        // Skip already-completed action items
+        if (item.completed) {
+          console.log(`[Fathom:${reqId}] Skipping completed action item: "${title}"`);
+          continue;
+        }
+
+        // Resolve assignee → member ID
+        let assigneeIds: string[] = [];
+        if (item.assignee) {
+          const assigneeName = typeof item.assignee === 'string'
+            ? item.assignee
+            : item.assignee.name || '';
+          const assigneeEmail = typeof item.assignee === 'object' ? item.assignee.email || '' : '';
+
+          const matchedMember = allMembers.find(m => {
+            const nameLower = m.name.toLowerCase();
+            const searchName = assigneeName.toLowerCase();
+            const searchEmail = assigneeEmail.toLowerCase();
+            return (
+              (searchName && (nameLower.includes(searchName) || searchName.includes(nameLower))) ||
+              (searchEmail && m.email?.toLowerCase() === searchEmail)
+            );
+          });
+
+          if (matchedMember) {
+            assigneeIds = [matchedMember.id];
+            console.log(`[Fathom:${reqId}] Matched assignee "${assigneeName}" → ${matchedMember.name}`);
+          } else if (assigneeName) {
+            console.log(`[Fathom:${reqId}] No member match for assignee: "${assigneeName}"`);
+          }
+        }
+
+        // Check if task already exists to avoid duplicates
+        const existingTask = await prisma.task.findFirst({
+          where: {
+            title: { equals: title, mode: 'insensitive' },
+            labels: { has: 'Fathom AI' },
+          },
+        });
+
+        if (existingTask) {
+          console.log(`[Fathom:${reqId}] Task already exists: "${title}"`);
+          continue;
+        }
+
+        const task = await prisma.task.create({
+          data: {
+            title,
+            description: `> 🤖 Auto-created from Fathom AI Meeting: **"${meetingData.agenda}"**\n>\n> Recorded: ${item.recording_timestamp ? `at ${item.recording_timestamp}` : 'during the meeting'}\n\n[View Meeting Notes & Recording](${meetingData.refLink || '#'})`,
+            priority: 'Medium',
+            status: 'Todo',
+            assigneeIds,
+            labels: ['Fathom AI', 'Meeting Action Item'],
+            isRecurring: false,
+          },
+        });
+
+        await prisma.taskActivity.create({
+          data: {
+            taskId: task.id,
+            user: 'Fathom AI Notetaker',
+            change: `Task auto-created from Fathom meeting: "${meetingData.agenda}"`,
+          },
+        });
+
+        tasksCreated++;
+        console.log(`[Fathom:${reqId}] ✓ Task created: "${title}" (ID: ${task.id})`);
+      }
+
+      if (tasksCreated > 0) {
+        await prisma.activityLog.create({
+          data: {
+            action: 'Created',
+            user: 'Fathom AI Notetaker',
+            role: 'System Bot',
+            details: `Auto-created ${tasksCreated} task(s) from Fathom meeting: "${meetingData.agenda}"`,
+          },
+        });
+
+        await prisma.notification.create({
+          data: {
+            message: `✅ ${tasksCreated} new task(s) auto-created from Fathom meeting: "${meetingData.agenda}"`,
+            type: 'New transaction',
+            status: 'Unread',
+          },
+        });
+
+        console.log(`[Fathom:${reqId}] ✓ ${tasksCreated} tasks created from action items`);
+      }
+    }
+    // ── END F2 ────────────────────────────────────────────────────────────
+
     console.log(`[Fathom:${reqId}] ✅ Done — returning success`);
     return NextResponse.json({
       success: true,
       message: existingMeeting ? 'Meeting note updated' : 'Meeting note created',
       meetingId: meeting.id,
       agenda: meeting.agenda,
+      tasksCreated,
       debug: { reqId },
     });
   } catch (error) {
@@ -177,6 +287,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message || 'Internal server error', debug: { reqId } }, { status: 500 });
   }
 }
+
 
 
 export async function GET() {
