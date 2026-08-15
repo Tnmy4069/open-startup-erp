@@ -29,7 +29,9 @@ export async function middleware(request: NextRequest) {
   const isPublic = 
     PUBLIC_PATHS.includes(pathname) ||
     pathname.startsWith('/public/') ||
-    pathname.startsWith('/api/public/');
+    pathname.startsWith('/api/public/') ||
+    pathname.startsWith('/api/webhooks/'); // External webhooks (Fathom, etc.) must bypass auth
+
   const needsAuth = !isPublic;
 
   const isLoginPage = pathname === '/' || pathname === '/login';
