@@ -65,7 +65,7 @@ Set up your own **open-source team management portal** in minutes.
 
 1.  **Clone the Open Source Repository**
     ```bash
-    git clone https://github.com/YOUR_ORG/nexus.git
+    git clone [https://github.com/YOUR_ORG/nexus.git](https://github.com/Tnmy4069/open-startup-erp.git)
     cd nexus
     ```
 
